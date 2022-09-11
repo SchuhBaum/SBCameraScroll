@@ -51,9 +51,12 @@ namespace SBCameraScroll
         public static float smoothingFactorX = 0.0f; // set default values in option menu
         public static float smoothingFactorY = 0.0f;
 
-        // parameters
         public static float maxUpdateShortcut = 3f;
         public static List<string> blacklistedRooms = new List<string>();
+
+        //
+        //
+        //
 
         internal static void OnEnable()
         {
@@ -100,7 +103,7 @@ namespace SBCameraScroll
             }
         }
 
-        public static Vector2 GetScreenOffset(Vector2 screenSize) // for SplitScreenMod
+        public static Vector2 GetScreenOffset(in Vector2 screenSize) // for SplitScreenMod
         {
             switch (SplitScreenMod.SplitScreenMod.CurrentSplitMode)
             {
@@ -118,6 +121,7 @@ namespace SBCameraScroll
             AttachedFields attachedFields = roomCamera.GetAttachedFields();
             attachedFields.followAbstractCreatureID = null; // do a smooth transition // this actually makes a difference for the vanilla type camera // otherwise the map input would immediately be processed
 
+            // vanilla copy & paste stuff
             if (attachedFields.isRoomBlacklisted || !RoomMod.CanScrollCamera(roomCamera.room) || roomCamera.voidSeaMode)
             {
                 roomCamera.seekPos = roomCamera.CamPos(roomCamera.currentCameraPosition);
@@ -144,6 +148,7 @@ namespace SBCameraScroll
                 roomCamera.lastPos = roomCamera.seekPos;
                 roomCamera.pos = roomCamera.seekPos;
 
+                attachedFields.seekPosition *= 0.0f;
                 attachedFields.vanillaTypePosition = attachedFields.onScreenPosition;
                 attachedFields.useVanillaPositions = true;
                 attachedFields.isCentered = false;
@@ -469,7 +474,7 @@ namespace SBCameraScroll
             {
                 roomCamera.GetAttachedFields().isRoomBlacklisted = false;
             }
-            ResetCameraPosition(roomCamera); // uses currentCameraPosition // uses isRoomBlacklisted
+            ResetCameraPosition(roomCamera); // uses currentCameraPosition and isRoomBlacklisted
         }
 
         // updates all the visual stuff // calls UpdateScreen() // mainly adepts the camera texture to the current (smoothed) position
@@ -496,6 +501,7 @@ namespace SBCameraScroll
                     cameraPosition += Custom.RNV() * 8f * roomCamera.microShake * UnityEngine.Random.value;
                 }
 
+                // might clamp something when camera shakes
                 cameraPosition.x = Mathf.Clamp(cameraPosition.x, cameraPosition.x + roomCamera.hDisplace - 12f, cameraPosition.x + roomCamera.hDisplace + 28f);
                 cameraPosition.x = Mathf.Floor(cameraPosition.x) - 0.02f;
 
@@ -545,7 +551,7 @@ namespace SBCameraScroll
                 }
 
                 roomCamera.shortcutGraphics.Draw(0.0f, cameraPosition);
-                UpdateScreen(roomCamera, cameraPosition); // update visible screen texture
+                UpdateScreen(roomCamera, cameraPosition); // screen texture // update variables for GPU
 
                 // mostly vanilla code
                 if (!room.abstractRoom.gate && !room.abstractRoom.shelter)
@@ -637,7 +643,7 @@ namespace SBCameraScroll
         private static void RoomCamera_MoveCamera(On.RoomCamera.orig_MoveCamera_int orig, RoomCamera roomCamera, int camPos)
         {
             AttachedFields attachedFields = roomCamera.GetAttachedFields();
-            if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode || roomCamera.followAbstractCreature == null)
+            if (attachedFields.isRoomBlacklisted || roomCamera.voidSeaMode || roomCamera.followAbstractCreature == null)
             {
                 orig(roomCamera, camPos);
                 return;
