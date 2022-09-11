@@ -19,8 +19,8 @@ namespace SBCameraScroll
             if (room?.game != null && room.abstractRoom.name is string roomName && !RoomCameraMod.blacklistedRooms.Contains(roomName))
             {
                 AbstractRoomMod.CheckCameraPositions(ref room.cameraPositions);
-                AbstractRoomMod.UpdateTextureOffset(roomName, room.cameraPositions); // update for one-screen rooms as well
-                AbstractRoomMod.MergeCameraTextures(roomName, room.abstractRoom.world?.regionState?.regionName, room.cameraPositions); // warping might mess with world or region state => check for nulls // regionState is a function and needs game != null
+                AbstractRoomMod.UpdateTextureOffset(room.abstractRoom, room.cameraPositions); // update for one-screen rooms as well
+                AbstractRoomMod.MergeCameraTextures(room.abstractRoom, room.abstractRoom.world?.regionState?.regionName, room.cameraPositions); // warping might mess with world or region state => check for nulls // regionState is a function and needs game != null
             }
         }
     }

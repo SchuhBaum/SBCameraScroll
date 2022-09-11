@@ -3,12 +3,39 @@ using System.Collections.Generic;
 using System.IO;
 using RWCustom;
 using UnityEngine;
+using WeakTables;
 
 namespace SBCameraScroll
 {
     public static class RoomCameraMod
     {
+        //
+        // variables / WeakTables
+        //
+
+        public sealed class AttachedFields
+        {
+            public bool isCentered;
+            public bool isRoomBlacklisted;
+            public bool useVanillaPositions; // for vanilla type camera
+
+            public EntityID? followAbstractCreatureID = null;
+
+            public Vector2 lastOnScreenPosition = new Vector2();
+            public Vector2 onScreenPosition = new Vector2();
+            public Vector2 seekPosition = new Vector2();
+            public Vector2 vanillaTypePosition = new Vector2();
+
+            public AttachedFields() { }
+        }
+
+        private static WeakTable<RoomCamera, AttachedFields> attachedFields = new WeakTable<RoomCamera, AttachedFields>(_ => new AttachedFields());
+        public static AttachedFields GetAttachedFields(this RoomCamera roomCamera) => attachedFields[roomCamera];
+
+        //
         // parameters
+        //
+
         public static int cameraType = 0; // 0: Position type, 1: Velocity type, 2: Vanilla type
         public static float innerCameraBoxX = 0.0f; // don't move camera when player is too close
         public static float innerCameraBoxY = 0.0f; // set default values in option menu
@@ -21,16 +48,16 @@ namespace SBCameraScroll
         public static float maxUpdateShortcut = 3f;
         public static List<string> blacklistedRooms = new List<string>();
 
-        // properties // vectors with size camera count
-        public static AbstractCreature?[] followAbstractCreature = new AbstractCreature?[0];
-        public static Vector2[] onScreenPosition = new Vector2[0];
-        public static Vector2[] lastOnScreenPosition = new Vector2[0];
-        public static Vector2[] vanillaTypePosition = new Vector2[0];
+        // // properties // vectors with size camera count
+        // public static AbstractCreature?[] followAbstractCreature = new AbstractCreature?[0];
+        // public static Vector2[] onScreenPosition = new Vector2[0];
+        // public static Vector2[] lastOnScreenPosition = new Vector2[0];
+        // public static Vector2[] vanillaTypePosition = new Vector2[0];
 
-        // properties // vectors with size camera count
-        public static bool[] isRoomBlacklisted = new bool[0];
-        public static bool[] useVanillaPositions = new bool[0]; // for vanilla type camera
-        public static bool[] isCentered = new bool[0];
+        // // properties // vectors with size camera count
+        // public static bool[] isRoomBlacklisted = new bool[0];
+        // public static bool[] useVanillaPositions = new bool[0]; // for vanilla type camera
+        // public static bool[] isCentered = new bool[0];
 
         internal static void OnEnable()
         {
@@ -39,7 +66,7 @@ namespace SBCameraScroll
             On.RoomCamera.ApplyPositionChange += RoomCamera_ApplyPositionChange;
             On.RoomCamera.DrawUpdate += RoomCamera_DrawUpdate;
 
-            On.RoomCamera.MoveCamera += RoomCamera_MoveCamera;
+            On.RoomCamera.MoveCamera_int += RoomCamera_MoveCamera;
             On.RoomCamera.MoveCamera2 += RoomCamera_MoveCamera2;
             On.RoomCamera.PixelColorAtCoordinate += RoomCamera_PixelColorAtCoordinate;
             On.RoomCamera.PositionCurrentlyVisible += RoomCamera_PositionCurrentlyVisible;
@@ -61,7 +88,9 @@ namespace SBCameraScroll
                 return;
             }
 
-            Vector2 textureOffset = AbstractRoomMod.textureOffset[roomCamera.room.abstractRoom.name];
+            // Vector2 textureOffset = AbstractRoomMod.textureOffset[roomCamera.room.abstractRoom.name];
+            Vector2 textureOffset = roomCamera.room.abstractRoom.GetAttachedFields().textureOffset;
+
             if (position.x >= roomCamera.levelGraphic.width - roomCamera.sSize.x + textureOffset.x) // stop position at room texture borders // probably works with room.PixelWidth - roomCamera.sSize.x / 2f instead as well
             {
                 position.x = roomCamera.levelGraphic.width - roomCamera.sSize.x + textureOffset.x;
@@ -83,10 +112,10 @@ namespace SBCameraScroll
 
         public static void ResetCameraPosition(RoomCamera roomCamera)
         {
-            int cameraNumber = roomCamera.cameraNumber;
-            followAbstractCreature[cameraNumber] = null; // do a smooth transition // this actually makes a difference for the vanilla type camera // otherwise the map input would immediately be processed
+            AttachedFields attachedFields = roomCamera.GetAttachedFields();
+            attachedFields.followAbstractCreatureID = null; // do a smooth transition // this actually makes a difference for the vanilla type camera // otherwise the map input would immediately be processed
 
-            if (isRoomBlacklisted[cameraNumber] || !RoomMod.CanScrollCamera(roomCamera.room) || roomCamera.voidSeaMode)
+            if (attachedFields.isRoomBlacklisted || !RoomMod.CanScrollCamera(roomCamera.room) || roomCamera.voidSeaMode)
             {
                 roomCamera.seekPos = roomCamera.CamPos(roomCamera.currentCameraPosition);
                 roomCamera.seekPos.x += roomCamera.hDisplace + 8f;
@@ -99,7 +128,7 @@ namespace SBCameraScroll
             }
 
             UpdateOnScreenPosition(roomCamera);
-            CheckBorders(roomCamera, ref onScreenPosition[cameraNumber]); // do not move past room boundaries
+            CheckBorders(roomCamera, ref attachedFields.onScreenPosition); // do not move past room boundaries
 
             if (cameraType == 2) // vanilla type
             {
@@ -112,15 +141,15 @@ namespace SBCameraScroll
                 roomCamera.lastPos = roomCamera.seekPos;
                 roomCamera.pos = roomCamera.seekPos;
 
-                vanillaTypePosition[cameraNumber] = onScreenPosition[cameraNumber];
-                useVanillaPositions[cameraNumber] = true;
-                isCentered[cameraNumber] = false;
+                attachedFields.vanillaTypePosition = attachedFields.onScreenPosition;
+                attachedFields.useVanillaPositions = true;
+                attachedFields.isCentered = false;
             }
             else
             {
                 // center camera on player
-                roomCamera.lastPos = onScreenPosition[cameraNumber];
-                roomCamera.pos = onScreenPosition[cameraNumber];
+                roomCamera.lastPos = attachedFields.onScreenPosition;
+                roomCamera.pos = attachedFields.onScreenPosition;
             }
         }
 
@@ -191,82 +220,82 @@ namespace SBCameraScroll
             }
 
             UpdateOnScreenPosition(roomCamera);
-            int cameraNumber = roomCamera.cameraNumber;
+            AttachedFields attachedFields = roomCamera.GetAttachedFields();
 
-            if (followAbstractCreature[cameraNumber] != roomCamera.followAbstractCreature) // smooth transition when switching cameras in the same room
+            if (attachedFields.followAbstractCreatureID != roomCamera.followAbstractCreature.ID) // smooth transition when switching cameras in the same room
             {
-                followAbstractCreature[cameraNumber] = null; // keep transition going even when switching back
-                if (cameraType == 2 && useVanillaPositions[cameraNumber])
+                attachedFields.followAbstractCreatureID = null; // keep transition going even when switching back
+                if (cameraType == 2 && attachedFields.useVanillaPositions)
                 {
                     SmoothCameraXY_Position(ref roomCamera.pos.x, roomCamera.lastPos.x, roomCamera.seekPos.x, smoothingFactorX, 0.0f);
                     SmoothCameraXY_Position(ref roomCamera.pos.y, roomCamera.lastPos.y, roomCamera.seekPos.y, smoothingFactorY, 0.0f);
                 }
                 else
                 {
-                    Vector2 targetPosition = onScreenPosition[cameraNumber];
+                    Vector2 targetPosition = attachedFields.onScreenPosition;
                     CheckBorders(roomCamera, ref targetPosition);
                     SmoothCameraXY_Position(ref roomCamera.pos.x, roomCamera.lastPos.x, targetPosition.x, smoothingFactorX, 0.0f);
                     SmoothCameraXY_Position(ref roomCamera.pos.y, roomCamera.lastPos.y, targetPosition.y, smoothingFactorY, 0.0f);
                 }
 
-                float minimumVelocityX = Mathf.Abs(onScreenPosition[cameraNumber].x - lastOnScreenPosition[cameraNumber].x) > 1f ? 10f : 1f;
-                float minimumVelocityY = Mathf.Abs(onScreenPosition[cameraNumber].y - lastOnScreenPosition[cameraNumber].y) > 1f ? 10f : 1f;
+                float minimumVelocityX = Mathf.Abs(attachedFields.onScreenPosition.x - attachedFields.lastOnScreenPosition.x) > 1f ? 10f : 1f;
+                float minimumVelocityY = Mathf.Abs(attachedFields.onScreenPosition.y - attachedFields.lastOnScreenPosition.y) > 1f ? 10f : 1f;
 
                 // stop transition earlier when player is moving
                 if (Math.Abs(roomCamera.pos.x - roomCamera.lastPos.x) <= minimumVelocityX && Math.Abs(roomCamera.pos.y - roomCamera.lastPos.y) <= minimumVelocityY)
                 {
-                    followAbstractCreature[cameraNumber] = roomCamera.followAbstractCreature;
-                    vanillaTypePosition[cameraNumber] = roomCamera.pos;
-                    isCentered[cameraNumber] = true; // for vanilla type only
+                    attachedFields.followAbstractCreatureID = roomCamera.followAbstractCreature.ID;
+                    attachedFields.vanillaTypePosition = roomCamera.pos;
+                    attachedFields.isCentered = true; // for vanilla type only
                 }
             }
             else if (cameraType == 0) // position type
             {
-                Vector2 borderPosition = onScreenPosition[cameraNumber];
+                Vector2 borderPosition = attachedFields.onScreenPosition;
                 CheckBorders(roomCamera, ref borderPosition);
 
-                if (borderPosition == onScreenPosition[cameraNumber])
+                if (borderPosition == attachedFields.onScreenPosition)
                 {
-                    SmoothCameraXY_Position(ref roomCamera.pos.x, roomCamera.lastPos.x, onScreenPosition[cameraNumber].x, smoothingFactorX, innerCameraBoxX);
-                    SmoothCameraXY_Position(ref roomCamera.pos.y, roomCamera.lastPos.y, onScreenPosition[cameraNumber].y, smoothingFactorY, innerCameraBoxY);
+                    SmoothCameraXY_Position(ref roomCamera.pos.x, roomCamera.lastPos.x, attachedFields.onScreenPosition.x, smoothingFactorX, innerCameraBoxX);
+                    SmoothCameraXY_Position(ref roomCamera.pos.y, roomCamera.lastPos.y, attachedFields.onScreenPosition.y, smoothingFactorY, innerCameraBoxY);
                 }
                 else // slow down at borders
                 {
-                    SmoothCameraXY_Position(ref roomCamera.pos.x, roomCamera.lastPos.x, borderPosition.x, smoothingFactorX, Math.Max(0, innerCameraBoxX - Math.Abs(borderPosition.x - onScreenPosition[cameraNumber].x)));
-                    SmoothCameraXY_Position(ref roomCamera.pos.y, roomCamera.lastPos.y, borderPosition.y, smoothingFactorY, Math.Max(0, innerCameraBoxY - Math.Abs(borderPosition.y - onScreenPosition[cameraNumber].y)));
+                    SmoothCameraXY_Position(ref roomCamera.pos.x, roomCamera.lastPos.x, borderPosition.x, smoothingFactorX, Math.Max(0, innerCameraBoxX - Math.Abs(borderPosition.x - attachedFields.onScreenPosition.x)));
+                    SmoothCameraXY_Position(ref roomCamera.pos.y, roomCamera.lastPos.y, borderPosition.y, smoothingFactorY, Math.Max(0, innerCameraBoxY - Math.Abs(borderPosition.y - attachedFields.onScreenPosition.y)));
                 }
                 CheckBorders(roomCamera, ref roomCamera.pos);
             }
             else if (cameraType == 1) // velocity type
             {
-                SmoothCameraXY_Velocity(ref roomCamera.pos.x, roomCamera.lastPos.x, onScreenPosition[cameraNumber].x, lastOnScreenPosition[cameraNumber].x, outerCameraBoxX, innerCameraBoxX);
-                SmoothCameraXY_Velocity(ref roomCamera.pos.y, roomCamera.lastPos.y, onScreenPosition[cameraNumber].y, lastOnScreenPosition[cameraNumber].y, outerCameraBoxY, innerCameraBoxY);
+                SmoothCameraXY_Velocity(ref roomCamera.pos.x, roomCamera.lastPos.x, attachedFields.onScreenPosition.x, attachedFields.lastOnScreenPosition.x, outerCameraBoxX, innerCameraBoxX);
+                SmoothCameraXY_Velocity(ref roomCamera.pos.y, roomCamera.lastPos.y, attachedFields.onScreenPosition.y, attachedFields.lastOnScreenPosition.y, outerCameraBoxY, innerCameraBoxY);
                 CheckBorders(roomCamera, ref roomCamera.pos);
             }
             else // vanilla type
             {
-                if (isCentered[cameraNumber] && (Math.Abs(onScreenPosition[cameraNumber].x - lastOnScreenPosition[cameraNumber].x) > 1f || Math.Abs(onScreenPosition[cameraNumber].y - lastOnScreenPosition[cameraNumber].y) > 1f))
+                if (attachedFields.isCentered && (Math.Abs(attachedFields.onScreenPosition.x - attachedFields.lastOnScreenPosition.x) > 1f || Math.Abs(attachedFields.onScreenPosition.y - attachedFields.lastOnScreenPosition.y) > 1f))
                 {
-                    isCentered[cameraNumber] = false;
+                    attachedFields.isCentered = false;
                 }
 
-                if (!useVanillaPositions[cameraNumber])
+                if (!attachedFields.useVanillaPositions)
                 {
-                    SmoothCameraXY_Vanilla(ref roomCamera.pos.x, ref roomCamera.lastPos.x, ref vanillaTypePosition[cameraNumber].x, onScreenPosition[cameraNumber].x, roomCamera.sSize.x / 2f - outerCameraBoxX, roomCamera.sSize.x / 2f - innerCameraBoxX);
-                    SmoothCameraXY_Vanilla(ref roomCamera.pos.y, ref roomCamera.lastPos.y, ref vanillaTypePosition[cameraNumber].y, onScreenPosition[cameraNumber].y, roomCamera.sSize.y / 2f - outerCameraBoxY, roomCamera.sSize.y / 2f - innerCameraBoxY);
+                    SmoothCameraXY_Vanilla(ref roomCamera.pos.x, ref roomCamera.lastPos.x, ref attachedFields.vanillaTypePosition.x, attachedFields.onScreenPosition.x, roomCamera.sSize.x / 2f - outerCameraBoxX, roomCamera.sSize.x / 2f - innerCameraBoxX);
+                    SmoothCameraXY_Vanilla(ref roomCamera.pos.y, ref roomCamera.lastPos.y, ref attachedFields.vanillaTypePosition.y, attachedFields.onScreenPosition.y, roomCamera.sSize.y / 2f - outerCameraBoxY, roomCamera.sSize.y / 2f - innerCameraBoxY);
 
-                    CheckBorders(roomCamera, ref vanillaTypePosition[cameraNumber]);
+                    CheckBorders(roomCamera, ref attachedFields.vanillaTypePosition);
                     CheckBorders(roomCamera, ref roomCamera.lastPos);
                     CheckBorders(roomCamera, ref roomCamera.pos);
                 }
 
                 if (roomCamera.followAbstractCreature?.realizedCreature is Player player_ && player_.input[0].mp && !player_.input[1].mp)
                 {
-                    if (useVanillaPositions[cameraNumber] || isCentered[cameraNumber])
+                    if (attachedFields.useVanillaPositions || attachedFields.isCentered)
                     {
-                        useVanillaPositions[cameraNumber] = !useVanillaPositions[cameraNumber];
+                        attachedFields.useVanillaPositions = !attachedFields.useVanillaPositions;
                     }
-                    followAbstractCreature[cameraNumber] = null; // start a smooth transition
+                    attachedFields.followAbstractCreatureID = null; // start a smooth transition
                 }
             }
         }
@@ -296,9 +325,9 @@ namespace SBCameraScroll
                     position.y += Mathf.Min(player.bodyChunks[0].pos.y, player.bodyChunks[1].pos.y);
                 }
 
-                int cameraNumber = roomCamera.cameraNumber;
-                lastOnScreenPosition[cameraNumber] = onScreenPosition[cameraNumber];
-                onScreenPosition[cameraNumber] = position;
+                AttachedFields attachedFields = roomCamera.GetAttachedFields();
+                attachedFields.lastOnScreenPosition = attachedFields.onScreenPosition;
+                attachedFields.onScreenPosition = position;
             }
         }
 
@@ -325,7 +354,7 @@ namespace SBCameraScroll
 
         private static Vector2 RoomCamera_ApplyDepth(On.RoomCamera.orig_ApplyDepth orig, RoomCamera roomCamera, Vector2 ps, float depth)
         {
-            if (isRoomBlacklisted[roomCamera.cameraNumber] || roomCamera.voidSeaMode)
+            if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode)
             {
                 return orig(roomCamera, ps, depth);
             }
@@ -349,6 +378,7 @@ namespace SBCameraScroll
         private static void RoomCamera_ApplyPositionChange(On.RoomCamera.orig_ApplyPositionChange orig, RoomCamera roomCamera)
         {
             orig(roomCamera); // updates currentCameraPosition // resizes the levelTexture automatically (and the corresponding atlas texture) // what is the purpose of an atlas?
+            ResetCameraPosition(roomCamera); // uses currentCameraPosition
 
             // resizes levelGraphic such that the levelTexture fits and is not squashed
             // holy moly don't use roomCamera.www.texture.width, etc. // "WWW.texture property allocates a new Texture2D every time"
@@ -358,19 +388,21 @@ namespace SBCameraScroll
                 roomCamera.levelGraphic.height = roomCamera.levelTexture.height;
             }
 
-            isRoomBlacklisted[roomCamera.cameraNumber] = roomCamera.room == null || blacklistedRooms.Contains(roomCamera.room.abstractRoom.name);
-            ResetCameraPosition(roomCamera); // uses currentCameraPosition
-
-            if (isRoomBlacklisted[roomCamera.cameraNumber])
+            if (roomCamera.room == null || blacklistedRooms.Contains(roomCamera.room.abstractRoom.name))
             {
                 Debug.Log("SBCameraScroll: The current room is blacklisted.");
+                roomCamera.GetAttachedFields().isRoomBlacklisted = true;
+            }
+            else
+            {
+                roomCamera.GetAttachedFields().isRoomBlacklisted = false;
             }
         }
 
         // updates all the visual stuff // calls UpdateScreen() // mainly adepts the camera texture to the current (smoothed) position
         private static void RoomCamera_DrawUpdate(On.RoomCamera.orig_DrawUpdate orig, RoomCamera roomCamera, float timeStacker, float timeSpeed)
         {
-            if (isRoomBlacklisted[roomCamera.cameraNumber] || !RoomMod.CanScrollCamera(roomCamera.room) || roomCamera.voidSeaMode)
+            if (roomCamera.GetAttachedFields().isRoomBlacklisted || !RoomMod.CanScrollCamera(roomCamera.room) || roomCamera.voidSeaMode)
             {
                 orig(roomCamera, timeStacker, timeSpeed);
                 return;
@@ -434,7 +466,9 @@ namespace SBCameraScroll
                 {
                     // not sure what this does // seems to visually darken stuff (apply shader or something) when offscreen
                     // I think that textureOffset is only needed(?) for compatibility reasons with room.cameraPositions
-                    Vector2 textureOffset = AbstractRoomMod.textureOffset[room.abstractRoom.name];
+                    // Vector2 textureOffset = AbstractRoomMod.textureOffset[room.abstractRoom.name];
+                    Vector2 textureOffset = roomCamera.room.abstractRoom.GetAttachedFields().textureOffset;
+
                     roomCamera.levelGraphic.SetPosition(textureOffset - cameraPosition);
                     roomCamera.backgroundGraphic.SetPosition(textureOffset - cameraPosition);
                 }
@@ -528,14 +562,21 @@ namespace SBCameraScroll
             }
         }
 
-        private static void RoomCamera_MoveCamera(On.RoomCamera.orig_MoveCamera orig, RoomCamera roomCamera, int camPos)
+        // only called when moving camera positions inside the same room // if the ID changed then do a smooth transition instead // the logic for that is done in UpdateCameraPosition()
+        private static void RoomCamera_MoveCamera(On.RoomCamera.orig_MoveCamera_int orig, RoomCamera roomCamera, int camPos)
         {
-            if (isRoomBlacklisted[roomCamera.cameraNumber] || roomCamera.voidSeaMode)
+            AttachedFields attachedFields = roomCamera.GetAttachedFields();
+            if (attachedFields.isRoomBlacklisted || roomCamera.voidSeaMode || roomCamera.followAbstractCreature == null)
             {
                 orig(roomCamera, camPos);
                 return;
             }
+
             roomCamera.currentCameraPosition = camPos;
+            if (attachedFields.useVanillaPositions && attachedFields.followAbstractCreatureID == roomCamera.followAbstractCreature.ID) // camera moves otherwise after vanilla transition since variables are not reset // ignore reset during a smooth transition
+            {
+                ResetCameraPosition(roomCamera);
+            }
         }
 
         // preloads textures // RoomCamera.ApplyPositionChange() is called when they are ready
@@ -569,7 +610,7 @@ namespace SBCameraScroll
 
         private static Color RoomCamera_PixelColorAtCoordinate(On.RoomCamera.orig_PixelColorAtCoordinate orig, RoomCamera roomCamera, Vector2 coord)
         {
-            if (isRoomBlacklisted[roomCamera.cameraNumber] || roomCamera.voidSeaMode)
+            if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode)
             {
                 return orig(roomCamera, coord);
             }
@@ -581,7 +622,7 @@ namespace SBCameraScroll
         // use roomCamera.pos as reference instead of camPos(..) // seems to be important for unloading graphics and maybe other things
         private static bool RoomCamera_PositionCurrentlyVisible(On.RoomCamera.orig_PositionCurrentlyVisible orig, RoomCamera roomCamera, Vector2 testPos, float margin, bool widescreen)
         {
-            if (isRoomBlacklisted[roomCamera.cameraNumber] || roomCamera.voidSeaMode)
+            if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode)
             {
                 return orig(roomCamera, testPos, margin, widescreen);
             }
@@ -590,7 +631,7 @@ namespace SBCameraScroll
 
         private static bool RoomCamera_PositionVisibleInNextScreen(On.RoomCamera.orig_PositionVisibleInNextScreen orig, RoomCamera roomCamera, Vector2 testPos, float margin, bool widescreen)
         {
-            if (isRoomBlacklisted[roomCamera.cameraNumber] || roomCamera.voidSeaMode)
+            if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode)
             {
                 return orig(roomCamera, testPos, margin, widescreen);
             }
@@ -600,7 +641,7 @@ namespace SBCameraScroll
         private static void RoomCamera_PreLoadTexture(On.RoomCamera.orig_PreLoadTexture orig, RoomCamera roomCamera, Room room, int camPos)
         {
             //this function is only called when moving inside rooms but not between them 
-            if (isRoomBlacklisted[roomCamera.cameraNumber] || roomCamera.voidSeaMode)
+            if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode)
             {
                 orig(roomCamera, room, camPos);
             }
@@ -609,7 +650,7 @@ namespace SBCameraScroll
         private static void RoomCamera_ScreenMovement(On.RoomCamera.orig_ScreenMovement orig, RoomCamera roomCamera, Vector2? sourcePos, Vector2 bump, float shake)
         {
             // should remove effects on camera like camera shakes caused by other creatures // feels weird otherwise
-            if (isRoomBlacklisted[roomCamera.cameraNumber] || roomCamera.voidSeaMode)
+            if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode)
             {
                 orig(roomCamera, sourcePos, bump, shake);
             }
@@ -619,7 +660,7 @@ namespace SBCameraScroll
         private static void RoomCamera_Update(On.RoomCamera.orig_Update orig, RoomCamera roomCamera)
         {
             orig(roomCamera); // updates isRoomBlacklisted
-            if (!isRoomBlacklisted[roomCamera.cameraNumber] && RoomMod.CanScrollCamera(roomCamera.room) && !roomCamera.voidSeaMode) // don't smooth the camera position in the void sea // treat void sea as being blacklisted
+            if (!roomCamera.GetAttachedFields().isRoomBlacklisted && RoomMod.CanScrollCamera(roomCamera.room) && !roomCamera.voidSeaMode) // don't smooth the camera position in the void sea // treat void sea as being blacklisted
             {
                 UpdateCameraPosition(roomCamera);
             }

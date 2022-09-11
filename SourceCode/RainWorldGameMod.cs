@@ -18,20 +18,20 @@ namespace SBCameraScroll
         {
             Debug.Log("SBCameraScroll: Initialize variables.");
 
-            AbstractRoomMod.textureOffset.Clear(); // put before orig or it freezes
-            WormGrassMod.cosmeticWormsOnTile.Clear();
+            // AbstractRoomMod.textureOffset.Clear(); // put before orig or it freezes
+            WormGrassMod.cosmeticWormsOnTiles.Clear();
 
             orig(rainWorldGame, manager);
             int cameraCount = rainWorldGame.cameras.Length;
 
-            RoomCameraMod.followAbstractCreature = new AbstractCreature?[cameraCount];
-            RoomCameraMod.lastOnScreenPosition = new Vector2[cameraCount];
-            RoomCameraMod.onScreenPosition = new Vector2[cameraCount];
-            RoomCameraMod.vanillaTypePosition = new Vector2[cameraCount];
+            // RoomCameraMod.followAbstractCreature = new AbstractCreature?[cameraCount];
+            // RoomCameraMod.lastOnScreenPosition = new Vector2[cameraCount];
+            // RoomCameraMod.onScreenPosition = new Vector2[cameraCount];
+            // RoomCameraMod.vanillaTypePosition = new Vector2[cameraCount];
 
-            RoomCameraMod.isRoomBlacklisted = new bool[cameraCount];
-            RoomCameraMod.useVanillaPositions = new bool[cameraCount];
-            RoomCameraMod.isCentered = new bool[cameraCount];
+            // RoomCameraMod.isRoomBlacklisted = new bool[cameraCount];
+            // RoomCameraMod.useVanillaPositions = new bool[cameraCount];
+            // RoomCameraMod.isCentered = new bool[cameraCount];
 
             Debug.Log("SBCameraScroll: cameraCount " + cameraCount);
         }
@@ -42,17 +42,17 @@ namespace SBCameraScroll
 
             orig(game);
 
-            RoomCameraMod.followAbstractCreature = new AbstractCreature?[0];
-            RoomCameraMod.lastOnScreenPosition = new Vector2[0];
-            RoomCameraMod.onScreenPosition = new Vector2[0];
-            RoomCameraMod.vanillaTypePosition = new Vector2[0];
+            // RoomCameraMod.followAbstractCreature = new AbstractCreature?[0];
+            // RoomCameraMod.lastOnScreenPosition = new Vector2[0];
+            // RoomCameraMod.onScreenPosition = new Vector2[0];
+            // RoomCameraMod.vanillaTypePosition = new Vector2[0];
 
-            RoomCameraMod.isRoomBlacklisted = new bool[0];
-            RoomCameraMod.useVanillaPositions = new bool[0];
-            RoomCameraMod.isCentered = new bool[0];
+            // RoomCameraMod.isRoomBlacklisted = new bool[0];
+            // RoomCameraMod.useVanillaPositions = new bool[0];
+            // RoomCameraMod.isCentered = new bool[0];
 
-            AbstractRoomMod.textureOffset.Clear();
-            WormGrassMod.cosmeticWormsOnTile.Clear();
+            // AbstractRoomMod.textureOffset.Clear();
+            WormGrassMod.cosmeticWormsOnTiles.Clear();
         }
     }
 }
