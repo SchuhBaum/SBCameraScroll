@@ -84,23 +84,32 @@ namespace SBCameraScroll
                 return;
             }
 
+            Vector2 screenSize = roomCamera.sSize;
             Vector2 textureOffset = roomCamera.room.abstractRoom.GetAttachedFields().textureOffset;
-            if (position.x >= roomCamera.levelGraphic.width - roomCamera.sSize.x + textureOffset.x) // stop position at room texture borders // probably works with room.PixelWidth - roomCamera.sSize.x / 2f instead as well
-            {
-                position.x = roomCamera.levelGraphic.width - roomCamera.sSize.x + textureOffset.x;
-            }
-            else if (position.x <= textureOffset.x)
-            {
-                position.x = textureOffset.x;
-            }
 
-            if (position.y >= roomCamera.levelGraphic.height - roomCamera.sSize.y + textureOffset.y - 18f) // not sure why I have to decrease positionY by a constant // I picked 18f bc roomCamera.seekPos.y gets changed by 18f in Update() // seems to work , i.e. I don't see black bars
+            if (MainMod.isSplitScreenModEnabled)
             {
-                position.y = roomCamera.levelGraphic.height - roomCamera.sSize.y + textureOffset.y - 18f;
+                Vector2 screenOffset = GetScreenOffset(screenSize); // half of the camera screen is not visible // the other half is centered // let the non-visible part move past room borders
+                position.x = Mathf.Clamp(position.x, textureOffset.x - screenOffset.x, textureOffset.x + screenOffset.x + roomCamera.levelGraphic.width - screenSize.x);
+                position.y = Mathf.Clamp(position.y, textureOffset.y - screenOffset.y, textureOffset.y + screenOffset.y + roomCamera.levelGraphic.height - screenSize.y - 18f);
             }
-            else if (position.y <= textureOffset.y)
+            else
             {
-                position.y = textureOffset.y;
+                position.x = Mathf.Clamp(position.x, textureOffset.x, roomCamera.levelGraphic.width - screenSize.x + textureOffset.x); // stop position at room texture borders // probably works with room.PixelWidth - roomCamera.sSize.x / 2f instead as well
+                position.y = Mathf.Clamp(position.y, textureOffset.y, roomCamera.levelGraphic.height - screenSize.y + textureOffset.y - 18f); // not sure why I have to decrease positionY by a constant // I picked 18f bc roomCamera.seekPos.y gets changed by 18f in Update() // seems to work , i.e. I don't see black bars
+            }
+        }
+
+        public static Vector2 GetScreenOffset(Vector2 screenSize) // for SplitScreenMod
+        {
+            switch (SplitScreenMod.SplitScreenMod.CurrentSplitMode)
+            {
+                case SplitScreenMod.SplitScreenMod.SplitMode.SplitVertical:
+                    return new Vector2(0.25f * screenSize.x, 0.0f);
+                case SplitScreenMod.SplitScreenMod.SplitMode.SplitHorizontal:
+                    return new Vector2(0.0f, 0.25f * screenSize.y);
+                default:
+                    return new Vector2();
             }
         }
 
