@@ -85,7 +85,7 @@ namespace SBCameraScroll
             }
 
             Vector2 screenSize = roomCamera.sSize;
-            Vector2 textureOffset = roomCamera.room.abstractRoom.GetAttachedFields().textureOffset;
+            Vector2 textureOffset = roomCamera.room.abstractRoom.GetAttachedFields().textureOffset; // regionGate's texture offset might be unitialized => RegionGateMod
 
             if (MainMod.isSplitScreenModEnabled)
             {

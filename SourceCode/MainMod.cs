@@ -119,10 +119,11 @@ namespace SBCameraScroll
             GoldFlakesMod.OnEnable();
             RainWorldGameMod.OnEnable();
 
+            RegionGateMod.OnEnable();
             RoomCameraMod.OnEnable();
             RoomMod.OnEnable();
-            SuperStructureProjectorMod.OnEnable();
 
+            SuperStructureProjectorMod.OnEnable();
             WorldMod.OnEnable();
             WormGrassMod.OnEnable();
 
