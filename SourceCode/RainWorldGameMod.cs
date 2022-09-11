@@ -18,7 +18,7 @@ namespace SBCameraScroll
         {
             Debug.Log("SBCameraScroll: Initialize variables.");
 
-            AbstractRoomMod.textureOffset.Clear(); // put before orig or it freezes
+            // AbstractRoomMod.textureOffset.Clear(); // put before orig or it freezes
             WormGrassMod.cosmeticWormsOnTiles.Clear();
 
             orig(rainWorldGame, manager);
@@ -51,7 +51,7 @@ namespace SBCameraScroll
             RoomCameraMod.useVanillaPositions = new bool[0];
             RoomCameraMod.isCentered = new bool[0];
 
-            AbstractRoomMod.textureOffset.Clear();
+            // AbstractRoomMod.textureOffset.Clear();
             WormGrassMod.cosmeticWormsOnTiles.Clear();
         }
     }

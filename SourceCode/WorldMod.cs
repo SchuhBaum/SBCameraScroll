@@ -26,7 +26,7 @@ namespace SBCameraScroll
                 Debug.Log("SBCameraScroll: Check rooms for missing merged textures.");
                 foreach (AbstractRoom abstractRoom in abstractRoomsList)
                 {
-                    AbstractRoomMod.MergeCameraTextures(abstractRoom.name, world.regionState?.regionName); // regionState can be null (at least in arena)
+                    AbstractRoomMod.MergeCameraTextures(abstractRoom, world.regionState?.regionName); // regionState can be null (at least in arena)
                 }
             }
         }

@@ -61,7 +61,7 @@ namespace SBCameraScroll
                 return;
             }
 
-            Vector2 textureOffset = AbstractRoomMod.textureOffset[roomCamera.room.abstractRoom.name];
+            Vector2 textureOffset = roomCamera.room.abstractRoom.GetAttachedFields().textureOffset;
             if (position.x >= roomCamera.levelGraphic.width - roomCamera.sSize.x + textureOffset.x) // stop position at room texture borders // probably works with room.PixelWidth - roomCamera.sSize.x / 2f instead as well
             {
                 position.x = roomCamera.levelGraphic.width - roomCamera.sSize.x + textureOffset.x;
@@ -434,7 +434,7 @@ namespace SBCameraScroll
                 {
                     // not sure what this does // seems to visually darken stuff (apply shader or something) when offscreen
                     // I think that textureOffset is only needed(?) for compatibility reasons with room.cameraPositions
-                    Vector2 textureOffset = AbstractRoomMod.textureOffset[room.abstractRoom.name];
+                    Vector2 textureOffset = room.abstractRoom.GetAttachedFields().textureOffset;
                     roomCamera.levelGraphic.SetPosition(textureOffset - cameraPosition);
                     roomCamera.backgroundGraphic.SetPosition(textureOffset - cameraPosition);
                 }

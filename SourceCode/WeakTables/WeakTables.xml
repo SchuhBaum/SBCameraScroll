@@ -1,0 +1,101 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>WeakTables</name>
+    </assembly>
+    <members>
+        <member name="T:WeakTables.Collections.ConditionalWeakTable`2">
+            <summary>
+            Holds weak handles to instances of <typeparamref name="TKey"/> to simulate fields of type <typeparamref name="TValue"/>.
+            <para/> Due to the restrictions of the .NET Framework 3.5 CLR, if a value contains a reference to its key in any way, it will never be garbage collected.
+            </summary>
+            <typeparam name="TKey">The type to which the field is attached.</typeparam>
+            <typeparam name="TValue">The field's type. This must be a reference type.</typeparam>
+        </member>
+        <member name="T:WeakTables.LeakyFieldException">
+            <summary>
+            The exception that is thrown when a weak table's value can reference its key, causing a memory leak.
+            </summary>
+        </member>
+        <member name="M:WeakTables.LeakyFieldException.#ctor(System.String,System.Collections.Generic.IEnumerable{System.Reflection.FieldInfo})">
+            <inheritdoc/>
+        </member>
+        <member name="P:WeakTables.LeakyFieldException.Fields">
+            <summary>
+            The fields that can hold a leaky reference.
+            </summary>
+        </member>
+        <member name="T:WeakTables.WeakRef`1">
+            <summary>
+            Represents a reference to an instance of <typeparamref name="T"/> that can be garbage collected.
+            </summary>
+            <typeparam name="T">The type of the object referenced.</typeparam>
+        </member>
+        <member name="M:WeakTables.WeakRef`1.#ctor(`0)">
+            <summary>
+            Initializes a new instance of the <see cref="T:WeakTables.WeakRef`1"/> class that references the specified object.
+            </summary>
+            <param name="target">The object referenced.</param>
+        </member>
+        <member name="M:WeakTables.WeakRef`1.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:WeakTables.WeakRef`1"/> class that references nothing.
+            </summary>
+        </member>
+        <member name="M:WeakTables.WeakRef`1.TryGetTarget(`0@)">
+            <summary>
+            Tries to retrieve the target object that is referenced by the current <see cref="T:WeakTables.WeakRef`1"/> object.
+            </summary>
+            <param name="value">The target object, or null if no object is targeted.</param>
+            <returns>True if the target was retrieved; otherwise, false.</returns>
+        </member>
+        <member name="M:WeakTables.WeakRef`1.Finalize">
+            <inheritdoc/>
+        </member>
+        <member name="T:WeakTables.WeakTable`2">
+            <summary>
+            Attaches data of type <typeparamref name="TData"/> to instances of <typeparamref name="T"/> while avoiding memory leaks.
+            </summary>
+            <typeparam name="T">The type to attach data to.</typeparam>
+            <typeparam name="TData">The data to attach to <typeparamref name="T"/> instances.</typeparam>
+        </member>
+        <member name="T:WeakTables.WeakTable`2.FactoryCallback">
+            <summary>
+            A delegate used to get new <typeparamref name="TData"/> instances.
+            </summary>
+            <param name="instance">The instance that the data will be attached to.</param>
+            <returns>A new instance of <typeparamref name="TData"/>.</returns>
+        </member>
+        <member name="M:WeakTables.WeakTable`2.#ctor(WeakTables.WeakTable{`0,`1}.FactoryCallback)">
+            <summary>
+            Initializes a new <see cref="T:WeakTables.WeakTable`2"/> instance.
+            </summary>
+            <param name="factory">A function that returns a new <typeparamref name="TData"/> instance given its associated <typeparamref name="T"/> instance.</param>
+            <exception cref="T:WeakTables.LeakyFieldException"/>
+        </member>
+        <member name="M:WeakTables.WeakTable`2.#ctor(WeakTables.WeakTable{`0,`1}.FactoryCallback,System.Boolean)">
+            <summary>
+            Initializes a new <see cref="T:WeakTables.WeakTable`2"/> instance.
+            </summary>
+            <param name="factory">A function that returns a new <typeparamref name="TData"/> instance given its associated <typeparamref name="T"/> instance.</param>
+            <param name="verify">If <see langword="false"/>, the instance will be initialized without checking for possible memory leaks.</param>
+            <exception cref="T:WeakTables.LeakyFieldException"/>
+        </member>
+        <member name="P:WeakTables.WeakTable`2.Item(`0)">
+            <summary>
+            Gets the data associated with <paramref name="instance"/>.
+            </summary>
+            <param name="instance">The instance whose data to fetch.</param>
+        </member>
+        <member name="T:System.Diagnostics.CodeAnalysis.MaybeNullWhenAttribute">
+            <summary>Specifies that when a method returns <see cref="P:System.Diagnostics.CodeAnalysis.MaybeNullWhenAttribute.ReturnValue"/>, the parameter may be null even if the corresponding type disallows it.</summary>
+        </member>
+        <member name="M:System.Diagnostics.CodeAnalysis.MaybeNullWhenAttribute.#ctor(System.Boolean)">
+            <summary>Initializes the attribute with the specified return value condition.</summary>
+            <param name="returnValue">The return value condition. If the method returns this value, the associated parameter may be null.</param>
+        </member>
+        <member name="P:System.Diagnostics.CodeAnalysis.MaybeNullWhenAttribute.ReturnValue">
+            <summary>Gets the return value condition.</summary>
+        </member>
+    </members>
+</doc>

@@ -1,15 +1,34 @@
-using RWCustom;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using RWCustom;
 using UnityEngine;
+using WeakTables;
 
 namespace SBCameraScroll
 {
     public static class AbstractRoomMod
     {
-        public static readonly Dictionary<string, Vector2> textureOffset = new Dictionary<string, Vector2>();
+        //
+        // variables / WeakTables
+        //
+
+        public sealed class AttachedFields
+        {
+            public bool isInitialized = false;
+            public Vector2 textureOffset = new Vector2();
+
+            public AttachedFields() { }
+        }
+
+        private static WeakTable<AbstractRoom, AttachedFields> attachedFields = new WeakTable<AbstractRoom, AttachedFields>(_ => new AttachedFields());
+        public static AttachedFields GetAttachedFields(this AbstractRoom abstractRoom) => attachedFields[abstractRoom];
+
+        //
+        //
+        //
+
         public static readonly Dictionary<string, Vector2> textureOffsetModifier = new Dictionary<string, Vector2>()
         {
             ["SB_J03"] = new Vector2(300f, 0.0f)
@@ -149,13 +168,14 @@ namespace SBCameraScroll
             return cameraPositions;
         }
 
-        public static void MergeCameraTextures(string? roomName, string? regionName, Vector2[]? cameraPositions = null)
+        public static void MergeCameraTextures(AbstractRoom? abstractRoom, string? regionName, Vector2[]? cameraPositions = null)
         {
-            if (roomName == null || regionName == null || RoomCameraMod.blacklistedRooms.Contains(roomName))
+            if (abstractRoom == null || regionName == null || RoomCameraMod.blacklistedRooms.Contains(abstractRoom.name))
             {
                 return;
             }
 
+            string roomName = abstractRoom.name;
             string? customRegionsRelativeRoomsPath = null;
             string vanillaRelativeRoomsPath = GetRelativeRoomsPath(regionName);
 
@@ -178,9 +198,9 @@ namespace SBCameraScroll
             }
 
             CheckCameraPositions(ref cameraPositions);
-            UpdateTextureOffset(roomName, cameraPositions);
+            UpdateTextureOffset(abstractRoom, cameraPositions);
 
-            Vector2 baseTextureOffset = textureOffset[roomName];
+            Vector2 baseTextureOffset = abstractRoom.GetAttachedFields().textureOffset;
             int maxWidth = 0;
             int maxHeight = 0;
 
@@ -204,7 +224,7 @@ namespace SBCameraScroll
                 maxWidth = Mathf.Min(maxWidth, 10000); // 10000 seems to be the limit in Unity v4.
                 maxHeight = Mathf.Min(maxHeight, 10000);
             }
-                
+
             if (textureOffsetModifier.ContainsKey(roomName))
             {
                 Debug.Log("SBCameraScroll: Cutting edges by modifying the texture offset.");
@@ -280,35 +300,34 @@ namespace SBCameraScroll
             cameraTexture.Resize(1, 1);
         }
 
-        public static void UpdateTextureOffset(string roomName, Vector2[]? cameraPositions)
+        public static void UpdateTextureOffset(AbstractRoom abstractRoom, Vector2[]? cameraPositions)
         {
-            if (textureOffset.ContainsKey(roomName))
+            AttachedFields attachedFields = abstractRoom.GetAttachedFields();
+            if (attachedFields.isInitialized)
             {
                 return;
             }
 
             if (cameraPositions == null || cameraPositions.Length == 0)
             {
-                if (!textureOffset.ContainsKey(roomName))
-                {
-                    Debug.Log("SBCameraScroll: Failed to initiate textureOffset properly. Setting as new Vector2().");
-                    textureOffset[roomName] = new Vector2();
-                }
+                Debug.Log("SBCameraScroll: Failed to initiate textureOffset properly. Setting as new Vector2()."); // automatically set
+                attachedFields.isInitialized = true;
                 return;
             }
 
-            Vector2 _textureOffset = cameraPositions[0];
+            attachedFields.textureOffset = cameraPositions[0];
             foreach (Vector2 cameraPosition in cameraPositions)
             {
-                _textureOffset.x = Mathf.Min(_textureOffset.x, cameraPosition.x);
-                _textureOffset.y = Mathf.Min(_textureOffset.y, cameraPosition.y);
+                attachedFields.textureOffset.x = Mathf.Min(attachedFields.textureOffset.x, cameraPosition.x);
+                attachedFields.textureOffset.y = Mathf.Min(attachedFields.textureOffset.y, cameraPosition.y);
             }
 
+            string roomName = abstractRoom.name;
             if (textureOffsetModifier.ContainsKey(roomName))
             {
-                _textureOffset += textureOffsetModifier[roomName];
+                attachedFields.textureOffset += textureOffsetModifier[roomName];
             }
-            textureOffset[roomName] = _textureOffset; // writing is okay // only reading needs a ContainsKey() check
+            attachedFields.isInitialized = true;
         }
     }
 }
