@@ -163,26 +163,26 @@ namespace SBCameraScroll
         //     }
         // }
 
-        public static void SmoothCameraXY_Vanilla(ref float cameraPosition, ref float lastCameraPosition, ref float vanillaTypePosition, float onScreenPosition, float outerCameraBox, float innerCameraBox)
-        {
-            float direction = Mathf.Sign(onScreenPosition - vanillaTypePosition);
-            float distance = direction * (onScreenPosition - vanillaTypePosition);
+        // public static void SmoothCameraXY_Vanilla(ref float cameraPosition, ref float lastCameraPosition, ref float vanillaTypePosition, float onScreenPosition, float outerCameraBox, float innerCameraBox)
+        // {
+        //     float direction = Mathf.Sign(onScreenPosition - vanillaTypePosition);
+        //     float distance = direction * (onScreenPosition - vanillaTypePosition);
 
-            if (distance > outerCameraBox)
-            {
-                vanillaTypePosition += direction * (distance + innerCameraBox); // new distance is equal to innerCameraBox
-                lastCameraPosition = vanillaTypePosition; // prevent transition with in-between frames
-                cameraPosition = vanillaTypePosition;
-            }
-            else if (distance > innerCameraBox)
-            {
-                cameraPosition = Mathf.Lerp(vanillaTypePosition, vanillaTypePosition + direction * (outerCameraBox - innerCameraBox), (distance - innerCameraBox) / (outerCameraBox - innerCameraBox));
-            }
-            else
-            {
-                cameraPosition = vanillaTypePosition;
-            }
-        }
+        //     if (distance > outerCameraBox)
+        //     {
+        //         vanillaTypePosition += direction * (distance + innerCameraBox); // new distance is equal to innerCameraBox
+        //         lastCameraPosition = vanillaTypePosition; // prevent transition with in-between frames
+        //         cameraPosition = vanillaTypePosition;
+        //     }
+        //     else if (distance > innerCameraBox)
+        //     {
+        //         cameraPosition = Mathf.Lerp(vanillaTypePosition, vanillaTypePosition + direction * (outerCameraBox - innerCameraBox), (distance - innerCameraBox) / (outerCameraBox - innerCameraBox));
+        //     }
+        //     else
+        //     {
+        //         cameraPosition = vanillaTypePosition;
+        //     }
+        // }
 
         public static void SmoothCameraXY_Velocity(ref float cameraPosition, float lastCameraPosition, float onScreenPosition, float lastOnScreenPosition, float outerCameraBox, float innerCameraBox)
         {
@@ -236,20 +236,15 @@ namespace SBCameraScroll
                     case CameraType.Position:
                         UpdateCamera_PositionType(roomCamera, attachedFields); // don't skip smooth transition if part or set followAbstractCreatureID here
                         break;
-                    case CameraType.Vanilla:
-                        if (attachedFields.isCentered && (Math.Abs(attachedFields.onScreenPosition.x - attachedFields.lastOnScreenPosition.x) > 1f || Math.Abs(attachedFields.onScreenPosition.y - attachedFields.lastOnScreenPosition.y) > 1f))
+                    case CameraType.Vanilla: // put after transition or map input gets registered immediately
+                        if (attachedFields.isCentered && (Mathf.Abs(attachedFields.onScreenPosition.x - attachedFields.lastOnScreenPosition.x) > 1f || Mathf.Abs(attachedFields.onScreenPosition.y - attachedFields.lastOnScreenPosition.y) > 1f))
                         {
                             attachedFields.isCentered = false;
                         }
 
                         if (!attachedFields.useVanillaPositions)
                         {
-                            SmoothCameraXY_Vanilla(ref roomCamera.pos.x, ref roomCamera.lastPos.x, ref attachedFields.vanillaTypePosition.x, attachedFields.onScreenPosition.x, roomCamera.sSize.x / 2f - outerCameraBoxX, roomCamera.sSize.x / 2f - innerCameraBoxX);
-                            SmoothCameraXY_Vanilla(ref roomCamera.pos.y, ref roomCamera.lastPos.y, ref attachedFields.vanillaTypePosition.y, attachedFields.onScreenPosition.y, roomCamera.sSize.y / 2f - outerCameraBoxY, roomCamera.sSize.y / 2f - innerCameraBoxY);
-
-                            CheckBorders(roomCamera, ref attachedFields.vanillaTypePosition);
-                            CheckBorders(roomCamera, ref roomCamera.lastPos);
-                            CheckBorders(roomCamera, ref roomCamera.pos);
+                            UpdateCamera_VanillaType(roomCamera, attachedFields);
                         }
 
                         if (roomCamera.followAbstractCreature?.realizedCreature is Player player_ && player_.input[0].mp && !player_.input[1].mp)
@@ -330,6 +325,63 @@ namespace SBCameraScroll
             }
         }
 
+        public static void UpdateCamera_VanillaType(RoomCamera roomCamera, AttachedFields attachedFields)
+        {
+            Vector2 sSize_2 = roomCamera.sSize / 2f;
+
+            float directionX = Mathf.Sign(attachedFields.onScreenPosition.x - attachedFields.vanillaTypePosition.x);
+            float distanceX = directionX * (attachedFields.onScreenPosition.x - attachedFields.vanillaTypePosition.x);
+            float leanStartDistanceX = 2f * Mathf.Abs(roomCamera.followCreatureInputForward.x);
+
+            if (distanceX > sSize_2.x - outerCameraBoxX)
+            {
+                // I cannot use ResetCameraPosition() because it sets vanillaTypePosition to onScreenPosition and useVanillaPositions is set to true
+                attachedFields.seekPosition.x = 0.0f;
+                attachedFields.vanillaTypePosition.x += directionX * (distanceX + sSize_2.x - outerCameraBoxX - 50f); // new distance to the center of the screen: outerCameraBoxX + 50f // leanStartDistanceX can be up to 40f
+                roomCamera.lastPos.x = attachedFields.vanillaTypePosition.x; // prevent transition with in-between frames
+                roomCamera.pos.x = attachedFields.vanillaTypePosition.x;
+            }
+            else
+            {
+                if (distanceX > sSize_2.x - outerCameraBoxX - leanStartDistanceX) // lean effect // 20f is a simplification // vanilla uses 
+                {
+                    attachedFields.seekPosition.x = directionX * 8f;
+                }
+                else
+                {
+                    attachedFields.seekPosition.x *= 0.9f;
+                }
+                roomCamera.pos.x = Mathf.Lerp(roomCamera.lastPos.x, attachedFields.vanillaTypePosition.x + attachedFields.seekPosition.x, 0.1f); // mimic what vanilla is doing with roomCamera.leanPos in Update()
+            }
+
+            float directionY = Mathf.Sign(attachedFields.onScreenPosition.y - attachedFields.vanillaTypePosition.y);
+            float distanceY = directionY * (attachedFields.onScreenPosition.y - attachedFields.vanillaTypePosition.y);
+            float leanStartDistanceY = 2f * Mathf.Abs(roomCamera.followCreatureInputForward.y);
+
+            if (distanceY > sSize_2.y - outerCameraBoxY)
+            {
+                attachedFields.seekPosition.y = 0.0f;
+                attachedFields.vanillaTypePosition.y += directionY * (distanceY + sSize_2.y - outerCameraBoxY - 50f);
+                roomCamera.lastPos.y = attachedFields.vanillaTypePosition.y;
+                roomCamera.pos.y = attachedFields.vanillaTypePosition.y;
+            }
+            else
+            {
+                if (distanceY > sSize_2.y - outerCameraBoxY - leanStartDistanceY && attachedFields.seekPosition.x < 8f) // vanilla does not do the lean effect for both
+                {
+                    attachedFields.seekPosition.y = directionY * 8f;
+                }
+                else
+                {
+                    attachedFields.seekPosition.y *= 0.9f;
+                }
+                roomCamera.pos.y = Mathf.Lerp(roomCamera.lastPos.y, attachedFields.vanillaTypePosition.y + attachedFields.seekPosition.y, 0.1f);
+            }
+
+            CheckBorders(roomCamera, ref attachedFields.vanillaTypePosition);
+            CheckBorders(roomCamera, ref roomCamera.lastPos);
+            CheckBorders(roomCamera, ref roomCamera.pos);
+        }
 
         // accounts for room boundaries and shortcuts
         public static void UpdateOnScreenPosition(RoomCamera roomCamera)
