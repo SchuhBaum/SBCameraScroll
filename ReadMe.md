@@ -21,7 +21,8 @@ Creates a smooth, scrolling camera that moves with the slugcat. Based on bee's C
 If you have feedback, you can message me on Discord `@SchuhBaum#7246` or write an email to SchuhBaum71@gmail.com.
 
 ### License
-There are two licenses available - MIT and Unlicense. You can choose which one you want to use. 
+There are two licenses available - MIT and Unlicense. You can choose which one you want to use.  
+**NOTE:** WeakTables use their own license. This license is included in the folder SourceCode/WeakTables. Website: https://github.com/Dual-Iron/weak-tables
 
 ### Changelog
 v0.3:
