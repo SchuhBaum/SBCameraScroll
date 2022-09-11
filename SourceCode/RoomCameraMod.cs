@@ -147,64 +147,6 @@ namespace SBCameraScroll
             }
         }
 
-        // public static void SmoothCameraXY_Position(ref float cameraPosition, float lastCameraPosition, float onScreenPosition, float smoothingFactor, float innerCameraBox)
-        // {
-        //     float distance = Mathf.Abs(onScreenPosition - lastCameraPosition);
-        //     if (distance > innerCameraBox)
-        //     {
-        //         // the goal is to reach innerCameraBox-close to onScreenPosition
-        //         // the result is the same as:
-        //         // cameraPosition = Mathf.Lerp(lastCameraPosition, innerCameraBox-close to onScreenPosition, t = smoothingFactor);
-        //         cameraPosition = Mathf.Lerp(lastCameraPosition, onScreenPosition, smoothingFactor * (distance - innerCameraBox) / distance);
-        //     }
-        //     else
-        //     {
-        //         cameraPosition = lastCameraPosition;
-        //     }
-        // }
-
-        // public static void SmoothCameraXY_Vanilla(ref float cameraPosition, ref float lastCameraPosition, ref float vanillaTypePosition, float onScreenPosition, float outerCameraBox, float innerCameraBox)
-        // {
-        //     float direction = Mathf.Sign(onScreenPosition - vanillaTypePosition);
-        //     float distance = direction * (onScreenPosition - vanillaTypePosition);
-
-        //     if (distance > outerCameraBox)
-        //     {
-        //         vanillaTypePosition += direction * (distance + innerCameraBox); // new distance is equal to innerCameraBox
-        //         lastCameraPosition = vanillaTypePosition; // prevent transition with in-between frames
-        //         cameraPosition = vanillaTypePosition;
-        //     }
-        //     else if (distance > innerCameraBox)
-        //     {
-        //         cameraPosition = Mathf.Lerp(vanillaTypePosition, vanillaTypePosition + direction * (outerCameraBox - innerCameraBox), (distance - innerCameraBox) / (outerCameraBox - innerCameraBox));
-        //     }
-        //     else
-        //     {
-        //         cameraPosition = vanillaTypePosition;
-        //     }
-        // }
-
-        public static void SmoothCameraXY_Velocity(ref float cameraPosition, float lastCameraPosition, float onScreenPosition, float lastOnScreenPosition, float outerCameraBox, float innerCameraBox)
-        {
-            float distance = Mathf.Abs(onScreenPosition - lastCameraPosition);
-            if (distance > outerCameraBox)
-            {
-                // makes sure that the camera is exactly outerCameraBox-far behind targetPosition // some animation are a bit much speed in very few frames // this can feel jittering
-                cameraPosition = Mathf.Lerp(lastCameraPosition, onScreenPosition, (distance - outerCameraBox) / distance);
-            }
-            else if (distance > innerCameraBox && (onScreenPosition == lastOnScreenPosition || onScreenPosition > lastOnScreenPosition == onScreenPosition > lastCameraPosition))
-            {
-                // t(distance = innerCameraBox) = 0 // don't move at all
-                // t(distance = outerCameraBox) = 1 // move at the same speed as the player
-                //float t = (distance - innerCameraBox) / (outerCameraBox - innerCameraBox);
-                cameraPosition = Mathf.Lerp(lastCameraPosition, lastCameraPosition + onScreenPosition - lastOnScreenPosition, (distance - innerCameraBox) / (outerCameraBox - innerCameraBox));
-            }
-            else
-            {
-                cameraPosition = lastCameraPosition;
-            }
-        }
-
         // expanding camera logic from bee's CameraScroll mod
         public static void UpdateCameraPosition(RoomCamera roomCamera)
         {
@@ -257,9 +199,7 @@ namespace SBCameraScroll
                         }
                         break;
                     case CameraType.Velocity:
-                        SmoothCameraXY_Velocity(ref roomCamera.pos.x, roomCamera.lastPos.x, attachedFields.onScreenPosition.x, attachedFields.lastOnScreenPosition.x, outerCameraBoxX, innerCameraBoxX);
-                        SmoothCameraXY_Velocity(ref roomCamera.pos.y, roomCamera.lastPos.y, attachedFields.onScreenPosition.y, attachedFields.lastOnScreenPosition.y, outerCameraBoxY, innerCameraBoxY);
-                        CheckBorders(roomCamera, ref roomCamera.pos);
+                        UpdateCamera_VelocityType(roomCamera, attachedFields);
                         break;
                 }
 
@@ -380,6 +320,47 @@ namespace SBCameraScroll
 
             CheckBorders(roomCamera, ref attachedFields.vanillaTypePosition);
             CheckBorders(roomCamera, ref roomCamera.lastPos);
+            CheckBorders(roomCamera, ref roomCamera.pos);
+        }
+
+        public static void UpdateCamera_VelocityType(RoomCamera roomCamera, AttachedFields attachedFields)
+        {
+            float distanceX = Mathf.Abs(attachedFields.onScreenPosition.x - roomCamera.lastPos.x);
+            if (distanceX > outerCameraBoxX)
+            {
+                // makes sure that the camera is exactly outerCameraBoxX-far behind targetPosition // some animation are a bit much speed in very few frames // this can feel jittering
+                roomCamera.pos.x = Mathf.Lerp(roomCamera.lastPos.x, attachedFields.onScreenPosition.x, (distanceX - outerCameraBoxX) / distanceX);
+            }
+            else if (distanceX > innerCameraBoxX && (attachedFields.onScreenPosition.x == attachedFields.lastOnScreenPosition.x || attachedFields.onScreenPosition.x > attachedFields.lastOnScreenPosition.x == attachedFields.onScreenPosition.x > roomCamera.lastPos.x))
+            {
+                // t(distanceX = innerCameraBoxX) = 0 // don't move at all
+                // t(distanceX = outerCameraBoxX) = 1 // move at the same speed as the player
+                //float t = (distanceX - innerCameraBoxX) / (outerCameraBoxX - innerCameraBoxX);
+                roomCamera.pos.x = Mathf.Lerp(roomCamera.lastPos.x, roomCamera.lastPos.x + attachedFields.onScreenPosition.x - attachedFields.lastOnScreenPosition.x, (distanceX - innerCameraBoxX) / (outerCameraBoxX - innerCameraBoxX));
+            }
+            else
+            {
+                roomCamera.pos.x = roomCamera.lastPos.x;
+            }
+
+            float distanceY = Mathf.Abs(attachedFields.onScreenPosition.y - roomCamera.lastPos.y);
+            if (distanceY > outerCameraBoxY)
+            {
+                // makes sure that the camera is exactly outerCameraBoxY-far behind targetPosition // some animation are a bit much speed in very few frames // this can feel jittering
+                roomCamera.pos.y = Mathf.Lerp(roomCamera.lastPos.y, attachedFields.onScreenPosition.y, (distanceY - outerCameraBoxY) / distanceY);
+            }
+            else if (distanceY > innerCameraBoxY && (attachedFields.onScreenPosition.y == attachedFields.lastOnScreenPosition.y || attachedFields.onScreenPosition.y > attachedFields.lastOnScreenPosition.y == attachedFields.onScreenPosition.y > roomCamera.lastPos.y))
+            {
+                // t(distanceY = innerCameraBoxY) = 0 // don't move at all
+                // t(distanceY = outerCameraBoxY) = 1 // move at the same speed as the player
+                //float t = (distanceY - innerCameraBoxY) / (outerCameraBoxY - innerCameraBoxY);
+                roomCamera.pos.y = Mathf.Lerp(roomCamera.lastPos.y, roomCamera.lastPos.y + attachedFields.onScreenPosition.y - attachedFields.lastOnScreenPosition.y, (distanceY - innerCameraBoxY) / (outerCameraBoxY - innerCameraBoxY));
+            }
+            else
+            {
+                roomCamera.pos.y = roomCamera.lastPos.y;
+            }
+
             CheckBorders(roomCamera, ref roomCamera.pos);
         }
 
