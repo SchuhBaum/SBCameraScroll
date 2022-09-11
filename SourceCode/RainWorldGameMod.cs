@@ -19,7 +19,7 @@ namespace SBCameraScroll
             Debug.Log("SBCameraScroll: Initialize variables.");
 
             AbstractRoomMod.textureOffset.Clear(); // put before orig or it freezes
-            WormGrassMod.cosmeticWormsOnTile.Clear();
+            WormGrassMod.cosmeticWormsOnTiles.Clear();
 
             orig(rainWorldGame, manager);
             int cameraCount = rainWorldGame.cameras.Length;
@@ -52,7 +52,7 @@ namespace SBCameraScroll
             RoomCameraMod.isCentered = new bool[0];
 
             AbstractRoomMod.textureOffset.Clear();
-            WormGrassMod.cosmeticWormsOnTile.Clear();
+            WormGrassMod.cosmeticWormsOnTiles.Clear();
         }
     }
 }

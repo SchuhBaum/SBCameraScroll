@@ -39,7 +39,7 @@ namespace SBCameraScroll
             On.RoomCamera.ApplyPositionChange += RoomCamera_ApplyPositionChange;
             On.RoomCamera.DrawUpdate += RoomCamera_DrawUpdate;
 
-            On.RoomCamera.MoveCamera += RoomCamera_MoveCamera;
+            On.RoomCamera.MoveCamera_int += RoomCamera_MoveCamera;
             On.RoomCamera.MoveCamera2 += RoomCamera_MoveCamera2;
             On.RoomCamera.PixelColorAtCoordinate += RoomCamera_PixelColorAtCoordinate;
             On.RoomCamera.PositionCurrentlyVisible += RoomCamera_PositionCurrentlyVisible;
@@ -528,14 +528,21 @@ namespace SBCameraScroll
             }
         }
 
-        private static void RoomCamera_MoveCamera(On.RoomCamera.orig_MoveCamera orig, RoomCamera roomCamera, int camPos)
+        // only called when moving camera positions inside the same room // if the ID changed then do a smooth transition instead // the logic for that is done in UpdateCameraPosition()
+        private static void RoomCamera_MoveCamera(On.RoomCamera.orig_MoveCamera_int orig, RoomCamera roomCamera, int camPos)
         {
-            if (isRoomBlacklisted[roomCamera.cameraNumber] || roomCamera.voidSeaMode)
+            int cameraNumber = roomCamera.cameraNumber;
+            if (isRoomBlacklisted[cameraNumber] || roomCamera.voidSeaMode || roomCamera.followAbstractCreature == null)
             {
                 orig(roomCamera, camPos);
                 return;
             }
+
             roomCamera.currentCameraPosition = camPos;
+            if (useVanillaPositions[cameraNumber] && followAbstractCreature[cameraNumber] == roomCamera.followAbstractCreature) // camera moves otherwise after vanilla transition since variables are not reset // ignore reset during a smooth transition
+            {
+                ResetCameraPosition(roomCamera);
+            }
         }
 
         // preloads textures // RoomCamera.ApplyPositionChange() is called when they are ready
