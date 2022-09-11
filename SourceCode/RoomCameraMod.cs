@@ -44,6 +44,7 @@ namespace SBCameraScroll
         //
 
         public static CameraType cameraType = CameraType.Position;
+
         public static float innerCameraBoxX = 0.0f; // don't move camera when player is too close
         public static float innerCameraBoxY = 0.0f; // set default values in option menu
         public static float outerCameraBoxX = 0.0f; // the camera will always be at least this close
@@ -86,7 +87,7 @@ namespace SBCameraScroll
             {
                 return;
             }
-
+            
             Vector2 screenSize = roomCamera.sSize;
             Vector2 textureOffset = roomCamera.room.abstractRoom.GetAttachedFields().textureOffset; // regionGate's texture offset might be unitialized => RegionGateMod
 
@@ -122,6 +123,7 @@ namespace SBCameraScroll
             attachedFields.followAbstractCreatureID = null; // do a smooth transition // this actually makes a difference for the vanilla type camera // otherwise the map input would immediately be processed
 
             // vanilla copy & paste stuff
+
             if (attachedFields.isRoomBlacklisted || !RoomMod.CanScrollCamera(roomCamera.room) || roomCamera.voidSeaMode)
             {
                 roomCamera.seekPos = roomCamera.CamPos(roomCamera.currentCameraPosition);
@@ -456,6 +458,7 @@ namespace SBCameraScroll
         private static void RoomCamera_ApplyPositionChange(On.RoomCamera.orig_ApplyPositionChange orig, RoomCamera roomCamera)
         {
             orig(roomCamera); // updates currentCameraPosition // resizes the levelTexture automatically (and the corresponding atlas texture) // what is the purpose of an atlas?
+            ResetCameraPosition(roomCamera); // uses currentCameraPosition
 
             // resizes levelGraphic such that the levelTexture fits and is not squashed
             // holy moly don't use roomCamera.www.texture.width, etc. // "WWW.texture property allocates a new Texture2D every time"
