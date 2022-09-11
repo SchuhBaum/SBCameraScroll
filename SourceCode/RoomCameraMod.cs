@@ -87,7 +87,7 @@ namespace SBCameraScroll
             {
                 return;
             }
-            
+
             Vector2 screenSize = roomCamera.sSize;
             Vector2 textureOffset = roomCamera.room.abstractRoom.GetAttachedFields().textureOffset; // regionGate's texture offset might be unitialized => RegionGateMod
 
@@ -123,7 +123,6 @@ namespace SBCameraScroll
             attachedFields.followAbstractCreatureID = null; // do a smooth transition // this actually makes a difference for the vanilla type camera // otherwise the map input would immediately be processed
 
             // vanilla copy & paste stuff
-
             if (attachedFields.isRoomBlacklisted || !RoomMod.CanScrollCamera(roomCamera.room) || roomCamera.voidSeaMode)
             {
                 roomCamera.seekPos = roomCamera.CamPos(roomCamera.currentCameraPosition);
