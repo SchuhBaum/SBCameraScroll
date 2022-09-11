@@ -6,10 +6,17 @@ using UnityEngine;
 
 namespace SBCameraScroll
 {
+    public enum CameraType
+    {
+        Position,
+        Vanilla,
+        Velocity
+    }
+
     public static class RoomCameraMod
     {
         // parameters
-        public static int cameraType = 0; // 0: Position type, 1: Velocity type, 2: Vanilla type
+        public static CameraType cameraType = CameraType.Position;
         public static float innerCameraBoxX = 0.0f; // don't move camera when player is too close
         public static float innerCameraBoxY = 0.0f; // set default values in option menu
         public static float outerCameraBoxX = 0.0f; // the camera will always be at least this close
@@ -101,7 +108,7 @@ namespace SBCameraScroll
             UpdateOnScreenPosition(roomCamera);
             CheckBorders(roomCamera, ref onScreenPosition[cameraNumber]); // do not move past room boundaries
 
-            if (cameraType == 2) // vanilla type
+            if (cameraType == CameraType.Vanilla)
             {
                 roomCamera.seekPos = roomCamera.CamPos(roomCamera.currentCameraPosition);
                 roomCamera.seekPos.x += roomCamera.hDisplace + 8f;
@@ -196,7 +203,7 @@ namespace SBCameraScroll
             if (followAbstractCreature[cameraNumber] != roomCamera.followAbstractCreature) // smooth transition when switching cameras in the same room
             {
                 followAbstractCreature[cameraNumber] = null; // keep transition going even when switching back
-                if (cameraType == 2 && useVanillaPositions[cameraNumber])
+                if (useVanillaPositions[cameraNumber])
                 {
                     SmoothCameraXY_Position(ref roomCamera.pos.x, roomCamera.lastPos.x, roomCamera.seekPos.x, smoothingFactorX, 0.0f);
                     SmoothCameraXY_Position(ref roomCamera.pos.y, roomCamera.lastPos.y, roomCamera.seekPos.y, smoothingFactorY, 0.0f);
@@ -237,7 +244,7 @@ namespace SBCameraScroll
                 }
                 CheckBorders(roomCamera, ref roomCamera.pos);
             }
-            else if (cameraType == 1) // velocity type
+            else if (cameraType == CameraType.Velocity)
             {
                 SmoothCameraXY_Velocity(ref roomCamera.pos.x, roomCamera.lastPos.x, onScreenPosition[cameraNumber].x, lastOnScreenPosition[cameraNumber].x, outerCameraBoxX, innerCameraBoxX);
                 SmoothCameraXY_Velocity(ref roomCamera.pos.y, roomCamera.lastPos.y, onScreenPosition[cameraNumber].y, lastOnScreenPosition[cameraNumber].y, outerCameraBoxY, innerCameraBoxY);

@@ -1,8 +1,8 @@
-using OptionalUI;
-using RWCustom;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using OptionalUI;
+using RWCustom;
 using UnityEngine;
 
 namespace SBCameraScroll
@@ -22,12 +22,12 @@ namespace SBCameraScroll
 
         private OpComboBox? cameraType = null;
         private int lastCameraType = 0;
-        private readonly string[] cameraTypeKeys = new string[3] { "position", "velocity", "vanilla" };
+        private readonly string[] cameraTypeKeys = new string[3] { "position", "vanilla", "velocity" };
         private readonly string[] cameraTypeDescriptions = new string[3]
         {
             "This type tries to stay close to the player. A larger distance means a faster camera.\nThe smoothing factor determines how much of the distance is covered per frame.",
-            "Mario-style camera. This type tries to match the player's speed.\nWhen OuterCameraBox is reached, the camera moves as fast as the player.",
-            "Vanilla-style camera. You can center the camera by pressing the map button. Pressing the map button again will revert to vanilla camera positions.\nWhen the player is close to the edge of the screen the camera jumps a constant distance."
+            "Vanilla-style camera. You can center the camera by pressing the map button. Pressing the map button again will revert to vanilla camera positions.\nWhen the player is close to the edge of the screen the camera jumps a constant distance.",
+            "Mario-style camera. This type tries to match the player's speed.\nWhen OuterCameraBox is reached, the camera moves as fast as the player."
         };
         private readonly List<OpComboBox> comboBoxes = new List<OpComboBox>();
         private readonly List<OpLabel> comboBoxesTextLabels = new List<OpLabel>();
@@ -74,13 +74,13 @@ namespace SBCameraScroll
             AddNewLine();
             AddBox();
 
-            List<ListItem> _cameraTypes = new List<ListItem> // { "Position", "Velocity", "Vanilla" };
+            List<ListItem> _cameraTypes = new List<ListItem> // { "Position", "Vanilla", "Velocity" };
             {
                 new ListItem(cameraTypeKeys[0], "Position (Default)") { desc = cameraTypeDescriptions[0] },
-                new ListItem(cameraTypeKeys[1], "Velocity") { desc = cameraTypeDescriptions[1] },
-                new ListItem(cameraTypeKeys[2], "Vanilla") { desc = cameraTypeDescriptions[2] }
+                new ListItem(cameraTypeKeys[1], "Vanilla") { desc = cameraTypeDescriptions[1] },
+                new ListItem(cameraTypeKeys[2], "Velocity") { desc = cameraTypeDescriptions[2] }
             };
-            AddComboBox(_cameraTypes, "cameraType", "Camera Type", "", "Position");
+            AddComboBox(_cameraTypes, "cameraType", "Camera Type", "");
             DrawComboBoxes(ref Tabs[tabIndex]);
 
             AddNewLine(1.25f);
@@ -169,14 +169,12 @@ namespace SBCameraScroll
 
             AddNewLine();
 
-            AddSlider("innerCameraBoxX_Vanilla", "Minimum Distance from the Edge in X (7)", "The camera starts to tilt if the player is closer to the edge of the screen than this value.", new IntVector2(0, 35), defaultValue: 7, "0 tiles", "35 tiles");
-            AddSlider("outerCameraBoxX_Vanilla", "Maximum Distance from the Edge in X (5)", "The camera changes position if the player is closer to the edge of the screen than this value.", new IntVector2(0, 35), defaultValue: 5, "0 tiles", "35 tiles");
+            AddSlider("outerCameraBoxX_Vanilla", "Distance from the Edge in X (9)", "The camera changes position if the player is closer to the edge of the screen than this value.", new IntVector2(0, 35), defaultValue: 9, "0 tiles", "35 tiles"); // I think 188f would be exactly vanilla
             DrawSliders(ref Tabs[tabIndex]);
 
             AddNewLine(2f);
 
-            AddSlider("innerCameraBoxY_Vanilla", "Minimum Distance from the Edge in Y (3)", "The camera starts to tilt if the player is closer to the edge of the screen than this value.", new IntVector2(0, 35), defaultValue: 3, "0 tiles", "35 tiles");
-            AddSlider("outerCameraBoxY_Vanilla", "Maximum Distance to the Edge in Y (1)", "The camera changes position if the player is closer to the edge of the screen than this value.", new IntVector2(0, 35), defaultValue: 1, "0 tiles", "35 tiles");
+            AddSlider("outerCameraBoxY_Vanilla", " Distance to the Edge in Y (1)", "The camera changes position if the player is closer to the edge of the screen than this value.", new IntVector2(0, 35), defaultValue: 1, "0 tiles", "35 tiles"); // I think 18f would be exactly vanilla
             DrawSliders(ref Tabs[tabIndex]);
 
             DrawBox(ref Tabs[tabIndex]);
@@ -244,19 +242,19 @@ namespace SBCameraScroll
                 }
             }
         }
-        
+
         public override void ConfigOnChange()
         {
             base.ConfigOnChange();
 
-            RoomCameraMod.cameraType = Array.IndexOf(cameraTypeKeys, config["cameraType"]);
+            RoomCameraMod.cameraType = (CameraType)Array.IndexOf(cameraTypeKeys, config["cameraType"]); // 0: Position type, 1: Vanilla type, 2: Velocity type
 
             MainMod.isFogFullScreenEffectOptionEnabled = bool.Parse(config["fogFullScreenEffect"]);
             MainMod.isOtherFullScreenEffectsOptionEnabled = bool.Parse(config["otherFullScreenEffects"]);
             MainMod.isMergeWhileLoadingOptionEnabled = bool.Parse(config["mergeWhileLoading"]);
             MainMod.isScrollOneScreenRoomsOptionEnabled = bool.Parse(config["scrollOneScreenRooms"]) || MainMod.isSplitScreenModEnabled; // automatically enable when using SplitScreenMod
 
-            Debug.Log("SBCameraScroll: cameraType " + config["cameraType"]);
+            Debug.Log("SBCameraScroll: cameraType " + RoomCameraMod.cameraType);
             Debug.Log("SBCameraScroll: isFogFullScreenEffectOptionEnabled " + MainMod.isFogFullScreenEffectOptionEnabled);
             Debug.Log("SBCameraScroll: isOtherFullScreenEffectsOptionEnabled " + MainMod.isOtherFullScreenEffectsOptionEnabled);
             Debug.Log("SBCameraScroll: isMergeWhileLoadingOptionEnabled " + MainMod.isMergeWhileLoadingOptionEnabled);
@@ -269,34 +267,34 @@ namespace SBCameraScroll
             Debug.Log("SBCameraScroll: smoothingFactorX " + RoomCameraMod.smoothingFactorX);
             Debug.Log("SBCameraScroll: smoothingFactorY " + RoomCameraMod.smoothingFactorY);
 
-            if (RoomCameraMod.cameraType == 0) // position type
+            switch (RoomCameraMod.cameraType)
             {
-                RoomCameraMod.innerCameraBoxX = 20f * float.Parse(config["innerCameraBoxX_Position"]);
-                RoomCameraMod.innerCameraBoxY = 20f * float.Parse(config["innerCameraBoxY_Position"]);
-            }
-            else if (RoomCameraMod.cameraType == 1) // velocity type
-            {
-                RoomCameraMod.innerCameraBoxX = 20f * float.Parse(config["innerCameraBoxX_Velocity"]);
-                RoomCameraMod.outerCameraBoxX = 20f * float.Parse(config["outerCameraBoxX_Velocity"]);
-                RoomCameraMod.innerCameraBoxY = 20f * float.Parse(config["innerCameraBoxY_Velocity"]);
-                RoomCameraMod.outerCameraBoxY = 20f * float.Parse(config["outerCameraBoxY_Velocity"]);
+                case CameraType.Position:
+                    RoomCameraMod.innerCameraBoxX = 20f * float.Parse(config["innerCameraBoxX_Position"]);
+                    RoomCameraMod.innerCameraBoxY = 20f * float.Parse(config["innerCameraBoxY_Position"]);
 
-                Debug.Log("SBCameraScroll: outerCameraBoxX " + RoomCameraMod.outerCameraBoxX);
-                Debug.Log("SBCameraScroll: outerCameraBoxY " + RoomCameraMod.outerCameraBoxY);
-            }
-            else
-            {
-                RoomCameraMod.innerCameraBoxX = 20f * float.Parse(config["innerCameraBoxX_Vanilla"]);
-                RoomCameraMod.outerCameraBoxX = 20f * float.Parse(config["outerCameraBoxX_Vanilla"]);
-                RoomCameraMod.innerCameraBoxY = 20f * float.Parse(config["innerCameraBoxY_Vanilla"]);
-                RoomCameraMod.outerCameraBoxY = 20f * float.Parse(config["outerCameraBoxY_Vanilla"]);
+                    Debug.Log("SBCameraScroll: innerCameraBoxX " + RoomCameraMod.innerCameraBoxX);
+                    Debug.Log("SBCameraScroll: innerCameraBoxY " + RoomCameraMod.innerCameraBoxY);
+                    break;
+                case CameraType.Vanilla:
+                    RoomCameraMod.outerCameraBoxX = 20f * float.Parse(config["outerCameraBoxX_Vanilla"]);
+                    RoomCameraMod.outerCameraBoxY = 20f * float.Parse(config["outerCameraBoxY_Vanilla"]);
 
-                Debug.Log("SBCameraScroll: outerCameraBoxX " + RoomCameraMod.outerCameraBoxX);
-                Debug.Log("SBCameraScroll: outerCameraBoxY " + RoomCameraMod.outerCameraBoxY);
-            }
+                    Debug.Log("SBCameraScroll: outerCameraBoxX " + RoomCameraMod.outerCameraBoxX);
+                    Debug.Log("SBCameraScroll: outerCameraBoxY " + RoomCameraMod.outerCameraBoxY);
+                    break;
+                case CameraType.Velocity:
+                    RoomCameraMod.innerCameraBoxX = 20f * float.Parse(config["innerCameraBoxX_Velocity"]);
+                    RoomCameraMod.outerCameraBoxX = 20f * float.Parse(config["outerCameraBoxX_Velocity"]);
+                    RoomCameraMod.innerCameraBoxY = 20f * float.Parse(config["innerCameraBoxY_Velocity"]);
+                    RoomCameraMod.outerCameraBoxY = 20f * float.Parse(config["outerCameraBoxY_Velocity"]);
 
-            Debug.Log("SBCameraScroll: innerCameraBoxX " + RoomCameraMod.innerCameraBoxX);
-            Debug.Log("SBCameraScroll: innerCameraBoxY " + RoomCameraMod.innerCameraBoxY);
+                    Debug.Log("SBCameraScroll: innerCameraBoxX " + RoomCameraMod.innerCameraBoxX);
+                    Debug.Log("SBCameraScroll: innerCameraBoxY " + RoomCameraMod.innerCameraBoxY);
+                    Debug.Log("SBCameraScroll: outerCameraBoxX " + RoomCameraMod.outerCameraBoxX);
+                    Debug.Log("SBCameraScroll: outerCameraBoxY " + RoomCameraMod.outerCameraBoxY);
+                    break;
+            }
         }
 
         // ----------------- //
