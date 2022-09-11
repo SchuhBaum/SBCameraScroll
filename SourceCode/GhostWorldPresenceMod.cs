@@ -1,0 +1,20 @@
+namespace SBCameraScroll
+{
+    internal static class GhostWorldPresenceMod
+    {
+        // same as in AboveCloudsViewMod
+        internal static void OnEnable()
+        {
+            On.GhostWorldPresence.GhostMode += GhostWorldPresence_GhostMode;
+        }
+
+        // ----------------- //
+        // private functions //
+        // ----------------- //
+
+        private static float GhostWorldPresence_GhostMode(On.GhostWorldPresence.orig_GhostMode orig, GhostWorldPresence ghostWorldPresence, Room room, int camPos)
+        {
+            return orig(ghostWorldPresence, room, 0);
+        }
+    }
+}
