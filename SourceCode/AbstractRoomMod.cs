@@ -300,7 +300,8 @@ namespace SBCameraScroll
             cameraTexture.Resize(1, 1);
         }
 
-        public static void UpdateTextureOffset(AbstractRoom abstractRoom, Vector2[]? cameraPositions)
+        public static void UpdateTextureOffset(AbstractRoom abstractRoom, in Vector2[]? cameraPositions)
+
         {
             AttachedFields attachedFields = abstractRoom.GetAttachedFields();
             if (attachedFields.isInitialized)

@@ -21,7 +21,8 @@ Creates a smooth, scrolling camera that moves with the slugcat. Based on bee's C
 If you have feedback, you can message me on Discord `@SchuhBaum#7246` or write an email to SchuhBaum71@gmail.com.
 
 ### License
-There are two licenses available - MIT and Unlicense. You can choose which one you want to use. 
+There are two licenses available - MIT and Unlicense. You can choose which one you want to use.  
+**NOTE:** WeakTables use their own license. This license is included in the folder SourceCode/WeakTables. Website: https://github.com/Dual-Iron/weak-tables
 
 ### Changelog
 v0.3:
@@ -83,6 +84,11 @@ v0.60:
 - Fixed a memory leak caused by calling www.texture which created texture copies.
 - Split the fullscreen effect option into two options. One for fog and the other for the rest.
 - Fixed three bugs where a variable was cleared too early.
+
+v0.61
+- Restructured code. Using weak tables. Fixed a bug where the texture offset of region gates were not initialized. Restructured CheckBorders() + included patch from SplitScreenMod. 
+- (vanilla type) Fixed a bug where the camera would slightly move after a screen transition when using vanilla camera positions. The lean effect now mimics vanilla lean effect instead of scaling with the camera box. This removes one parameter from the options menu.
+- Slightly increase minimum speed for transitions and the position type camera. Camera moves at least one pixel per frame.
 
 ### Known issues
 - Motion sickness might be a problem. I wonder how much is due to noise (details) in the textures. You can play around with the parameters and see what works for you.
