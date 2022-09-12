@@ -27,6 +27,7 @@ namespace SBCameraScroll
             public bool useVanillaPositions; // for vanilla type camera
 
             public EntityID? followAbstractCreatureID = null;
+            public EntityID? transitionTrackingID = null;
 
             public Vector2 lastOnScreenPosition = new Vector2();
             public Vector2 onScreenPosition = new Vector2();
@@ -120,7 +121,6 @@ namespace SBCameraScroll
         public static void ResetCameraPosition(RoomCamera roomCamera)
         {
             AttachedFields attachedFields = roomCamera.GetAttachedFields();
-            attachedFields.followAbstractCreatureID = null; // do a smooth transition // this actually makes a difference for the vanilla type camera // otherwise the map input would immediately be processed
 
             // vanilla copy & paste stuff
             if (attachedFields.isRoomBlacklisted || !RoomMod.CanScrollCamera(roomCamera.room) || roomCamera.voidSeaMode)
@@ -135,6 +135,7 @@ namespace SBCameraScroll
                 return;
             }
 
+            attachedFields.followAbstractCreatureID = null; // do a smooth transition // this actually makes a difference for the vanilla type camera // otherwise the map input would immediately be processed
             UpdateOnScreenPosition(roomCamera);
             CheckBorders(roomCamera, ref attachedFields.onScreenPosition); // do not move past room boundaries
 
@@ -178,12 +179,23 @@ namespace SBCameraScroll
                 attachedFields.followAbstractCreatureID = null; // keep transition going even when switching back
                 UpdateCamera_PositionType(roomCamera, attachedFields); // needs followAbstractCreatureID = null
 
+                if (attachedFields.transitionTrackingID != roomCamera.followAbstractCreature.ID)
+                {
+                    // another player can take the camera during the transition // keep track to prevent instant map press recognition
+                    attachedFields.transitionTrackingID = roomCamera.followAbstractCreature.ID;
+                }
+                else if (cameraType == CameraType.Vanilla && player.input[0].mp && !player.input[1].mp)
+                {
+                    attachedFields.useVanillaPositions = !attachedFields.useVanillaPositions;
+                }
+
                 // stop transition earlier when player is moving && vanilla positions are not used
                 if (roomCamera.pos == roomCamera.lastPos || !attachedFields.useVanillaPositions &&
                     (player.input[0].x == 0 && roomCamera.pos.x == roomCamera.lastPos.x || player.input[0].x != 0 && Math.Abs(roomCamera.pos.x - roomCamera.lastPos.x) <= 10f) &&
                     (player.input[0].y == 0 && roomCamera.pos.y == roomCamera.lastPos.y || player.input[0].y != 0 && Math.Abs(roomCamera.pos.y - roomCamera.lastPos.y) <= 10f))
                 {
                     attachedFields.followAbstractCreatureID = roomCamera.followAbstractCreature.ID;
+                    attachedFields.transitionTrackingID = null;
                     attachedFields.vanillaTypePosition = roomCamera.pos;
                     attachedFields.isCentered = true; // for vanilla type only
                 }
@@ -257,7 +269,7 @@ namespace SBCameraScroll
 
                 if (Mathf.Abs(roomCamera.pos.x - roomCamera.lastPos.x) < 1f) // move at least one pixel
                 {
-                    roomCamera.pos.x = roomCamera.lastPos.x;
+                    roomCamera.pos.x = Mathf.Lerp(roomCamera.lastPos.x, targetPosition.x, 1f / distanceX);
                 }
             }
             else
@@ -271,7 +283,7 @@ namespace SBCameraScroll
                 roomCamera.pos.y = Mathf.Lerp(Mathf.Lerp(roomCamera.lastPos.y, targetPosition.y, 1f / distanceY), targetPosition.y, smoothingFactorY * (distanceY - innerCameraBoxY_) / distanceY);
                 if (Mathf.Abs(roomCamera.pos.y - roomCamera.lastPos.y) < 1f)
                 {
-                    roomCamera.pos.y = roomCamera.lastPos.y;
+                    roomCamera.pos.y = Mathf.Lerp(roomCamera.lastPos.y, targetPosition.y, 1f / distanceY);
                 }
             }
             else
@@ -652,7 +664,7 @@ namespace SBCameraScroll
             }
 
             roomCamera.currentCameraPosition = camPos;
-            if (attachedFields.useVanillaPositions && attachedFields.followAbstractCreatureID == roomCamera.followAbstractCreature.ID) // camera moves otherwise after vanilla transition since variables are not reset // ignore reset during a smooth transition
+            if (cameraType == CameraType.Vanilla && attachedFields.useVanillaPositions && attachedFields.followAbstractCreatureID == roomCamera.followAbstractCreature.ID) // camera moves otherwise after vanilla transition since variables are not reset // ignore reset during a smooth transition
             {
                 ResetCameraPosition(roomCamera);
             }
