@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 0.60
+###### Version: 0.62
 This is a mod for Rain World v1.5.
 
 ### Description
@@ -85,10 +85,11 @@ v0.60:
 - Split the fullscreen effect option into two options. One for fog and the other for the rest.
 - Fixed three bugs where a variable was cleared too early.
 
-v0.61
+v0.62
 - Restructured code. Using weak tables. Fixed a bug where the texture offset of region gates were not initialized. Restructured CheckBorders() + included patch from SplitScreenMod. 
 - (vanilla type) Fixed a bug where the camera would slightly move after a screen transition when using vanilla camera positions. The lean effect now mimics vanilla lean effect instead of scaling with the camera box. This removes one parameter from the options menu.
 - Slightly increase minimum speed for transitions and the position type camera. Camera moves at least one pixel per frame.
+- Restructured code.
 
 ### Known issues
 - Motion sickness might be a problem. I wonder how much is due to noise (details) in the textures. You can play around with the parameters and see what works for you.

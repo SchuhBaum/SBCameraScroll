@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using RWCustom;
 using UnityEngine;
 using WeakTables;
@@ -25,6 +24,8 @@ namespace SBCameraScroll
         private static WeakTable<AbstractRoom, AttachedFields> attachedFields = new WeakTable<AbstractRoom, AttachedFields>(_ => new AttachedFields());
         public static AttachedFields GetAttachedFields(this AbstractRoom abstractRoom) => attachedFields[abstractRoom];
 
+        public static Dictionary<AbstractRoom, WormGrass> abstractRoomsWithWormGrass = new Dictionary<AbstractRoom, WormGrass>();
+
         //
         //
         //
@@ -36,6 +37,15 @@ namespace SBCameraScroll
 
         public static readonly Texture2D mergedTexture = new Texture2D(1, 1, TextureFormat.ARGB32, false);
         public static readonly Texture2D cameraTexture = new Texture2D(1, 1, TextureFormat.ARGB32, false);
+
+        //
+        //
+        //
+
+        internal static void OnEnable()
+        {
+            On.AbstractRoom.Abstractize += AbstractRoom_Abstractize;
+        }
 
         // ---------------- //
         // public functions //
@@ -71,23 +81,49 @@ namespace SBCameraScroll
 
         public static void CheckCameraPositions(ref Vector2[] cameraPositions)
         {
-            // SL_C01 has two cameras which are in outer space or something => needed too much memory
-            List<Vector2> _cameraPositions = cameraPositions.ToList();
             bool isFaultyCameraFound = false;
-
             foreach (Vector2 cameraPosition in cameraPositions)
             {
                 if (Mathf.Abs(cameraPosition.x) > 20000f || Mathf.Abs(cameraPosition.y) > 20000f)
                 {
-                    _cameraPositions.Remove(cameraPosition);
                     isFaultyCameraFound = true;
                 }
             }
 
             if (isFaultyCameraFound)
             {
-                Debug.Log("SBCameraScroll: Found one or more out of bounds cameras. Remove them from cameraPositions.");
-                cameraPositions = _cameraPositions.ToArray();
+                // SL_C01 has two cameras which are in outer space or something => needed too much memory
+                Debug.Log("SBCameraScroll: One or more camera screen positions are out of bounds. Remove them from cameraPositions.");
+
+                List<Vector2> cameraPositions_ = new List<Vector2>();
+                foreach (Vector2 cameraPosition in cameraPositions)
+                {
+                    if (Mathf.Abs(cameraPosition.x) <= 20000f && Mathf.Abs(cameraPosition.y) <= 20000f)
+                    {
+                        cameraPositions_.Add(cameraPosition);
+                    }
+                }
+                cameraPositions = cameraPositions_.ToArray();
+            }
+        }
+
+        public static void ClearWormGrassInAbstractRoom(AbstractRoom abstractRoom)
+        {
+            if (abstractRoomsWithWormGrass.ContainsKey(abstractRoom))
+            {
+                Debug.Log("SBCameraScroll: Remove worm grass from " + abstractRoom.name + ".");
+
+                // I expect only one wormGrass per room
+                // wormGrass can have multiple patches with multiple tiles each
+
+                WormGrass wormGrass = abstractRoomsWithWormGrass[abstractRoom];
+                wormGrass.Destroy(); // sets slatedForDeletetion
+                abstractRoomsWithWormGrass.Remove(abstractRoom);
+
+                foreach (WormGrass.WormGrassPatch wormGrassPatch in wormGrass.patches)
+                {
+                    WormGrassPatchMod.cosmeticWormsOnTiles.Remove(wormGrassPatch);
+                }
             }
         }
 
@@ -99,14 +135,14 @@ namespace SBCameraScroll
             }
 
             List<string> activeModdedRegions = CustomRegions.Mod.CustomWorldMod.activeModdedRegions;
-            List<string> folderNames = CustomRegions.Mod.CustomWorldMod.activatedPacks.Values.ToList();
+            Dictionary<string, string>.ValueCollection folderNames = CustomRegions.Mod.CustomWorldMod.activatedPacks.Values;
 
             string regionNameFromRoomName = roomName.Split(new char[] { '_' })[0];
-            for (int folderIndex = 0; folderIndex < folderNames.Count; ++folderIndex) //v0.42
+            foreach (string folderName in folderNames)
             {
-                for (int regionIndex = 0; regionIndex < activeModdedRegions.Count; ++regionIndex) //v0.42
+                for (int regionIndex = 0; regionIndex < activeModdedRegions.Count; ++regionIndex)
                 {
-                    string relativeRegionsPath = "Mods" + Path.DirectorySeparatorChar + "CustomResources" + Path.DirectorySeparatorChar + folderNames[folderIndex] + Path.DirectorySeparatorChar + "World" + Path.DirectorySeparatorChar + "Regions" + Path.DirectorySeparatorChar;
+                    string relativeRegionsPath = "Mods" + Path.DirectorySeparatorChar + "CustomResources" + Path.DirectorySeparatorChar + folderName + Path.DirectorySeparatorChar + "World" + Path.DirectorySeparatorChar + "Regions" + Path.DirectorySeparatorChar;
                     string relativeRoomsPath = relativeRegionsPath + regionNameFromRoomName + Path.DirectorySeparatorChar + "Rooms" + Path.DirectorySeparatorChar;
 
                     if (File.Exists(Custom.RootFolderDirectory() + relativeRoomsPath + roomName + "_1.png"))
@@ -329,6 +365,16 @@ namespace SBCameraScroll
                 attachedFields.textureOffset += textureOffsetModifier[roomName];
             }
             attachedFields.isInitialized = true;
+        }
+
+        //
+        // private
+        //
+
+        private static void AbstractRoom_Abstractize(On.AbstractRoom.orig_Abstractize orig, AbstractRoom abstractRoom)
+        {
+            ClearWormGrassInAbstractRoom(abstractRoom);
+            orig(abstractRoom);
         }
     }
 }

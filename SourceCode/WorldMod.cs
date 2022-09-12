@@ -16,8 +16,9 @@ namespace SBCameraScroll
 
         private static void World_LoadWorld(On.World.orig_LoadWorld orig, World world, int slugcatNumber, List<AbstractRoom> abstractRoomsList, int[] swarmRooms, int[] shelters, int[] gates)
         {
-            //AbstractRoomMod.textureOffset.Clear(); // this freezes gate transitions when using SplitScreenMod
-            //WormGrassMod.cosmeticWormsOnTile.Clear(); // probably caused freezes as well // too risky to do stuff like this while rooms still being updated(?)
+            // AbstractRoomMod.textureOffset.Clear(); // this freezes gate transitions when using SplitScreenMod
+            // WormGrassMod.cosmeticWormsOnTile.Clear(); // probably caused freezes as well // too risky to do stuff like this while rooms still being updated(?)
+            // RainWorldGameMod.ClearAllWormGrass(); // safer but too slow // there might worm grass already been created for the (new) world
 
             orig(world, slugcatNumber, abstractRoomsList, swarmRooms, shelters, gates);
 

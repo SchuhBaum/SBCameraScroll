@@ -2,12 +2,33 @@ using UnityEngine;
 
 namespace SBCameraScroll
 {
-    internal static class RainWorldGameMod
+    public static class RainWorldGameMod
     {
         internal static void OnEnable()
         {
             On.RainWorldGame.ctor += RainWorldGame_ctor;
             On.RainWorldGame.ShutDownProcess += RainWorldGame_ShutDownProcess; // should be good practice to free all important stuff when shutting down
+        }
+
+        //
+        // public
+        //
+
+        public static void ClearAllWormGrass()
+        {
+            //Debug.Log("SBCameraScroll: Clear all worm grass.");
+
+            // once removed no function calls are made anymore which require cosmeticWormsOnTiles
+            // they get also cleared on a room by room basis in AbstractRoom_Abstractize()
+
+            foreach (WormGrass wormGrass in AbstractRoomMod.abstractRoomsWithWormGrass.Values)
+            {
+                Debug.Log("SBCameraScroll: Remove worm grass from " + wormGrass.room?.abstractRoom.name + ".");
+                wormGrass.Destroy(); // sets slatedForDeletion
+            }
+
+            AbstractRoomMod.abstractRoomsWithWormGrass.Clear();
+            WormGrassPatchMod.cosmeticWormsOnTiles.Clear();
         }
 
         // ----------------- //
@@ -17,7 +38,7 @@ namespace SBCameraScroll
         private static void RainWorldGame_ctor(On.RainWorldGame.orig_ctor orig, RainWorldGame game, ProcessManager manager)
         {
             Debug.Log("SBCameraScroll: Initialize variables.");
-            WormGrassMod.cosmeticWormsOnTiles.Clear();
+            ClearAllWormGrass();
             orig(game, manager);
 
             foreach (AbstractCreature abstractPlayer in game.Players)
@@ -36,7 +57,7 @@ namespace SBCameraScroll
         {
             Debug.Log("SBCameraScroll: Cleanup.");
             orig(game);
-            WormGrassMod.cosmeticWormsOnTiles.Clear();
+            ClearAllWormGrass();
         }
     }
 }
