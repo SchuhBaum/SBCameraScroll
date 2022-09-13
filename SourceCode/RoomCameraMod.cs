@@ -94,7 +94,7 @@ namespace SBCameraScroll
 
             if (MainMod.isSplitScreenModEnabled)
             {
-                Vector2 screenOffset = GetScreenOffset(screenSize); // half of the camera screen is not visible // the other half is centered // let the non-visible part move past room borders
+                Vector2 screenOffset = SplitScreenMod_GetScreenOffset(screenSize); // half of the camera screen is not visible // the other half is centered // let the non-visible part move past room borders
                 position.x = Mathf.Clamp(position.x, textureOffset.x - screenOffset.x, textureOffset.x + screenOffset.x + roomCamera.levelGraphic.width - screenSize.x);
                 position.y = Mathf.Clamp(position.y, textureOffset.y - screenOffset.y, textureOffset.y + screenOffset.y + roomCamera.levelGraphic.height - screenSize.y - 18f);
             }
@@ -102,19 +102,6 @@ namespace SBCameraScroll
             {
                 position.x = Mathf.Clamp(position.x, textureOffset.x, roomCamera.levelGraphic.width - screenSize.x + textureOffset.x); // stop position at room texture borders // probably works with room.PixelWidth - roomCamera.sSize.x / 2f instead as well
                 position.y = Mathf.Clamp(position.y, textureOffset.y, roomCamera.levelGraphic.height - screenSize.y + textureOffset.y - 18f); // not sure why I have to decrease positionY by a constant // I picked 18f bc roomCamera.seekPos.y gets changed by 18f in Update() // seems to work , i.e. I don't see black bars
-            }
-        }
-
-        public static Vector2 GetScreenOffset(in Vector2 screenSize) // for SplitScreenMod
-        {
-            switch (SplitScreenMod.SplitScreenMod.CurrentSplitMode)
-            {
-                case SplitScreenMod.SplitScreenMod.SplitMode.SplitVertical:
-                    return new Vector2(0.25f * screenSize.x, 0.0f);
-                case SplitScreenMod.SplitScreenMod.SplitMode.SplitHorizontal:
-                    return new Vector2(0.0f, 0.25f * screenSize.y);
-                default:
-                    return new Vector2();
             }
         }
 
@@ -160,6 +147,19 @@ namespace SBCameraScroll
                 // center camera on player
                 roomCamera.lastPos = attachedFields.onScreenPosition;
                 roomCamera.pos = attachedFields.onScreenPosition;
+            }
+        }
+
+        public static Vector2 SplitScreenMod_GetScreenOffset(in Vector2 screenSize) // for SplitScreenMod
+        {
+            switch (SplitScreenMod.SplitScreenMod.CurrentSplitMode)
+            {
+                case SplitScreenMod.SplitScreenMod.SplitMode.SplitVertical:
+                    return new Vector2(0.25f * screenSize.x, 0.0f);
+                case SplitScreenMod.SplitScreenMod.SplitMode.SplitHorizontal:
+                    return new Vector2(0.0f, 0.25f * screenSize.y);
+                default:
+                    return new Vector2();
             }
         }
 
@@ -232,7 +232,7 @@ namespace SBCameraScroll
 
         }
 
-        public static void UpdateCamera_PositionType(RoomCamera roomCamera, AttachedFields attachedFields)
+        public static void UpdateCamera_PositionType(RoomCamera roomCamera, in AttachedFields attachedFields)
         {
             //
             // setting up by using attachedFields
@@ -292,7 +292,7 @@ namespace SBCameraScroll
             }
         }
 
-        public static void UpdateCamera_VanillaType(RoomCamera roomCamera, AttachedFields attachedFields)
+        public static void UpdateCamera_VanillaType(RoomCamera roomCamera, in AttachedFields attachedFields)
         {
             Vector2 sSize_2 = roomCamera.sSize / 2f;
 
@@ -350,7 +350,7 @@ namespace SBCameraScroll
             CheckBorders(roomCamera, ref roomCamera.pos);
         }
 
-        public static void UpdateCamera_VelocityType(RoomCamera roomCamera, AttachedFields attachedFields)
+        public static void UpdateCamera_VelocityType(RoomCamera roomCamera, in AttachedFields attachedFields)
         {
             float distanceX = Mathf.Abs(attachedFields.onScreenPosition.x - roomCamera.lastPos.x);
             if (distanceX > outerCameraBoxX)

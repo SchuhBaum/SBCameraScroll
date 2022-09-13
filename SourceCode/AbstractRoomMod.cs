@@ -51,7 +51,7 @@ namespace SBCameraScroll
         // public functions //
         // ---------------- //
 
-        public static void AddCameraTexture(int cameraIndex, string filePath, Vector2[] cameraPositions, Vector2 baseTextureOffset)
+        public static void AddCameraTexture(int cameraIndex, string filePath, in Vector2[] cameraPositions, in Vector2 baseTextureOffset)
         {
             Vector2 _textureOffset = cameraPositions[cameraIndex] - baseTextureOffset; // already contains the offsetModifier
             cameraTexture.LoadImage(File.ReadAllBytes(filePath)); // resizes if needed

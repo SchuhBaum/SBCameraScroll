@@ -4,17 +4,9 @@ namespace SBCameraScroll
 {
     public static class WormGrassPatchMod
     {
-        //
-        // variables
-        //
-
         // I couldn't get weak tables to work in this case // maybe use only for struct type values // List<WeakRef> throws an error // WeakRef<List> gets automatically cleared all the time
         // the difference between this and WormGrass.cosmeticWorms is that I can update them tile by tile // vanilla looks at every worm but only when switching screens // costs too much performance otherwise
         public static Dictionary<WormGrass.WormGrassPatch, List<WormGrass.Worm>[]> cosmeticWormsOnTiles = new Dictionary<WormGrass.WormGrassPatch, List<WormGrass.Worm>[]>();
-
-        //
-        //
-        //
 
         internal static void OnEnable()
         {
