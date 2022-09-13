@@ -191,8 +191,8 @@ namespace SBCameraScroll
 
                 // stop transition earlier when player is moving && vanilla positions are not used
                 if (roomCamera.pos == roomCamera.lastPos || !attachedFields.useVanillaPositions &&
-                    (player.input[0].x == 0 && roomCamera.pos.x == roomCamera.lastPos.x || player.input[0].x != 0 && Math.Abs(roomCamera.pos.x - roomCamera.lastPos.x) <= 10f) &&
-                    (player.input[0].y == 0 && roomCamera.pos.y == roomCamera.lastPos.y || player.input[0].y != 0 && Math.Abs(roomCamera.pos.y - roomCamera.lastPos.y) <= 10f))
+                    (Mathf.Abs(player.mainBodyChunk.vel.x) <= 1f && roomCamera.pos.x == roomCamera.lastPos.x || Mathf.Abs(player.mainBodyChunk.vel.x) > 1f && Math.Abs(roomCamera.pos.x - roomCamera.lastPos.x) <= 10f) &&
+                    (Mathf.Abs(player.mainBodyChunk.vel.y) <= 1f && roomCamera.pos.y == roomCamera.lastPos.y || Mathf.Abs(player.mainBodyChunk.vel.y) > 1f && Math.Abs(roomCamera.pos.y - roomCamera.lastPos.y) <= 10f))
                 {
                     attachedFields.followAbstractCreatureID = roomCamera.followAbstractCreature.ID;
                     attachedFields.transitionTrackingID = null;
@@ -252,7 +252,11 @@ namespace SBCameraScroll
             }
             else if (cameraType == CameraType.Vanilla && attachedFields.useVanillaPositions)
             {
-                targetPosition = roomCamera.seekPos; // only case where the player is not the target // don't check borders for this one
+                // only case where the player is not the target
+                // don't check borders for this one
+                // seekPos can change during a transition // this extends the transition until the player stops changing screens
+
+                targetPosition = roomCamera.seekPos;
             }
 
             //
