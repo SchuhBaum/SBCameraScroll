@@ -1,12 +1,17 @@
 using System;
 using System.IO;
 using System.Reflection;
+using BepInEx;
 using RWCustom;
 using UnityEngine;
 
 namespace SBCameraScroll
 {
-    public class MainMod : Partiality.Modloader.PartialityMod
+    // this plugin needs to be loaded before SplitScreenMod because some methods don't always call orig()
+    // SplitScreenMod needs to be able to get the current cameraNumber for these methods
+    // if I get access to that variable directly (static) I could do that too // but I don't want to carry an instance of SplitScreenMod around => dependency
+    [BepInPlugin("_SchuhBaum.SBCameraScroll", "SBCameraScroll", "0.63")]
+    public class MainMod : BaseUnityPlugin
     {
         //
         // AutoUpdate
@@ -35,6 +40,7 @@ namespace SBCameraScroll
         // ConfigMachine
         //
 
+        public string author;
         public static MainMod? instance;
 
         public static OptionalUI.OptionInterface LoadOI()
@@ -48,15 +54,12 @@ namespace SBCameraScroll
 
         public MainMod()
         {
-            ModID = "SBCameraScroll";
-            Version = "0.62";
             author = "SchuhBaum";
             instance = this;
         }
 
-        public override void OnEnable()
+        public void OnEnable()
         {
-            base.OnEnable();
             On.RainWorld.Start += RainWorld_Start;
         }
 
@@ -94,7 +97,7 @@ namespace SBCameraScroll
         private void RainWorld_Start(On.RainWorld.orig_Start orig, RainWorld rainWorld)
         {
             CreateModRootDirectory();
-            Debug.Log("SBCameraScroll: Version " + Version);
+            Debug.Log("SBCameraScroll: Version " + Info.Metadata.Version);
 
             foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
@@ -144,5 +147,20 @@ namespace SBCameraScroll
 
             orig(rainWorld);
         }
+
+        // internal static object? SetNonPublicField(object? instance, string fieldName, object value) => SetField(instance?.GetType(), instance, fieldName, value, BindingFlags.NonPublic | BindingFlags.Instance);
+
+        // private static object? SetField(Type? type, object? instance, string fieldName, object value, BindingFlags bindingFlags)
+        // {
+        //     try
+        //     {
+        //         type?.GetField(fieldName, bindingFlags).SetValue(instance, value);
+        //     }
+        //     catch (Exception exception)
+        //     {
+        //         Debug.Log("SBCameraScroll: " + exception);
+        //     }
+        //     return null;
+        // }
     }
 }
