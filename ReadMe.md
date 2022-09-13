@@ -81,7 +81,7 @@ v0.60:
 - Empty merged texture files are ignored and will be overwritten. In rare cases the file was created but not written to.
 - Void sea is treated as being blacklisted. The camera should no longer lag behind and the screen shake should be applied normally.
 - Simplified implementation.
-- Fixed a memory leak caused by calling www.texture which created texture copies.
+- Fixed a memory leak caused by calling `www.texture` which created texture copies.
 - Split the fullscreen effect option into two options. One for fog and the other for the rest.
 - Fixed three bugs where a variable was cleared too early.
 
