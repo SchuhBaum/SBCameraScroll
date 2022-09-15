@@ -30,7 +30,7 @@ namespace SBCameraScroll
             roomCamera.room.cameraPositions[roomCamera.currentCameraPosition] = roomCameraPosition;
 
             // this makes the position as it should be // i.e. it respects a moving camera (even without scrolling the camera moves)
-            // however this messes with the lightning of the cloud shader // the clouds look like light bulbs turning on and off when scrolling quickly
+            // however this messes with the light of the cloud shader // the clouds look like light bulbs turning on and off when scrolling quickly
 
             // spriteLeaser.sprites[1].x = 683f + closeCloud.DrawPos(cameraPosition, roomCamera.hDisplace).x;
         }
