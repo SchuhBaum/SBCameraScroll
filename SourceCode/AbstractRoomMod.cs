@@ -18,10 +18,12 @@ namespace SBCameraScroll
             public bool isInitialized = false;
             public Vector2 textureOffset = new Vector2();
 
-            public AttachedFields() { }
+            public AttachedFields()
+            {
+            }
         }
 
-        private static WeakTable<AbstractRoom, AttachedFields> attachedFields = new WeakTable<AbstractRoom, AttachedFields>(_ => new AttachedFields());
+        private static readonly WeakTable<AbstractRoom, AttachedFields> attachedFields = new WeakTable<AbstractRoom, AttachedFields>(_ => new AttachedFields());
         public static AttachedFields GetAttachedFields(this AbstractRoom abstractRoom) => attachedFields[abstractRoom];
 
         public static Dictionary<AbstractRoom, WormGrass> abstractRoomsWithWormGrass = new Dictionary<AbstractRoom, WormGrass>();

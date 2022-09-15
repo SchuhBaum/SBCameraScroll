@@ -34,10 +34,12 @@ namespace SBCameraScroll
             public Vector2 seekPosition = new Vector2();
             public Vector2 vanillaTypePosition = new Vector2();
 
-            public AttachedFields() { }
+            public AttachedFields()
+            {
+            }
         }
 
-        private static WeakTable<RoomCamera, AttachedFields> attachedFields = new WeakTable<RoomCamera, AttachedFields>(_ => new AttachedFields());
+        private static readonly WeakTable<RoomCamera, AttachedFields> attachedFields = new WeakTable<RoomCamera, AttachedFields>(_ => new AttachedFields());
         public static AttachedFields GetAttachedFields(this RoomCamera roomCamera) => attachedFields[roomCamera];
 
         //
@@ -150,18 +152,12 @@ namespace SBCameraScroll
             }
         }
 
-        public static Vector2 SplitScreenMod_GetScreenOffset(in Vector2 screenSize) // for SplitScreenMod
+        public static Vector2 SplitScreenMod_GetScreenOffset(in Vector2 screenSize) => SplitScreenMod.SplitScreenMod.CurrentSplitMode switch
         {
-            switch (SplitScreenMod.SplitScreenMod.CurrentSplitMode)
-            {
-                case SplitScreenMod.SplitScreenMod.SplitMode.SplitVertical:
-                    return new Vector2(0.25f * screenSize.x, 0.0f);
-                case SplitScreenMod.SplitScreenMod.SplitMode.SplitHorizontal:
-                    return new Vector2(0.0f, 0.25f * screenSize.y);
-                default:
-                    return new Vector2();
-            }
-        }
+            SplitScreenMod.SplitScreenMod.SplitMode.SplitVertical => new Vector2(0.25f * screenSize.x, 0.0f),
+            SplitScreenMod.SplitScreenMod.SplitMode.SplitHorizontal => new Vector2(0.0f, 0.25f * screenSize.y),
+            _ => new Vector2(),
+        };
 
         // expanding camera logic from bee's CameraScroll mod
         public static void UpdateCameraPosition(RoomCamera roomCamera)
@@ -200,7 +196,8 @@ namespace SBCameraScroll
                     attachedFields.isCentered = true; // for vanilla type only
                 }
             }
-            else switch (cameraType)
+            else
+                switch (cameraType)
                 {
                     case CameraType.Position:
                         UpdateCamera_PositionType(roomCamera, attachedFields); // don't skip smooth transition if part or set followAbstractCreatureID here
