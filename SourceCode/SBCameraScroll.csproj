@@ -4,7 +4,7 @@
     <TargetFramework>net35</TargetFramework>
     <Nullable>enable</Nullable>
 	<LangVersion>8.0</LangVersion>
-	<Version>0.63.0.0</Version> 
+	<Version>0.64.0.0</Version> 
   </PropertyGroup>
 
   <ItemGroup>

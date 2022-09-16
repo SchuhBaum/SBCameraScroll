@@ -10,7 +10,7 @@ namespace SBCameraScroll
     // this plugin needs to be loaded before SplitScreenMod because some methods don't always call orig()
     // SplitScreenMod needs to be able to get the current cameraNumber for these methods
     // if I get access to that variable directly (static) I could do that too // but I don't want to carry an instance of SplitScreenMod around => dependency
-    [BepInPlugin("_SchuhBaum.SBCameraScroll", "SBCameraScroll", "0.63")]
+    [BepInPlugin("_SchuhBaum.SBCameraScroll", "SBCameraScroll", "0.64")]
     public class MainMod : BaseUnityPlugin
     {
         //
