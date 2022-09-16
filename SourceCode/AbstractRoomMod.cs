@@ -286,7 +286,6 @@ namespace SBCameraScroll
                 pixels[index] = new Color(0.004f, 0.0f, 0.0f); // non-transparent black (dark grey)
             }
             mergedTexture.SetPixels32(pixels);
-            //cameraTexture.Resize(1400, 800, TextureFormat.ARGB32, false); // just to be sure
 
             for (int cameraIndex = 0; cameraIndex < cameraPositions.Length; ++cameraIndex)
             {
@@ -339,7 +338,6 @@ namespace SBCameraScroll
         }
 
         public static void UpdateTextureOffset(AbstractRoom abstractRoom, in Vector2[]? cameraPositions)
-
         {
             AttachedFields attachedFields = abstractRoom.GetAttachedFields();
             if (attachedFields.isInitialized)

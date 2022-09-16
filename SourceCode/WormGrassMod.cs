@@ -37,7 +37,10 @@ namespace SBCameraScroll
                     AbstractRoomMod.ClearWormGrassInAbstractRoom(room.abstractRoom);
                 }
             }
-            AbstractRoomMod.abstractRoomsWithWormGrass.Add(room.abstractRoom, (WormGrass)updatableAndDeletable);
+            else if (wormGrass.patches.Count > 0)
+            {
+                AbstractRoomMod.abstractRoomsWithWormGrass.Add(room.abstractRoom, (WormGrass)updatableAndDeletable);
+            }
         }
 
         private static void WormGrass_Explosion(On.WormGrass.orig_Explosion orig, UpdatableAndDeletable updatableAndDeletable, Explosion explosion)

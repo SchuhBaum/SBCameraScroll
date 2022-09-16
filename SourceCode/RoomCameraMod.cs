@@ -197,6 +197,7 @@ namespace SBCameraScroll
                 }
             }
             else
+            {
                 switch (cameraType)
                 {
                     case CameraType.Position:
@@ -226,7 +227,7 @@ namespace SBCameraScroll
                         UpdateCamera_VelocityType(roomCamera, attachedFields);
                         break;
                 }
-
+            }
         }
 
         public static void UpdateCamera_PositionType(RoomCamera roomCamera, in AttachedFields attachedFields)

@@ -16,46 +16,54 @@ namespace SBCameraScroll
         // private functions //
         // ----------------- //
 
-        private static void CloseCloud_DrawSprites(On.AboveCloudsView.CloseCloud.orig_DrawSprites orig, AboveCloudsView.CloseCloud closeCloud, RoomCamera.SpriteLeaser sLeaser, RoomCamera roomCamera, float timeStacker, Vector2 camPos)
+        private static void CloseCloud_DrawSprites(On.AboveCloudsView.CloseCloud.orig_DrawSprites orig, AboveCloudsView.CloseCloud closeCloud, RoomCamera.SpriteLeaser spriteLeaser, RoomCamera roomCamera, float timeStacker, Vector2 cameraPosition)
         {
             if (roomCamera.room == null)
             {
-                orig(closeCloud, sLeaser, roomCamera, timeStacker, camPos);
+                orig(closeCloud, spriteLeaser, roomCamera, timeStacker, cameraPosition);
                 return;
             }
 
-            Vector2 cameraPosition = roomCamera.room.cameraPositions[roomCamera.currentCameraPosition];
+            Vector2 roomCameraPosition = roomCamera.room.cameraPositions[roomCamera.currentCameraPosition];
             roomCamera.room.cameraPositions[roomCamera.currentCameraPosition] = roomCamera.room.cameraPositions[0];
-            orig(closeCloud, sLeaser, roomCamera, timeStacker, camPos);
-            roomCamera.room.cameraPositions[roomCamera.currentCameraPosition] = cameraPosition;
+            orig(closeCloud, spriteLeaser, roomCamera, timeStacker, cameraPosition);
+            roomCamera.room.cameraPositions[roomCamera.currentCameraPosition] = roomCameraPosition;
+
+            // this makes the position as it should be // i.e. it respects a moving camera (even without scrolling the camera moves)
+            // however this messes with the light of the cloud shader // the clouds look like light bulbs turning on and off when scrolling very quickly
+            spriteLeaser.sprites[1].x = closeCloud.DrawPos(cameraPosition, roomCamera.hDisplace).x;
         }
 
-        private static void DistantCloud_DrawSprites(On.AboveCloudsView.DistantCloud.orig_DrawSprites orig, AboveCloudsView.DistantCloud distantCloud, RoomCamera.SpriteLeaser sLeaser, RoomCamera roomCamera, float timeStacker, Vector2 camPos)
+        private static void DistantCloud_DrawSprites(On.AboveCloudsView.DistantCloud.orig_DrawSprites orig, AboveCloudsView.DistantCloud distantCloud, RoomCamera.SpriteLeaser spriteLeaser, RoomCamera roomCamera, float timeStacker, Vector2 cameraPosition)
         {
             if (roomCamera.room == null)
             {
-                orig(distantCloud, sLeaser, roomCamera, timeStacker, camPos);
+                orig(distantCloud, spriteLeaser, roomCamera, timeStacker, cameraPosition);
                 return;
             }
 
-            Vector2 cameraPosition = roomCamera.room.cameraPositions[roomCamera.currentCameraPosition];
+            Vector2 roomCameraPosition = roomCamera.room.cameraPositions[roomCamera.currentCameraPosition];
             roomCamera.room.cameraPositions[roomCamera.currentCameraPosition] = roomCamera.room.cameraPositions[0];
-            orig(distantCloud, sLeaser, roomCamera, timeStacker, camPos);
-            roomCamera.room.cameraPositions[roomCamera.currentCameraPosition] = cameraPosition;
+            orig(distantCloud, spriteLeaser, roomCamera, timeStacker, cameraPosition);
+
+            roomCamera.room.cameraPositions[roomCamera.currentCameraPosition] = roomCameraPosition;
+            spriteLeaser.sprites[1].x = distantCloud.DrawPos(cameraPosition, roomCamera.hDisplace).x;
         }
 
-        private static void FlyingCloud_DrawSprites(On.AboveCloudsView.FlyingCloud.orig_DrawSprites orig, AboveCloudsView.FlyingCloud flyingCloud, RoomCamera.SpriteLeaser sLeaser, RoomCamera roomCamera, float timeStacker, Vector2 camPos)
+        private static void FlyingCloud_DrawSprites(On.AboveCloudsView.FlyingCloud.orig_DrawSprites orig, AboveCloudsView.FlyingCloud flyingCloud, RoomCamera.SpriteLeaser spriteLeaser, RoomCamera roomCamera, float timeStacker, Vector2 cameraPosition)
         {
             if (roomCamera.room == null)
             {
-                orig(flyingCloud, sLeaser, roomCamera, timeStacker, camPos);
+                orig(flyingCloud, spriteLeaser, roomCamera, timeStacker, cameraPosition);
                 return;
             }
 
-            Vector2 cameraPosition = roomCamera.room.cameraPositions[roomCamera.currentCameraPosition];
+            Vector2 roomCameraPosition = roomCamera.room.cameraPositions[roomCamera.currentCameraPosition];
             roomCamera.room.cameraPositions[roomCamera.currentCameraPosition] = roomCamera.room.cameraPositions[0];
-            orig(flyingCloud, sLeaser, roomCamera, timeStacker, camPos);
-            roomCamera.room.cameraPositions[roomCamera.currentCameraPosition] = cameraPosition;
+            orig(flyingCloud, spriteLeaser, roomCamera, timeStacker, cameraPosition);
+
+            roomCamera.room.cameraPositions[roomCamera.currentCameraPosition] = roomCameraPosition;
+            spriteLeaser.sprites[0].x = flyingCloud.DrawPos(cameraPosition, roomCamera.hDisplace).x;
         }
     }
 }
