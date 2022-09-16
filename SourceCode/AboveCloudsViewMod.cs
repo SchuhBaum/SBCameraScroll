@@ -30,8 +30,7 @@ namespace SBCameraScroll
             roomCamera.room.cameraPositions[roomCamera.currentCameraPosition] = roomCameraPosition;
 
             // this makes the position as it should be // i.e. it respects a moving camera (even without scrolling the camera moves)
-            // however this messes with the light of the cloud shader // the clouds look like light bulbs turning on and off when scrolling quickly
-
+            // however this messes with the light of the cloud shader // the clouds look like light bulbs turning on and off when scrolling very quickly
             spriteLeaser.sprites[1].x = closeCloud.DrawPos(cameraPosition, roomCamera.hDisplace).x;
         }
 
@@ -46,6 +45,7 @@ namespace SBCameraScroll
             Vector2 roomCameraPosition = roomCamera.room.cameraPositions[roomCamera.currentCameraPosition];
             roomCamera.room.cameraPositions[roomCamera.currentCameraPosition] = roomCamera.room.cameraPositions[0];
             orig(distantCloud, spriteLeaser, roomCamera, timeStacker, cameraPosition);
+
             roomCamera.room.cameraPositions[roomCamera.currentCameraPosition] = roomCameraPosition;
             spriteLeaser.sprites[1].x = distantCloud.DrawPos(cameraPosition, roomCamera.hDisplace).x;
         }
@@ -61,6 +61,7 @@ namespace SBCameraScroll
             Vector2 roomCameraPosition = roomCamera.room.cameraPositions[roomCamera.currentCameraPosition];
             roomCamera.room.cameraPositions[roomCamera.currentCameraPosition] = roomCamera.room.cameraPositions[0];
             orig(flyingCloud, spriteLeaser, roomCamera, timeStacker, cameraPosition);
+
             roomCamera.room.cameraPositions[roomCamera.currentCameraPosition] = roomCameraPosition;
             spriteLeaser.sprites[0].x = flyingCloud.DrawPos(cameraPosition, roomCamera.hDisplace).x;
         }

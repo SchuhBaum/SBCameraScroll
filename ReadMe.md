@@ -92,7 +92,7 @@ v0.64:
 - Restructured code.
 - (vanilla type) Map inputs for switching between centering and vanilla camera positions can be used during transitions. 
 - Switched to BepInEx plugin. Changed priority (GUID) to be lower than SplitScreenMod. Otherwise curCamera is not updated during RoomCamera_DrawUpdate calls.
-- Clouds move horizontally accounting for a moving camera.
+- Clouds account horizontally for a moving camera.
 - Worm grass is only added when at least one patch is included.
 
 ### Known issues
