@@ -3,7 +3,9 @@
 This is a mod for Rain World v1.5.
 
 ### Description
-Creates a smooth, scrolling camera that moves with the slugcat. Based on bee's CameraScroll mod, credit to bee for that.
+Creates a smooth, scrolling camera that moves with the slugcat. Based on bee's CameraScroll mod, credit to bee for that.  
+  
+Here is a youtube video showing SBCameraScroll (+ other mods) in action : https://www.youtube.com/watch?v=ePJbY4GSMck
 
 ### Dependencies
 - ConfigMachine.dll.
