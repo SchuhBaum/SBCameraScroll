@@ -6,6 +6,17 @@ namespace SBCameraScroll
 {
     internal static class WormGrassMod
     {
+        //
+        // variables
+        //
+
+        internal static readonly Dictionary<WormGrass, AttachedFields> allAttachedFields = new();
+        public static AttachedFields GetAttachedFields(this WormGrass wormGrass) => allAttachedFields[wormGrass];
+
+        //
+        //
+        //
+
         internal static void OnEnable()
         {
             On.WormGrass.ctor += WormGrass_ctor; // initialize variables
@@ -14,32 +25,60 @@ namespace SBCameraScroll
             On.WormGrass.Update += WormGrass_Update;
         }
 
+        // ---------------- //
+        // public functions //
+        // ---------------- //
+
+        public static void UpdatePatchTile(AttachedFields attachedFields, WormGrass.WormGrassPatch wormGrassPatch, Room wormGrassRoom, int tileIndex)
+        {
+            // in the hunter cutscene this function is called before rainworldgame.ctor
+            ref List<WormGrass.Worm> cosmeticWormsOnTile = ref attachedFields.cosmeticWormsOnTiles[wormGrassPatch][tileIndex];
+            if (cosmeticWormsOnTile.Count == 0 && wormGrassPatch.cosmeticWormPositions[tileIndex].Length > 0 && wormGrassRoom.ViewedByAnyCamera(wormGrassRoom.MiddleOfTile(wormGrassPatch.tiles[tileIndex]), margin: 200f))
+            {
+                for (int wormIndex = 0; wormIndex < wormGrassPatch.cosmeticWormPositions[tileIndex].Length; ++wormIndex)
+                {
+                    WormGrass.Worm worm = new(wormGrassPatch.wormGrass, wormGrassPatch, wormGrassPatch.cosmeticWormPositions[tileIndex][wormIndex], wormGrassPatch.cosmeticWormLengths[tileIndex][wormIndex, 0], wormGrassPatch.sizes[tileIndex, 1], wormGrassPatch.cosmeticWormLengths[tileIndex][wormIndex, 1], true);
+
+                    cosmeticWormsOnTile.Add(worm);
+                    wormGrassPatch.wormGrass.room.AddObject(worm);
+                }
+            }
+            else if (cosmeticWormsOnTile.Count > 0 && !wormGrassRoom.ViewedByAnyCamera(wormGrassRoom.MiddleOfTile(wormGrassPatch.tiles[tileIndex]), margin: 600f))
+            {
+                foreach (WormGrass.Worm worm in cosmeticWormsOnTile)
+                {
+                    worm.Destroy(); // should be removed automatically from room
+                }
+                cosmeticWormsOnTile.Clear();
+            }
+        }
+
         // ----------------- //
         // private functions //
         // ----------------- //
 
         private static void WormGrass_ctor(On.WormGrass.orig_ctor orig, UpdatableAndDeletable updatableAndDeletable, Room room, List<IntVector2> tiles)
         {
-            orig(updatableAndDeletable, room, tiles); // initializes WormGrassPatchMod.cosmeticWormsOnTiles
             WormGrass wormGrass = (WormGrass)updatableAndDeletable;
+            allAttachedFields.Add(wormGrass, new AttachedFields());
+            orig(updatableAndDeletable, room, tiles); // needs attachedFields for wormGrass
 
-            if (AbstractRoomMod.abstractRoomsWithWormGrass.ContainsKey(room.abstractRoom))
+            if (wormGrass.patches.Count == 0)
             {
-                if (wormGrass.patches.Count == 0)
-                {
-                    Debug.Log("SBCameraScroll: There is already worm grass in " + room.abstractRoom.name + ". The new one has no worm grass patches. Delete the new one.");
-                    wormGrass.Destroy();
-                    return;
-                }
-                else
-                {
-                    Debug.Log("SBCameraScroll: There is already worm grass in " + room.abstractRoom.name + ". Delete the old one.");
-                    AbstractRoomMod.ClearWormGrassInAbstractRoom(room.abstractRoom);
-                }
+                Debug.Log("SBCameraScroll: This worm grass for room " + room.abstractRoom.name + " has no patches. Destroy.");
+                wormGrass.Destroy();
+                allAttachedFields.Remove(wormGrass);
             }
-            else if (wormGrass.patches.Count > 0)
+            else
             {
-                AbstractRoomMod.abstractRoomsWithWormGrass.Add(room.abstractRoom, (WormGrass)updatableAndDeletable);
+                AbstractRoomMod.AttachedFields abstractRoomAF = room.abstractRoom.GetAttachedFields();
+                if (abstractRoomAF.wormGrass is WormGrass wormGrass_)
+                {
+                    Debug.Log("SBCameraScroll: There is already worm grass in " + room.abstractRoom.name + ". Destroy the old one.");
+                    wormGrass_.Destroy();
+                    allAttachedFields.Remove(wormGrass_);
+                }
+                abstractRoomAF.wormGrass = wormGrass;
             }
         }
 
@@ -47,27 +86,29 @@ namespace SBCameraScroll
         {
             orig(updatableAndDeletable, explosion); // takes care of small worms // cosmeticWorms is empty because NewCameraPos() is skipped
 
-            WormGrass wormGrass = (WormGrass)updatableAndDeletable;
-            if (!wormGrass.slatedForDeletetion)
+            if (updatableAndDeletable.slatedForDeletetion)
             {
-                foreach (WormGrass.WormGrassPatch wormGrassPatch in wormGrass.patches)
+                return;
+            }
+
+            AttachedFields attachedFields = ((WormGrass)updatableAndDeletable).GetAttachedFields();
+            foreach (List<WormGrass.Worm>[] cosmeticWormsOnTiles in attachedFields.cosmeticWormsOnTiles.Values)
+            {
+                foreach (List<WormGrass.Worm> cosmeticWormsOnTile in cosmeticWormsOnTiles)
                 {
-                    for (int tileIndex = 0; tileIndex < wormGrassPatch.tiles.Count; ++tileIndex)
+                    foreach (WormGrass.Worm worm in cosmeticWormsOnTile) // loaded worms
                     {
-                        foreach (WormGrass.Worm worm in WormGrassPatchMod.cosmeticWormsOnTiles[wormGrassPatch][tileIndex]) // loaded worms
+                        // vanilla copy & paste
+                        if (Custom.DistLess(worm.pos, explosion.pos, explosion.rad * 2f))
                         {
-                            // vanilla copy & paste
-                            if (Custom.DistLess(worm.pos, explosion.pos, explosion.rad * 2f))
+                            float distance = Mathf.InverseLerp(explosion.rad * 2f, explosion.rad, Vector2.Distance(worm.pos, explosion.pos)); // between 0 and 1
+                            if (Random.value < distance)
                             {
-                                float distance = Mathf.InverseLerp(explosion.rad * 2f, explosion.rad, Vector2.Distance(worm.pos, explosion.pos)); // between 0 and 1
-                                if (Random.value < distance)
-                                {
-                                    worm.vel += Custom.DirVec(explosion.pos, worm.pos) * explosion.force * 2f * distance;
-                                    worm.excitement = 0.0f;
-                                    worm.focusCreature = null;
-                                    worm.dragForce = 0.0f;
-                                    worm.attachedChunk = null;
-                                }
+                                worm.vel += Custom.DirVec(explosion.pos, worm.pos) * explosion.force * 2f * distance;
+                                worm.excitement = 0.0f;
+                                worm.focusCreature = null;
+                                worm.dragForce = 0.0f;
+                                worm.attachedChunk = null;
                             }
                         }
                     }
@@ -97,20 +138,34 @@ namespace SBCameraScroll
                 wormGrassPatch.Update();
             }
 
+            if (wormGrass.slatedForDeletetion)
+            {
+                return;
+            }
+
             // different update logic for worms
             // update each tile based on distance
             // not when currentCameraIndex changes
 
-            if (!wormGrass.slatedForDeletetion)
+            AttachedFields attachedFields = wormGrass.GetAttachedFields();
+            foreach (WormGrass.WormGrassPatch wormGrassPatch in attachedFields.cosmeticWormsOnTiles.Keys)
             {
-                foreach (WormGrass.WormGrassPatch wormGrassPatch in wormGrass.patches)
+                for (int tileIndex = 0; tileIndex < wormGrassPatch.tiles.Count; ++tileIndex) // update all tiles at once
                 {
-                    for (int tileIndex = 0; tileIndex < wormGrassPatch.tiles.Count; ++tileIndex) // update all tiles at once
-                    {
-                        WormGrassPatchMod.UpdatePatchTile(wormGrassPatch, wormGrass.room, tileIndex);
-                    }
+                    UpdatePatchTile(attachedFields, wormGrassPatch, wormGrass.room, tileIndex);
                 }
             }
+        }
+
+        //
+        //
+        //
+
+        public sealed class AttachedFields
+        {
+            // the difference between this and WormGrass.cosmeticWorms is that I can update them tile by tile
+            // vanilla looks at every worm but only when switching screens // costs too much performance otherwise
+            public Dictionary<WormGrass.WormGrassPatch, List<WormGrass.Worm>[]> cosmeticWormsOnTiles = new();
         }
     }
 }

@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 0.64
+###### Version: 0.65
 This is a mod for Rain World v1.5.
 
 ### Description
@@ -22,7 +22,6 @@ If you have feedback, you can message me on Discord `@SchuhBaum#7246` or write a
 
 ### License
 There are two licenses available - MIT and Unlicense. You can choose which one you want to use.  
-**NOTE:** WeakTables use their own license. This license is included in the folder SourceCode/WeakTables. Website: https://github.com/Dual-Iron/weak-tables
 
 ### Changelog
 v0.3:
@@ -85,7 +84,7 @@ v0.60:
 - Split the fullscreen effect option into two options. One for fog and the other for the rest.
 - Fixed three bugs where a variable was cleared too early.
 
-v0.64:
+v0.65:
 - Restructured code. Using weak tables. Fixed a bug where the texture offset of region gates were not initialized. Restructured CheckBorders() + included patch from SplitScreenMod. 
 - (vanilla type) Fixed a bug where the camera would slightly move after a screen transition when using vanilla camera positions. The lean effect now mimics vanilla lean effect instead of scaling with the camera box. This removes one parameter from the options menu.
 - Slightly increase minimum speed for transitions and the position type camera. Camera moves at least one pixel per frame.
@@ -93,7 +92,7 @@ v0.64:
 - (vanilla type) Map inputs for switching between centering and vanilla camera positions can be used during transitions. 
 - Switched to BepInEx plugin. Changed priority (GUID) to be lower than SplitScreenMod. Otherwise curCamera is not updated during RoomCamera_DrawUpdate calls.
 - Clouds account horizontally for a moving camera.
-- Worm grass is only added when at least one patch is included.
+- Restructured code. Worm grass is only added when at least one patch is included.
 
 ### Known issues
 - Motion sickness might be a problem. I wonder how much is due to noise (details) in the textures. You can play around with the parameters and see what works for you.
