@@ -100,3 +100,4 @@ v0.65:
 - Motion sickness might be a problem. I wonder how much is due to noise (details) in the textures. You can play around with the parameters and see what works for you.
 - The underwater shaders do not work correctly. In large rooms they can smear sprites.
 - Shadows at the edge of the screen seem to flicker or stretch in some rooms. I can see the same thing without camera scroll. Maybe a vanilla bug. 
+- There seem to be an memory increase over time. This might be due to a memory leak or maybe due to memory fragmentation. Fragmentation might happen because most roomCamera textures are now fairly large and change in size often. It is recommended to restart the game every now and then.
