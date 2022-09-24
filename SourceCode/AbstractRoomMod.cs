@@ -3,42 +3,29 @@ using System.Collections.Generic;
 using System.IO;
 using RWCustom;
 using UnityEngine;
-using WeakTables;
 
 namespace SBCameraScroll
 {
     public static class AbstractRoomMod
     {
         //
-        // variables / WeakTables
+        // variables
         //
 
-        public sealed class AttachedFields
-        {
-            public bool isInitialized = false;
-            public Vector2 textureOffset = new Vector2();
-
-            public AttachedFields()
-            {
-            }
-        }
-
-        private static readonly WeakTable<AbstractRoom, AttachedFields> attachedFields = new WeakTable<AbstractRoom, AttachedFields>(_ => new AttachedFields());
-        public static AttachedFields GetAttachedFields(this AbstractRoom abstractRoom) => attachedFields[abstractRoom];
-
-        public static Dictionary<AbstractRoom, WormGrass> abstractRoomsWithWormGrass = new Dictionary<AbstractRoom, WormGrass>();
+        internal static readonly Dictionary<AbstractRoom, AttachedFields> allAttachedFields = new();
+        public static AttachedFields GetAttachedFields(this AbstractRoom abstractRoom) => allAttachedFields[abstractRoom];
 
         //
         //
         //
 
-        public static readonly Dictionary<string, Vector2> textureOffsetModifier = new Dictionary<string, Vector2>()
+        public static readonly Dictionary<string, Vector2> textureOffsetModifier = new()
         {
             ["SB_J03"] = new Vector2(300f, 0.0f)
         };
 
-        public static readonly Texture2D mergedTexture = new Texture2D(1, 1, TextureFormat.ARGB32, false);
-        public static readonly Texture2D cameraTexture = new Texture2D(1, 1, TextureFormat.ARGB32, false);
+        public static readonly Texture2D mergedTexture = new(1, 1, TextureFormat.ARGB32, false);
+        public static readonly Texture2D cameraTexture = new(1, 1, TextureFormat.ARGB32, false);
 
         //
         //
@@ -46,6 +33,7 @@ namespace SBCameraScroll
 
         internal static void OnEnable()
         {
+            On.AbstractRoom.ctor += AbstractRoom_ctor;
             On.AbstractRoom.Abstractize += AbstractRoom_Abstractize;
         }
 
@@ -97,7 +85,7 @@ namespace SBCameraScroll
                 // SL_C01 has two cameras which are in outer space or something => needed too much memory
                 Debug.Log("SBCameraScroll: One or more camera screen positions are out of bounds. Remove them from cameraPositions.");
 
-                List<Vector2> cameraPositions_ = new List<Vector2>();
+                List<Vector2> cameraPositions_ = new();
                 foreach (Vector2 cameraPosition in cameraPositions)
                 {
                     if (Mathf.Abs(cameraPosition.x) <= 20000f && Mathf.Abs(cameraPosition.y) <= 20000f)
@@ -109,26 +97,21 @@ namespace SBCameraScroll
             }
         }
 
-        public static void ClearWormGrassInAbstractRoom(AbstractRoom abstractRoom)
+        public static void DestroyWormGrassInAbstractRoom(AbstractRoom abstractRoom)
         {
-            if (abstractRoomsWithWormGrass.ContainsKey(abstractRoom))
+            AttachedFields attachedFields = abstractRoom.GetAttachedFields();
+            if (attachedFields.wormGrass is WormGrass wormGrass)
             {
                 Debug.Log("SBCameraScroll: Remove worm grass from " + abstractRoom.name + ".");
 
                 // I expect only one wormGrass per room
                 // wormGrass can have multiple patches with multiple tiles each
 
-                WormGrass wormGrass = abstractRoomsWithWormGrass[abstractRoom];
-                wormGrass.Destroy(); // sets slatedForDeletetion
-                abstractRoomsWithWormGrass.Remove(abstractRoom);
-
-                foreach (WormGrass.WormGrassPatch wormGrassPatch in wormGrass.patches)
-                {
-                    WormGrassPatchMod.cosmeticWormsOnTiles.Remove(wormGrassPatch);
-                }
+                wormGrass.Destroy();
+                WormGrassMod.allAttachedFields.Remove(wormGrass);
             }
+            attachedFields.wormGrass = null;
         }
-
         public static string? GetCustomRegionsRelativeRoomsPath(string? roomName)
         {
             if (roomName == null)
@@ -242,7 +225,7 @@ namespace SBCameraScroll
             int maxWidth = 0;
             int maxHeight = 0;
 
-            Vector2 offsetModifier = new Vector2();
+            Vector2 offsetModifier = new();
             if (textureOffsetModifier.ContainsKey(roomName))
             {
                 offsetModifier = textureOffsetModifier[roomName];
@@ -277,6 +260,7 @@ namespace SBCameraScroll
                 {
                     RoomCameraMod.blacklistedRooms.Add(roomName);
                 }
+                mergedTexture.Resize(1, 1);
                 return;
             }
 
@@ -285,7 +269,7 @@ namespace SBCameraScroll
             {
                 pixels[index] = new Color(0.004f, 0.0f, 0.0f); // non-transparent black (dark grey)
             }
-            mergedTexture.SetPixels32(pixels);
+            mergedTexture.SetPixels32(pixels); // faster than SetPixel()
 
             for (int cameraIndex = 0; cameraIndex < cameraPositions.Length; ++cameraIndex)
             {
@@ -308,6 +292,9 @@ namespace SBCameraScroll
                         {
                             RoomCameraMod.blacklistedRooms.Add(roomName);
                         }
+
+                        mergedTexture.Resize(1, 1);
+                        cameraTexture.Resize(1, 1);
                         return;
                     }
                 }
@@ -371,10 +358,27 @@ namespace SBCameraScroll
         // private
         //
 
+        private static void AbstractRoom_ctor(On.AbstractRoom.orig_ctor orig, AbstractRoom abstractRoom, string name, int[] connections, int index, int swarmRoomIndex, int shelterIndex, int gateIndex)
+        {
+            orig(abstractRoom, name, connections, index, swarmRoomIndex, shelterIndex, gateIndex);
+            allAttachedFields.Add(abstractRoom, new AttachedFields());
+        }
+
         private static void AbstractRoom_Abstractize(On.AbstractRoom.orig_Abstractize orig, AbstractRoom abstractRoom)
         {
-            ClearWormGrassInAbstractRoom(abstractRoom);
+            DestroyWormGrassInAbstractRoom(abstractRoom);
             orig(abstractRoom);
+        }
+
+        //
+        //
+        //
+
+        public sealed class AttachedFields
+        {
+            public bool isInitialized = false;
+            public Vector2 textureOffset = new();
+            public WormGrass? wormGrass = null;
         }
     }
 }

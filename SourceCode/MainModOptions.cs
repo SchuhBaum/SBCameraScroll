@@ -9,16 +9,16 @@ namespace SBCameraScroll
 {
     public class MainModOptions : OptionInterface
     {
-        private Vector2 marginX = new Vector2();
-        private Vector2 pos = new Vector2();
+        private Vector2 marginX = new();
+        private Vector2 pos = new();
         private readonly float spacing = 20f;
 
-        private readonly List<float> boxEndPositions = new List<float>();
+        private readonly List<float> boxEndPositions = new();
 
         private readonly int numberOfCheckboxes = 3;
         private readonly float checkBoxSize = 24f;
-        private readonly List<OpCheckBox> checkBoxes = new List<OpCheckBox>();
-        private readonly List<OpLabel> checkBoxesTextLabels = new List<OpLabel>();
+        private readonly List<OpCheckBox> checkBoxes = new();
+        private readonly List<OpLabel> checkBoxesTextLabels = new();
 
         private OpComboBox? cameraType = null;
         private int lastCameraType = 0;
@@ -29,19 +29,19 @@ namespace SBCameraScroll
             "Vanilla-style camera. You can center the camera by pressing the map button. Pressing the map button again will revert to vanilla camera positions.\nWhen the player is close to the edge of the screen the camera jumps a constant distance.",
             "Mario-style camera. This type tries to match the player's speed.\nWhen OuterCameraBox is reached, the camera moves as fast as the player."
         };
-        private readonly List<OpComboBox> comboBoxes = new List<OpComboBox>();
-        private readonly List<OpLabel> comboBoxesTextLabels = new List<OpLabel>();
+        private readonly List<OpComboBox> comboBoxes = new();
+        private readonly List<OpLabel> comboBoxesTextLabels = new();
 
-        private readonly List<string> sliderKeys = new List<string>();
-        private readonly List<IntVector2> sliderRanges = new List<IntVector2>();
-        private readonly List<int> sliderDefaultValues = new List<int>();
-        private readonly List<string> sliderDescriptions = new List<string>();
-        private readonly List<string> sliderMainTextLabels = new List<string>();
-        private readonly List<OpLabel> sliderTextLabelsLeft = new List<OpLabel>();
-        private readonly List<OpLabel> sliderTextLabelsRight = new List<OpLabel>();
+        private readonly List<string> sliderKeys = new();
+        private readonly List<IntVector2> sliderRanges = new();
+        private readonly List<int> sliderDefaultValues = new();
+        private readonly List<string> sliderDescriptions = new();
+        private readonly List<string> sliderMainTextLabels = new();
+        private readonly List<OpLabel> sliderTextLabelsLeft = new();
+        private readonly List<OpLabel> sliderTextLabelsRight = new();
 
         private readonly float fontHeight = 20f;
-        private readonly List<OpLabel> textLabels = new List<OpLabel>();
+        private readonly List<OpLabel> textLabels = new();
 
         private float CheckBoxWithSpacing => checkBoxSize + 0.25f * spacing;
 
@@ -74,7 +74,7 @@ namespace SBCameraScroll
             AddNewLine();
             AddBox();
 
-            List<ListItem> _cameraTypes = new List<ListItem> // { "Position", "Vanilla", "Velocity" };
+            List<ListItem> _cameraTypes = new()
             {
                 new ListItem(cameraTypeKeys[0], "Position (Default)") { desc = cameraTypeDescriptions[0] },
                 new ListItem(cameraTypeKeys[1], "Vanilla") { desc = cameraTypeDescriptions[1] },
@@ -358,7 +358,7 @@ namespace SBCameraScroll
 
         private void AddCheckBox(string key, string text, string description, bool? defaultBool = null)
         {
-            OpCheckBox opCheckBox = new OpCheckBox(new Vector2(), key, defaultBool: defaultBool ?? false)
+            OpCheckBox opCheckBox = new(new Vector2(), key, defaultBool: defaultBool ?? false)
             {
                 description = description
             };
@@ -412,10 +412,10 @@ namespace SBCameraScroll
 
         private void AddComboBox(List<ListItem> list, string key, string text, string description, string defaultName = "", bool allowEmpty = false)
         {
-            OpLabel opLabel = new OpLabel(new Vector2(), new Vector2(0.0f, fontHeight), text, FLabelAlignment.Center, false);
+            OpLabel opLabel = new(new Vector2(), new Vector2(0.0f, fontHeight), text, FLabelAlignment.Center, false);
             comboBoxesTextLabels.Add(opLabel);
 
-            OpComboBox opComboBox = new OpComboBox(new Vector2(), 200f, key, list, defaultName)
+            OpComboBox opComboBox = new(new Vector2(), 200f, key, list, defaultName)
             {
                 allowEmpty = allowEmpty,
                 description = description
@@ -444,7 +444,7 @@ namespace SBCameraScroll
                 pos.x += width;
 
                 OpComboBox comboBox = comboBoxes[comboBoxIndex];
-                OpComboBox newComboBox = new OpComboBox(pos, width, comboBox.key, comboBox.GetItemList().ToList(), defaultName: comboBox.defaultValue)
+                OpComboBox newComboBox = new(pos, width, comboBox.key, comboBox.GetItemList().ToList(), defaultName: comboBox.defaultValue)
                 {
                     allowEmpty = comboBox.allowEmpty,
                     description = comboBox.description,
@@ -550,7 +550,7 @@ namespace SBCameraScroll
                 opLabel.size = new Vector2(sliderLabelSizeX, fontHeight);
                 tab.AddItems(opLabel);
 
-                OpSlider slider = new OpSlider(new Vector2(sliderCenter - 0.5f * sliderSizeX, pos.y), sliderKeys[sliderIndex], sliderRanges[sliderIndex], length: (int)sliderSizeX, defaultValue: sliderDefaultValues[sliderIndex])
+                OpSlider slider = new(new Vector2(sliderCenter - 0.5f * sliderSizeX, pos.y), sliderKeys[sliderIndex], sliderRanges[sliderIndex], length: (int)sliderSizeX, defaultValue: sliderDefaultValues[sliderIndex])
                 {
                     size = new Vector2(sliderSizeX, fontHeight),
                     description = sliderDescriptions[sliderIndex]
@@ -589,7 +589,7 @@ namespace SBCameraScroll
                 pos.y -= textHeight;
             }
 
-            OpLabel textLabel = new OpLabel(new Vector2(), new Vector2(20f, textHeight), text, alignment, bigText) // minimal size.x = 20f
+            OpLabel textLabel = new(new Vector2(), new Vector2(20f, textHeight), text, alignment, bigText) // minimal size.x = 20f
             {
                 autoWrap = true
             };

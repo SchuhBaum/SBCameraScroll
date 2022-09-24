@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using RWCustom;
 using UnityEngine;
-using WeakTables;
 
 namespace SBCameraScroll
 {
@@ -17,30 +16,11 @@ namespace SBCameraScroll
     public static class RoomCameraMod
     {
         //
-        // variables / WeakTables
+        // variables
         //
 
-        public sealed class AttachedFields
-        {
-            public bool isCentered;
-            public bool isRoomBlacklisted;
-            public bool useVanillaPositions; // for vanilla type camera
-
-            public EntityID? followAbstractCreatureID = null;
-            public EntityID? transitionTrackingID = null;
-
-            public Vector2 lastOnScreenPosition = new Vector2();
-            public Vector2 onScreenPosition = new Vector2();
-            public Vector2 seekPosition = new Vector2();
-            public Vector2 vanillaTypePosition = new Vector2();
-
-            public AttachedFields()
-            {
-            }
-        }
-
-        private static readonly WeakTable<RoomCamera, AttachedFields> attachedFields = new WeakTable<RoomCamera, AttachedFields>(_ => new AttachedFields());
-        public static AttachedFields GetAttachedFields(this RoomCamera roomCamera) => attachedFields[roomCamera];
+        internal static readonly Dictionary<RoomCamera, AttachedFields> allAttachedFields = new();
+        public static AttachedFields GetAttachedFields(this RoomCamera roomCamera) => allAttachedFields[roomCamera];
 
         //
         // parameters
@@ -56,7 +36,7 @@ namespace SBCameraScroll
         public static float smoothingFactorY = 0.0f;
 
         public static float maxUpdateShortcut = 3f;
-        public static List<string> blacklistedRooms = new List<string>();
+        public static List<string> blacklistedRooms = new();
 
         //
         //
@@ -67,15 +47,17 @@ namespace SBCameraScroll
             On.RoomCamera.ApplyDepth += RoomCamera_ApplyDepth;
             On.RoomCamera.ApplyPalette += RoomCamera_ApplyPalette;
             On.RoomCamera.ApplyPositionChange += RoomCamera_ApplyPositionChange;
-            On.RoomCamera.DrawUpdate += RoomCamera_DrawUpdate;
+            On.RoomCamera.ctor += RoomCamera_ctor;
 
+            On.RoomCamera.DrawUpdate += RoomCamera_DrawUpdate;
             On.RoomCamera.MoveCamera_int += RoomCamera_MoveCamera;
             On.RoomCamera.MoveCamera2 += RoomCamera_MoveCamera2;
             On.RoomCamera.PixelColorAtCoordinate += RoomCamera_PixelColorAtCoordinate;
-            On.RoomCamera.PositionCurrentlyVisible += RoomCamera_PositionCurrentlyVisible;
 
+            On.RoomCamera.PositionCurrentlyVisible += RoomCamera_PositionCurrentlyVisible;
             On.RoomCamera.PositionVisibleInNextScreen += RoomCamera_PositionVisibleInNextScreen;
             On.RoomCamera.PreLoadTexture += RoomCamera_PreLoadTexture;
+
             On.RoomCamera.ScreenMovement += RoomCamera_ScreenMovement;
             On.RoomCamera.Update += RoomCamera_Update;
         }
@@ -433,7 +415,7 @@ namespace SBCameraScroll
 
             // this is what you see from levelGraphic / levelTexture on screen
             // scroll texture left when moving right and vice versa
-            Vector2 startPosition = new Vector2(roomCamera.levelGraphic.x, roomCamera.levelGraphic.y);
+            Vector2 startPosition = new(roomCamera.levelGraphic.x, roomCamera.levelGraphic.y);
             Vector2 endPosition = startPosition + new Vector2(roomCamera.levelGraphic.width, roomCamera.levelGraphic.height);
 
             Shader.SetGlobalVector("_spriteRect", new Vector4((startPosition.x - 0.5f) / roomCamera.sSize.x, (startPosition.y + 0.5f) / roomCamera.sSize.y, (endPosition.x - 0.5f) / roomCamera.sSize.x, (endPosition.y + 0.5f) / roomCamera.sSize.y)); // if the 0.5f is missing then you get black outlines
@@ -491,6 +473,12 @@ namespace SBCameraScroll
                 roomCamera.GetAttachedFields().isRoomBlacklisted = false;
             }
             ResetCameraPosition(roomCamera); // uses currentCameraPosition and isRoomBlacklisted
+        }
+
+        private static void RoomCamera_ctor(On.RoomCamera.orig_ctor orig, RoomCamera roomCamera, RainWorldGame game, int cameraNumber)
+        {
+            orig(roomCamera, game, cameraNumber);
+            allAttachedFields.Add(roomCamera, new AttachedFields());
         }
 
         // updates all the visual stuff // calls UpdateScreen() // mainly adepts the camera texture to the current (smoothed) position
@@ -757,6 +745,25 @@ namespace SBCameraScroll
             {
                 UpdateCameraPosition(roomCamera);
             }
+        }
+
+        //
+        //
+        //
+
+        public sealed class AttachedFields
+        {
+            public bool isCentered = false;
+            public bool isRoomBlacklisted = false;
+            public bool useVanillaPositions = false; // for vanilla type camera
+
+            public EntityID? followAbstractCreatureID = null;
+            public EntityID? transitionTrackingID = null;
+
+            public Vector2 lastOnScreenPosition = new();
+            public Vector2 onScreenPosition = new();
+            public Vector2 seekPosition = new();
+            public Vector2 vanillaTypePosition = new();
         }
     }
 }
