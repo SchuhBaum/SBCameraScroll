@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using OptionalUI;
 using RWCustom;
@@ -9,19 +10,15 @@ namespace SBCameraScroll
 {
     public class MainModOptions : OptionInterface
     {
-        private Vector2 marginX = new();
-        private Vector2 pos = new();
+        //
+        // parameter
+        //
+
         private readonly float spacing = 20f;
-
-        private readonly List<float> boxEndPositions = new();
-
+        private readonly float fontHeight = 20f;
         private readonly int numberOfCheckboxes = 3;
         private readonly float checkBoxSize = 24f;
-        private readonly List<OpCheckBox> checkBoxes = new();
-        private readonly List<OpLabel> checkBoxesTextLabels = new();
 
-        private OpComboBox? cameraType = null;
-        private int lastCameraType = 0;
         private readonly string[] cameraTypeKeys = new string[3] { "position", "vanilla", "velocity" };
         private readonly string[] cameraTypeDescriptions = new string[3]
         {
@@ -29,6 +26,24 @@ namespace SBCameraScroll
             "Vanilla-style camera. You can center the camera by pressing the map button. Pressing the map button again will revert to vanilla camera positions.\nWhen the player is close to the edge of the screen the camera jumps a constant distance.",
             "Mario-style camera. This type tries to match the player's speed.\nWhen OuterCameraBox is reached, the camera moves as fast as the player."
         };
+
+        //
+        // variables
+        //
+
+        private Vector2 marginX = new();
+        private Vector2 pos = new();
+
+        private readonly List<float> boxEndPositions = new();
+
+        private readonly List<OpCheckBox> checkBoxes = new();
+        private readonly List<OpLabel> checkBoxesTextLabels = new();
+
+        private OpComboBox? cameraType = null;
+        private int lastCameraType = 0;
+
+        public static OpSimpleButton? clearCacheButton = null;
+
         private readonly List<OpComboBox> comboBoxes = new();
         private readonly List<OpLabel> comboBoxesTextLabels = new();
 
@@ -40,7 +55,6 @@ namespace SBCameraScroll
         private readonly List<OpLabel> sliderTextLabelsLeft = new();
         private readonly List<OpLabel> sliderTextLabelsRight = new();
 
-        private readonly float fontHeight = 20f;
         private readonly List<OpLabel> textLabels = new();
 
         private float CheckBoxWithSpacing => checkBoxSize + 0.25f * spacing;
@@ -54,7 +68,10 @@ namespace SBCameraScroll
             base.Initialize();
             Tabs = new OpTab[4];
 
-            // general tab
+            //-------------//
+            // general tab //
+            //-------------//
+
             int tabIndex = 0;
             Tabs[tabIndex] = new OpTab("General");
             InitializeMarginAndPos();
@@ -87,7 +104,7 @@ namespace SBCameraScroll
 
             AddCheckBox("fogFullScreenEffect", "Fog Effect", "When disabled, the full screen fog effect is removed. It depends on the camera position and can noticeably move with the screen.", defaultBool: true);
             AddCheckBox("otherFullScreenEffects", "Full Screen Effects", "When disabled, full screen effects (except fog) like bloom and melt are removed.", defaultBool: true);
-            AddCheckBox("mergeWhileLoading", "Merge While Loading", "When enabled, the camera textures for each room are merged when the region gets loaded.\nWhen disabled, camera textures are merge for each room on demand. Merging happens only once and the files are stored in your Mods\\SBCameraScroll folder.\nThis process can take a while. Merging all rooms in Deserted Wastelands took me around three minutes.", defaultBool: true);
+            AddCheckBox("mergeWhileLoading", "Merge While Loading", "When enabled, the camera textures for each room are merged when the region gets loaded.\nWhen disabled, camera textures are merged for each room on demand. Merging happens only once and the files are stored inside the folder \"Mods/SBCameraScroll/\".\nThis process can take a while. Merging all rooms in Deserted Wastelands took me around three minutes.", defaultBool: true);
             AddCheckBox("scrollOneScreenRooms", "One Screen Rooms", "When disabled, the camera does not scroll in rooms with only one screen. Automatically enabled when using SplitScreenMod.", defaultBool: false);
             DrawCheckBoxes(ref Tabs[tabIndex]);
 
@@ -100,6 +117,22 @@ namespace SBCameraScroll
 
             AddSlider("smoothingFactorY", "Smoothing Factor for Y (8)", "The smoothing factor determines how much of the distance is covered per frame. This is used when switching cameras as well to ensure a smooth transition.", new IntVector2(0, 35), defaultValue: 8, "0%", "70%");
             DrawSliders(ref Tabs[tabIndex]);
+
+            AddNewLine(3f);
+
+            clearCacheButton = new OpSimpleButton(new Vector2(pos.x + (marginX.y - marginX.x) / 2f - 55f, pos.y), new Vector2(110f, 30f), "clearCache", "CLEAR CACHE") // same size as apply / back button in ConfigMachine
+            {
+                colorEdge = new Color(1f, 1f, 1f, 1f),
+                colorFill = new Color(1f, 0.0f, 0.0f, 0.5f),
+                description = "WARNING: Deletes all merged textures inside the folder \"Mods/SBCameraScroll/\".\nAdding custom regions might change existing room textures. These textures need to be merged again."
+            };
+            Tabs[tabIndex].AddItems(clearCacheButton);
+
+            if (clearCacheButton != null && Directory.GetFiles(MainMod.modDirectoryPath, "*.*", SearchOption.AllDirectories).Length == 0)
+            {
+                clearCacheButton.colorEdge.a = 0.1f;
+                clearCacheButton.greyedOut = true;
+            }
 
             DrawBox(ref Tabs[tabIndex]);
 
@@ -294,6 +327,26 @@ namespace SBCameraScroll
                     Debug.Log("SBCameraScroll: outerCameraBoxX " + RoomCameraMod.outerCameraBoxX);
                     Debug.Log("SBCameraScroll: outerCameraBoxY " + RoomCameraMod.outerCameraBoxY);
                     break;
+            }
+        }
+
+        public override void Signal(UItrigger trigger, string signal)
+        {
+            if (signal == "clearCache")
+            {
+                FileInfo[] files = new DirectoryInfo(MainMod.modDirectoryPath).GetFiles("*.*", SearchOption.AllDirectories);
+                for (int fileIndex = files.Length - 1; fileIndex >= 0; --fileIndex)
+                {
+                    files[fileIndex].Delete();
+                }
+            }
+
+            if (clearCacheButton != null && Directory.GetFiles(MainMod.modDirectoryPath, "*.*", SearchOption.AllDirectories).Length == 0)
+            {
+                clearCacheButton.colorEdge.a = 0.1f;
+                clearCacheButton.colorFill = new Color(0.0f, 0.0f, 0.0f, 0.0f);
+                clearCacheButton.greyedOut = true;
+                clearCacheButton.OnChange();
             }
         }
 

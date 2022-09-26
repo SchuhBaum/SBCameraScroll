@@ -24,8 +24,8 @@ namespace SBCameraScroll
             ["SB_J03"] = new Vector2(300f, 0.0f)
         };
 
-        public static readonly Texture2D mergedTexture = new(1, 1, TextureFormat.ARGB32, false);
-        public static readonly Texture2D cameraTexture = new(1, 1, TextureFormat.ARGB32, false);
+        public static readonly Texture2D mergedTexture = new(1, 1, TextureFormat.RGB24, false);
+        public static readonly Texture2D cameraTexture = new(1, 1, TextureFormat.RGB24, false);
 
         //
         //
@@ -251,7 +251,7 @@ namespace SBCameraScroll
                 Debug.Log("SBCameraScroll: Cutting edges by modifying the texture offset.");
                 Debug.Log("SBCameraScroll: offsetModifier " + offsetModifier);
             }
-            mergedTexture.Resize(maxWidth, maxHeight, TextureFormat.ARGB32, false); // don't create new Texture2D objects => high memory usage
+            mergedTexture.Resize(maxWidth, maxHeight); // don't create new Texture2D objects => high memory usage
 
             if (mergedTexture.width != maxWidth || mergedTexture.height != maxHeight)
             {
@@ -264,12 +264,12 @@ namespace SBCameraScroll
                 return;
             }
 
-            Color32[] pixels = new Color32[maxWidth * maxHeight];
+            Color[] pixels = new Color[maxWidth * maxHeight];
             for (int index = 0; index < pixels.Length; ++index)
             {
                 pixels[index] = new Color(0.004f, 0.0f, 0.0f); // non-transparent black (dark grey)
             }
-            mergedTexture.SetPixels32(pixels); // faster than SetPixel()
+            mergedTexture.SetPixels(pixels); // faster than SetPixel()
 
             for (int cameraIndex = 0; cameraIndex < cameraPositions.Length; ++cameraIndex)
             {
