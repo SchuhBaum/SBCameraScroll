@@ -295,6 +295,8 @@ namespace SBCameraScroll
 
                         mergedTexture.Resize(1, 1);
                         cameraTexture.Resize(1, 1);
+                        cameraTexture.Apply();
+                        Resources.UnloadUnusedAssets();
                         return;
                     }
                 }
@@ -322,6 +324,12 @@ namespace SBCameraScroll
             Debug.Log("SBCameraScroll: Merging complete.");
             mergedTexture.Resize(1, 1);
             cameraTexture.Resize(1, 1);
+            cameraTexture.Apply(); // uses LoadImage() which calls Apply() to upload to the GPU; maybe this is better;
+
+            // this seems to be required; do the loaded images stay in memory otherwise?;
+            // there is still some sort of memory fragmentation(?) going on; maybe bc
+            // of the resizing
+            Resources.UnloadUnusedAssets();
         }
 
         public static void UpdateTextureOffset(AbstractRoom abstractRoom, in Vector2[]? cameraPositions)
