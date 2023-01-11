@@ -10,7 +10,7 @@ namespace SBCameraScroll
     // this plugin needs to be loaded before SplitScreenMod because some methods don't always call orig()
     // SplitScreenMod needs to be able to get the current cameraNumber for these methods
     // if I get access to that variable directly (static) I could do that too // but I don't want to carry an instance of SplitScreenMod around => dependency
-    [BepInPlugin("_SchuhBaum.SBCameraScroll", "SBCameraScroll", "0.68")]
+    [BepInPlugin("_SchuhBaum.SBCameraScroll", "SBCameraScroll", "0.69")]
     public class MainMod : BaseUnityPlugin
     {
         //
@@ -18,7 +18,7 @@ namespace SBCameraScroll
         //
 
         public string updateURL = "http://beestuff.pythonanywhere.com/audb/api/mods/8/6";
-        public int version = 27;
+        public int version = 28;
         public string keyE = "AQAB";
         public string keyN = "0Sb8AUUh0jkFOuNDGJti4jL0iTB4Oug0pM8opATxJH8hfAt6FW3//Q4wb4VfTHZVP3+zHMX6pxcqjdvN0wt/0SWyccfoFhx2LupmT3asV4UDPBdQNmDeA/XMfwmwYb23yxp0apq3kVJNJ3v1SExvo+EPQP4/74JueNBiYshKysRK1InJfkrO1pe1WxtcE7uIrRBVwIgegSVAJDm4PRCODWEp533RxA4FZjq8Hc4UP0Pa0LxlYlSI+jJ+hUrdoA6wd+c/R+lRqN2bjY9OE/OktAxqgthEkSXTtmZwFkCjds0RCqZTnzxfJLN7IheyZ69ptzcB6Zl7kFTEofv4uDjCYNic52/C8uarj+hl4O0yU4xpzdxhG9Tq9SAeNu7h6Dt4Impbr3dAonyVwOhA/HNIz8TUjXldRs0THcZumJ/ZvCHO3qSh7xKS/D7CWuwuY5jWzYZpyy14WOK55vnEFS0GmTwjR+zZtSUy2Y7m8hklllqHZNqRYejoORxTK4UkL4GFOk/uLZKVtOfDODwERWz3ns/eOlReeUaCG1Tole7GhvoZkSMyby/81k3Fh16Z55JD+j1HzUCaoKmT10OOmLF7muV7RV2ZWG0uzvN2oUfr5HSN3TveNw7JQPd5DvZ56whr5ExLMS7Gs6fFBesmkgAwcPTkU5pFpIjgbyk07lDI81k=";
 

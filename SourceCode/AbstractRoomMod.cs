@@ -251,77 +251,65 @@ namespace SBCameraScroll
                 Debug.Log("SBCameraScroll: Cutting edges by modifying the texture offset.");
                 Debug.Log("SBCameraScroll: offsetModifier " + offsetModifier);
             }
-            mergedTexture.Resize(maxWidth, maxHeight); // don't create new Texture2D objects => high memory usage
 
-            if (mergedTexture.width != maxWidth || mergedTexture.height != maxHeight)
+            // not sure if this helps;
+            // someone ran into an out of memory exception for this function;
+            try
             {
-                Debug.Log("SBCameraScroll: Resize failed. Blacklist room " + roomName + ".");
-                if (!RoomCameraMod.blacklistedRooms.Contains(roomName))
+                mergedTexture.Resize(maxWidth, maxHeight); // don't create new Texture2D objects => high memory usage
+                if (mergedTexture.width != maxWidth || mergedTexture.height != maxHeight)
                 {
+                    Debug.Log("SBCameraScroll: Resize failed. Blacklist room " + roomName + ".");
                     RoomCameraMod.blacklistedRooms.Add(roomName);
+                    mergedTexture.Resize(1, 1);
+                    return;
                 }
-                mergedTexture.Resize(1, 1);
-                return;
-            }
 
-            Color[] pixels = new Color[maxWidth * maxHeight];
-            for (int index = 0; index < pixels.Length; ++index)
-            {
-                pixels[index] = new Color(0.004f, 0.0f, 0.0f); // non-transparent black (dark grey)
-            }
-            mergedTexture.SetPixels(pixels); // faster than SetPixel()
-
-            for (int cameraIndex = 0; cameraIndex < cameraPositions.Length; ++cameraIndex)
-            {
-                string filePath = Custom.RootFolderDirectory() + (customRegionsRelativeRoomsPath ?? vanillaRelativeRoomsPath) + roomName + "_" + (cameraIndex + 1) + ".png";
-                if (File.Exists(filePath))
+                Color[] pixels = new Color[maxWidth * maxHeight];
+                for (int index = 0; index < pixels.Length; ++index)
                 {
-                    AddCameraTexture(cameraIndex, filePath, cameraPositions, baseTextureOffset); // changes cameraTexture and mergedTexture
+                    pixels[index] = new Color(0.004f, 0.0f, 0.0f); // non-transparent black (dark grey)
                 }
-                else
+                mergedTexture.SetPixels(pixels); // faster than SetPixel()
+
+                for (int cameraIndex = 0; cameraIndex < cameraPositions.Length; ++cameraIndex)
                 {
-                    filePath = Custom.RootFolderDirectory() + vanillaRelativeRoomsPath + roomName + "_" + (cameraIndex + 1) + ".png";
-                    if (customRegionsRelativeRoomsPath != null && File.Exists(filePath))
+                    string filePath = Custom.RootFolderDirectory() + (customRegionsRelativeRoomsPath ?? vanillaRelativeRoomsPath) + roomName + "_" + (cameraIndex + 1) + ".png";
+                    if (File.Exists(filePath))
                     {
                         AddCameraTexture(cameraIndex, filePath, cameraPositions, baseTextureOffset); // changes cameraTexture and mergedTexture
                     }
                     else
                     {
-                        Debug.Log("SBCameraScroll: Could not find or load texture with path " + filePath + ". Blacklist " + roomName + ".");
-                        if (!RoomCameraMod.blacklistedRooms.Contains(roomName))
+                        filePath = Custom.RootFolderDirectory() + vanillaRelativeRoomsPath + roomName + "_" + (cameraIndex + 1) + ".png";
+                        if (customRegionsRelativeRoomsPath != null && File.Exists(filePath))
                         {
-                            RoomCameraMod.blacklistedRooms.Add(roomName);
+                            AddCameraTexture(cameraIndex, filePath, cameraPositions, baseTextureOffset); // changes cameraTexture and mergedTexture
                         }
+                        else
+                        {
+                            Debug.Log("SBCameraScroll: Could not find or load texture with path " + filePath + ". Blacklist " + roomName + ".");
+                            RoomCameraMod.blacklistedRooms.Add(roomName);
+                            mergedTexture.Resize(1, 1);
+                            cameraTexture.Resize(1, 1);
 
-                        mergedTexture.Resize(1, 1);
-                        cameraTexture.Resize(1, 1);
-                        cameraTexture.Apply();
-                        Resources.UnloadUnusedAssets();
-                        return;
+                            cameraTexture.Apply();
+                            Resources.UnloadUnusedAssets();
+                            return;
+                        }
                     }
                 }
-            }
 
-            try
-            {
                 File.WriteAllBytes(MainMod.modDirectoryPath + vanillaRelativeRoomsPath + roomName + ".png", mergedTexture.EncodeToPNG());
-                if (RoomCameraMod.blacklistedRooms.Contains(roomName))
-                {
-                    RoomCameraMod.blacklistedRooms.Remove(roomName);
-                }
+                Debug.Log("SBCameraScroll: Merging complete.");
             }
             catch (Exception exception)
             {
-                Debug.Log("SBCameraScroll: Could not write merged texture to disk. Blacklist " + roomName + ".");
                 Debug.Log("SBCameraScroll: " + exception);
-
-                if (!RoomCameraMod.blacklistedRooms.Contains(roomName))
-                {
-                    RoomCameraMod.blacklistedRooms.Add(roomName);
-                }
+                Debug.Log("SBCameraScroll: Encountered an exception. Blacklist " + roomName + ".");
+                RoomCameraMod.blacklistedRooms.Add(roomName);
             }
 
-            Debug.Log("SBCameraScroll: Merging complete.");
             mergedTexture.Resize(1, 1);
             cameraTexture.Resize(1, 1);
             cameraTexture.Apply(); // uses LoadImage() which calls Apply() to upload to the GPU; maybe this is better;
