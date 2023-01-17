@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 0.69
+###### Version: 0.70
 This is a mod for Rain World v1.5.
 
 ### Description
@@ -8,7 +8,7 @@ Creates a smooth, scrolling camera that moves with the slugcat. Based on bee's C
 Here is a youtube video showing SBCameraScroll (+ other mods) in action : https://www.youtube.com/watch?v=ePJbY4GSMck
 
 ### Known issues
-- This mod increases memory consumption. When the game runs out of memory it will crash. This might take a while (90+ minutes). It is recommended to restart the game every now and then.  
+- This mod increases memory consumption. When the game runs low on memory the performance will decline and the game might crash. This might take a while (90+ minutes). Merging room texture accelerates this. This needs to happen once for every room with multiple screens. The textures are saved to disk (cached) and reused. It is recommended to restart the game every now and then.  
  CONTEXT: There might be memory leaks or memory fragmentation. A memory leak would mean that memory is not released when it is not used anymore. Fragmentation might happen because most roomCamera textures are now fairly large and change in size often. This means that they need to be re-allocated in memory often and they require a chunk of memory without "holes".
 - The underwater shaders do not work correctly. In large rooms they can smear sprites.
 - Shadows at the edge of the screen seem to flicker or stretch in some rooms. I can see the same thing without camera scroll. Maybe a vanilla bug.
@@ -93,7 +93,7 @@ v0.60:
 - Split the fullscreen effect option into two options. One for fog and the other for the rest.
 - Fixed three bugs where a variable was cleared too early.
 
-v0.69:
+v0.70:
 - Restructured code. Using weak tables. Fixed a bug where the texture offset of region gates were not initialized. Restructured CheckBorders() + included patch from SplitScreenMod. 
 - (vanilla type) Fixed a bug where the camera would slightly move after a screen transition when using vanilla camera positions. The lean effect now mimics vanilla lean effect instead of scaling with the camera box. This removes one parameter from the options menu.
 - Slightly increase minimum speed for transitions and the position type camera. Camera moves at least one pixel per frame.
@@ -105,5 +105,5 @@ v0.69:
 - Switched to RGB24 since vanilla texture files are stored in RGB24 format. (Only loaded textures have an alpha channel.)
 - Added a button for deleting all merged textures.
 - Fixed a bug with Realm where optional dependencies were not recognized.
-- Potentially reduced memory consumption when merging large regions at once. There are still other unresolved memory issues (fragmentation?).
 - Extended try-catch when merging room textures. This might help in case of out-of-memory exceptions during merging.
+- Potentially reduced memory consumption when merging large regions at once. There are still other unresolved memory issues (fragmentation?).

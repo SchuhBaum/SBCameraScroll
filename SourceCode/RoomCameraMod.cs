@@ -452,8 +452,29 @@ namespace SBCameraScroll
 
         private static void RoomCamera_ApplyPositionChange(On.RoomCamera.orig_ApplyPositionChange orig, RoomCamera roomCamera)
         {
-            orig(roomCamera); // updates currentCameraPosition // resizes the levelTexture automatically (and the corresponding atlas texture) // what is the purpose of an atlas?
-            ResetCameraPosition(roomCamera); // uses currentCameraPosition
+            // updates currentCameraPosition;
+            // resizes the levelTexture automatically (and the corresponding atlas texture);
+            // constantly resizing might be a problem (memory fragmentation?)
+            // what is the purpose of an atlas?;
+            orig(roomCamera);
+
+            // www has a texture too;
+            // not sure what exactly happens when www.LoadImageIntoTexture(roomCamera.levelTexture) is called in orig();
+            // it probably just removes the reference to www.texture (or rather the old room texture) when it is not needed anymore
+            // and waits for the garbage collector to kick in and clean up;
+            // unloading it here might slow down memory fragmentation(?);
+            //
+            // this does increase load time;
+            // the glow effect of slugcats takes longer to show;
+            // this is slightly annoying;
+            //
+            // when quickly loading rooms by teleporting this doesn't seem to do much..;
+            // given that this has a positive effect when merging; longer play sessions
+            // with more garbage generated might benefit from it;
+            // Resources.UnloadUnusedAssets();
+            // GC.Collect();
+            // GC.WaitForPendingFinalizers();
+            // GC.Collect();
 
             // resizes levelGraphic such that the levelTexture fits and is not squashed
             // holy moly don't use roomCamera.www.texture.width, etc. // "WWW.texture property allocates a new Texture2D every time"

@@ -4,7 +4,7 @@
     <TargetFramework>net35</TargetFramework>
     <Nullable>enable</Nullable>
 	  <LangVersion>10.0</LangVersion>
-	  <Version>0.69</Version> 
+	  <Version>0.70</Version> 
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,7 +13,6 @@
     <Reference Include="..\..\references\ConfigMachine.dll"/>  
     <Reference Include="..\..\references\CustomRegions.dll"/>  
     <Reference Include="..\..\references\HOOKS-Assembly-CSharp.dll"/>
-    <Reference Include="..\..\references\Partiality.dll"/>
     <Reference Include="..\..\references\SplitScreenMod.dll"/>
     <Reference Include="..\..\references\UnityEngine.dll"/>
   </ItemGroup>

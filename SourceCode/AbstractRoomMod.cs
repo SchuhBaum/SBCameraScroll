@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime;
 using RWCustom;
 using UnityEngine;
 
@@ -262,6 +263,11 @@ namespace SBCameraScroll
                     Debug.Log("SBCameraScroll: Resize failed. Blacklist room " + roomName + ".");
                     RoomCameraMod.blacklistedRooms.Add(roomName);
                     mergedTexture.Resize(1, 1);
+
+                    Resources.UnloadUnusedAssets();
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                    GC.Collect();
                     return;
                 }
 
@@ -292,9 +298,12 @@ namespace SBCameraScroll
                             RoomCameraMod.blacklistedRooms.Add(roomName);
                             mergedTexture.Resize(1, 1);
                             cameraTexture.Resize(1, 1);
-
                             cameraTexture.Apply();
+
                             Resources.UnloadUnusedAssets();
+                            GC.Collect();
+                            GC.WaitForPendingFinalizers();
+                            GC.Collect();
                             return;
                         }
                     }
@@ -312,12 +321,27 @@ namespace SBCameraScroll
 
             mergedTexture.Resize(1, 1);
             cameraTexture.Resize(1, 1);
-            cameraTexture.Apply(); // uses LoadImage() which calls Apply() to upload to the GPU; maybe this is better;
 
-            // this seems to be required; do the loaded images stay in memory otherwise?;
-            // there is still some sort of memory fragmentation(?) going on; maybe bc
-            // of the resizing
+            // cameraTexture uses LoadImage() which calls Apply() to upload to the GPU;
+            // maybe this is better;
+            // doesn't seem to do much..
+            cameraTexture.Apply();
+
+            // this seems to help sometimes; do the loaded images stay in memory otherwise?;
+            // there is still some sort of memory fragmentation(?) going on; maybe bc of the resizing;
+            // or maybe stuff just gets accumulated and you get an inital boost by releasing it;
             Resources.UnloadUnusedAssets();
+
+            // this seems to help more; this makes sense since you generate
+            // a lot of garbage;
+            // merging DW after starting rain world with GC cuts down memory by 500MB
+            // with GC: 1.5GB; without: ~2GB;
+            // 500MB are used by rain world when starting;
+            // (not counting stuff that get allocated when loading into the game);
+            // leaving <1.0GB or <1.5GB from merging 138 rooms, respectively;
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
         }
 
         public static void UpdateTextureOffset(AbstractRoom abstractRoom, in Vector2[]? cameraPositions)

@@ -11,7 +11,7 @@ namespace SBCameraScroll
     public class MainModOptions : OptionInterface
     {
         //
-        // parameter
+        // parameters
         //
 
         private readonly float spacing = 20f;
@@ -59,9 +59,15 @@ namespace SBCameraScroll
 
         private float CheckBoxWithSpacing => checkBoxSize + 0.25f * spacing;
 
-        public MainModOptions() : base(MainMod.instance)
-        {
-        }
+        //
+        // main
+        //
+
+        public MainModOptions() : base(plugin: MainMod.instance) { }
+
+        //
+        // public
+        //
 
         public override void Initialize()
         {
@@ -350,9 +356,9 @@ namespace SBCameraScroll
             }
         }
 
-        // ----------------- //
-        // private functions //
-        // ----------------- //
+        //
+        // private
+        //
 
         private void InitializeMarginAndPos()
         {
