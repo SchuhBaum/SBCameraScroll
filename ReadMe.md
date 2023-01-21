@@ -1,30 +1,25 @@
 ## SBCameraScroll
-###### Version: 0.70
-This is a mod for Rain World v1.5.
+###### Version: 2.01
+This is a mod for Rain World v1.9.
 
 ### Description
 Creates a smooth, scrolling camera that moves with the slugcat. Based on bee's CameraScroll mod, credit to bee for that.  
   
-Here is a youtube video showing SBCameraScroll (+ other mods) in action : https://www.youtube.com/watch?v=ePJbY4GSMck
+Here is a youtube video showing Rain World 1.5 + SBCameraScroll (+ other mods) in action : https://www.youtube.com/watch?v=ePJbY4GSMck
 
 ### Known issues
+(not verified for Rain World 1.9; probably all of them are still there; TODO)
 - This mod increases memory consumption. When the game runs low on memory the performance will decline and the game might crash. This might take a while (90+ minutes). Merging room texture accelerates this. This needs to happen once for every room with multiple screens. The textures are saved to disk (cached) and reused. It is recommended to restart the game every now and then.  
  CONTEXT: There might be memory leaks or memory fragmentation. A memory leak would mean that memory is not released when it is not used anymore. Fragmentation might happen because most roomCamera textures are now fairly large and change in size often. This means that they need to be re-allocated in memory often and they require a chunk of memory without "holes".
 - The underwater shaders do not work correctly. In large rooms they can smear sprites.
 - Shadows at the edge of the screen seem to flicker or stretch in some rooms. I can see the same thing without camera scroll. Maybe a vanilla bug.
 - Motion sickness might be a problem. I wonder how much is due to noise (details) in the textures. You can play around with the parameters and see what works for you.
 
-### Dependencies
-- ConfigMachine.dll
-- (optional) CustomRegions.dll
-
 ### Installation
-1. (ModLoader) `BepInEx` and `BOI` can be downloaded from [RainDB](https://www.raindb.net/) under `Tools`.  
-  **NOTE:** Rain World's BepInEx is a modified version. Don't download it from GitHub.
-2. (Dependency) The mod `ConfigMachine` can be downloaded from [RainDB](https://www.raindb.net/) under `Tools`.
-3. Download the file  `SBCameraScroll.dll` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases) and place it in the folder `[Steam]\SteamApps\common\Rain World\Mods`.
-4. Start `[Steam]\SteamApps\common\Rain World\BOI\BlepOutIn.exe`.
-5. Click `Select path` and enter the game's path `[Steam]\SteamApps\common\Rain World`. Enable the mod `SBCameraScroll.dll` and its dependencies. Then launch the game as normal. 
+0. Update Rain World to version 1.9 (Downpour) if needed.
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases).
+2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
+3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
 ### Contact
 If you have feedback, you can message me on Discord `@SchuhBaum#7246` or write an email to SchuhBaum71@gmail.com.
@@ -33,6 +28,12 @@ If you have feedback, you can message me on Discord `@SchuhBaum#7246` or write a
 There are two licenses available - MIT and Unlicense. You can choose which one you want to use.  
 
 ### Changelog
+(Rain World 1.9)
+v2.01:
+- Added support for Rain World 1.9.
+- Removed AutoUpdate.
+
+(Rain World 1.5)
 v0.3:
 - Major overhaul. Restructured code.
 - Merges camera texture at runtime.

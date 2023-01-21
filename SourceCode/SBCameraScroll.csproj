@@ -1,20 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net35</TargetFramework>
+    <!-- <TargetFramework>netstandard2.0</TargetFramework> -->
+    <TargetFramework>net48</TargetFramework>
     <Nullable>enable</Nullable>
 	  <LangVersion>10.0</LangVersion>
-	  <Version>0.70</Version> 
+	  <Version>2.01</Version> 
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="..\..\references\Assembly-CSharp.dll"/>
+    <Reference Include="..\..\references\PUBLIC-Assembly-CSharp.dll"/>
     <Reference Include="..\..\references\BepInEx.dll"/>
-    <Reference Include="..\..\references\ConfigMachine.dll"/>  
-    <Reference Include="..\..\references\CustomRegions.dll"/>  
     <Reference Include="..\..\references\HOOKS-Assembly-CSharp.dll"/>
     <Reference Include="..\..\references\SplitScreenMod.dll"/>
-    <Reference Include="..\..\references\UnityEngine.dll"/>
+    <Reference Include="..\..\references\UnityEngine.dll"/> 
+    <Reference Include="..\..\references\UnityEngine.CoreModule.dll"/>
+    <Reference Include="..\..\references\UnityEngine.ImageConversionModule.dll"/>
   </ItemGroup>
 
 </Project>

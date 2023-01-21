@@ -57,11 +57,10 @@ namespace SBCameraScroll
         // private functions //
         // ----------------- //
 
-        private static void WormGrass_ctor(On.WormGrass.orig_ctor orig, UpdatableAndDeletable updatableAndDeletable, Room room, List<IntVector2> tiles)
+        private static void WormGrass_ctor(On.WormGrass.orig_ctor orig, WormGrass wormGrass, Room room, List<IntVector2> tiles)
         {
-            WormGrass wormGrass = (WormGrass)updatableAndDeletable;
             allAttachedFields.Add(wormGrass, new AttachedFields());
-            orig(updatableAndDeletable, room, tiles); // needs attachedFields for wormGrass
+            orig(wormGrass, room, tiles); // needs attachedFields for wormGrass
 
             if (wormGrass.patches.Count == 0)
             {
@@ -82,16 +81,13 @@ namespace SBCameraScroll
             }
         }
 
-        private static void WormGrass_Explosion(On.WormGrass.orig_Explosion orig, UpdatableAndDeletable updatableAndDeletable, Explosion explosion)
+        private static void WormGrass_Explosion(On.WormGrass.orig_Explosion orig, WormGrass wormGrass, Explosion explosion)
         {
-            orig(updatableAndDeletable, explosion); // takes care of small worms // cosmeticWorms is empty because NewCameraPos() is skipped
+            orig(wormGrass, explosion); // takes care of small worms // cosmeticWorms is empty because NewCameraPos() is skipped
 
-            if (updatableAndDeletable.slatedForDeletetion)
-            {
-                return;
-            }
+            if (wormGrass.slatedForDeletetion) return;
 
-            AttachedFields attachedFields = ((WormGrass)updatableAndDeletable).GetAttachedFields();
+            AttachedFields attachedFields = wormGrass.GetAttachedFields();
             foreach (List<WormGrass.Worm>[] cosmeticWormsOnTiles in attachedFields.cosmeticWormsOnTiles.Values)
             {
                 foreach (List<WormGrass.Worm> cosmeticWormsOnTile in cosmeticWormsOnTiles)

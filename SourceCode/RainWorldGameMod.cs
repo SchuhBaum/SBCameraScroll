@@ -21,6 +21,7 @@ namespace SBCameraScroll
             WormGrassMod.allAttachedFields.Clear();
 
             Debug.Log("SBCameraScroll: Initialize variables.");
+            MainModOptions.instance.MainModOptions_OnConfigChanged(); //TODO // remporary fix for events not working
             orig(game, manager);
 
             foreach (AbstractCreature abstractPlayer in game.Players)

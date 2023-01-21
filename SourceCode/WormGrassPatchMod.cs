@@ -13,14 +13,13 @@ namespace SBCameraScroll
         // private
         //
 
-        private static void WormGrassPatch_SortTiles(On.WormGrass.WormGrassPatch.orig_SortTiles orig, object obj)
+        private static void WormGrassPatch_SortTiles(On.WormGrass.WormGrassPatch.orig_SortTiles orig, WormGrass.WormGrassPatch wormGrassPatch)
         {
             // some smaller worms will always be visible // they are added directly to rooms
             // for larger worms: just their information is stored and they are created/destroyed later
-            orig(obj);
+            orig(wormGrassPatch);
 
             // setting up cosmeticWormsOnTile
-            WormGrass.WormGrassPatch wormGrassPatch = (WormGrass.WormGrassPatch)obj;
             WormGrassMod.AttachedFields attachedFields = wormGrassPatch.wormGrass.GetAttachedFields();
             int tileCount = wormGrassPatch.tiles.Count;
 

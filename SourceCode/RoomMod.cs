@@ -2,7 +2,7 @@ namespace SBCameraScroll
 {
     public static class RoomMod
     {
-        public static bool CanScrollCamera(Room? room) => MainMod.isScrollOneScreenRoomsOptionEnabled || room?.cameraPositions.Length > 1;
+        public static bool CanScrollCamera(Room? room) => MainModOptions.isScrollOneScreenRoomsEnabled.Value || room?.cameraPositions.Length > 1;
 
         internal static void OnEnable()
         {

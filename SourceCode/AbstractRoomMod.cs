@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime;
-using RWCustom;
+using Unity.Collections;
 using UnityEngine;
 
 namespace SBCameraScroll
@@ -52,20 +51,17 @@ namespace SBCameraScroll
             int cutoffX = 0;
             int cutoffY = 0;
 
-            if (x < 0)
-            {
-                cutoffX = -x;
-            }
-
-            if (y < 0)
-            {
-                cutoffY = -y;
-            }
+            if (x < 0) cutoffX = -x;
+            if (y < 0) cutoffY = -y;
 
             if (x < 10000 && y < 10000)
             {
                 int width = Math.Min(1400 - cutoffX, 10000 - x);
                 int height = Math.Min(800 - cutoffY, 10000 - y);
+
+                // I would need to de-compress the source first;
+                // how do I even do that?;
+                // Buffer.BlockCopy(bytes, 3 * ((cutoffX + 1) * (cutoffY + 1) - 1), mergedTexture.GetRawTextureData(), 3 * ((Mathf.Max(x, 0) + 1) * (Mathf.Max(y, 0) + 1) - 1), 3 * ((width - cutoffX) * (height - cutoffY) - 1));
                 mergedTexture.SetPixels(Mathf.Max(x, 0), Mathf.Max(y, 0), width, height, cameraTexture.GetPixels(cutoffX, cutoffY, width, height));
             }
         }
@@ -113,69 +109,24 @@ namespace SBCameraScroll
             }
             attachedFields.wormGrass = null;
         }
-        public static string? GetCustomRegionsRelativeRoomsPath(string? roomName)
-        {
-            if (roomName == null)
-            {
-                return null;
-            }
 
-            List<string> activeModdedRegions = CustomRegions.Mod.CustomWorldMod.activeModdedRegions;
-            Dictionary<string, string>.ValueCollection folderNames = CustomRegions.Mod.CustomWorldMod.activatedPacks.Values;
-
-            string regionNameFromRoomName = roomName.Split(new char[] { '_' })[0];
-            foreach (string folderName in folderNames)
-            {
-                for (int regionIndex = 0; regionIndex < activeModdedRegions.Count; ++regionIndex)
-                {
-                    string relativeRegionsPath = "Mods" + Path.DirectorySeparatorChar + "CustomResources" + Path.DirectorySeparatorChar + folderName + Path.DirectorySeparatorChar + "World" + Path.DirectorySeparatorChar + "Regions" + Path.DirectorySeparatorChar;
-                    string relativeRoomsPath = relativeRegionsPath + regionNameFromRoomName + Path.DirectorySeparatorChar + "Rooms" + Path.DirectorySeparatorChar;
-
-                    if (File.Exists(Custom.RootFolderDirectory() + relativeRoomsPath + roomName + "_1.png"))
-                    {
-                        return relativeRoomsPath;
-                    }
-
-                    string regionName = activeModdedRegions[regionIndex];
-                    relativeRoomsPath = relativeRegionsPath + regionName + Path.DirectorySeparatorChar + "Rooms" + Path.DirectorySeparatorChar;
-
-                    if (File.Exists(Custom.RootFolderDirectory() + relativeRoomsPath + roomName + "_1.png"))
-                    {
-                        return relativeRoomsPath;
-                    }
-                }
-            }
-            return null;
-        }
 
         // creates directories if they don't exist
         public static string GetRelativeRoomsPath(string? regionName)
         {
-            if (regionName == null)
-            {
-                return "";
-            }
+            if (regionName == null) return "";
 
-            string relativeRegionPath = "World" + Path.DirectorySeparatorChar + "Regions" + Path.DirectorySeparatorChar + regionName;
+            string relativeRegionPath = "world" + Path.DirectorySeparatorChar + regionName.ToLower() + "-rooms";
             MainMod.CreateDirectory(MainMod.modDirectoryPath + relativeRegionPath);
-            relativeRegionPath += Path.DirectorySeparatorChar + "Rooms";
-            MainMod.CreateDirectory(MainMod.modDirectoryPath + relativeRegionPath);
-
             return relativeRegionPath + Path.DirectorySeparatorChar;
         }
 
         public static Vector2[]? LoadCameraPositions(string? roomName)
         {
-            if (roomName == null)
-            {
-                return null;
-            }
+            if (roomName == null) return null;
 
-            string filePath = WorldLoader.FindRoomFileDirectory(roomName, false) + ".txt";
-            if (!File.Exists(filePath))
-            {
-                return null;
-            }
+            string filePath = WorldLoader.FindRoomFile(roomName, false, ".txt");
+            if (!File.Exists(filePath)) return null;
 
             // copy and paste from vanilla code
             string[] lines = File.ReadAllLines(filePath);
@@ -192,32 +143,21 @@ namespace SBCameraScroll
 
         public static void MergeCameraTextures(AbstractRoom? abstractRoom, string? regionName, Vector2[]? cameraPositions = null)
         {
-            if (abstractRoom == null || regionName == null || RoomCameraMod.blacklistedRooms.Contains(abstractRoom.name))
-            {
-                return;
-            }
+            if (abstractRoom == null) return;
+            if (regionName == null) return;
+            if (RoomCameraMod.blacklistedRooms.Contains(abstractRoom.name)) return;
 
             string roomName = abstractRoom.name;
-            string? customRegionsRelativeRoomsPath = null;
-            string vanillaRelativeRoomsPath = GetRelativeRoomsPath(regionName);
-
-            if (MainMod.isCustomRegionsModEnabled)
-            {
-                customRegionsRelativeRoomsPath = GetCustomRegionsRelativeRoomsPath(roomName);
-            }
+            string relativeRoomsPath = GetRelativeRoomsPath(regionName);
+            string filePath = MainMod.modDirectoryPath + relativeRoomsPath + roomName + "_0.png";
 
             // check if custom regions already contains the merged room texture // was this needed? // hm..., I think it was
             // ignore empty merged texture files that were created but not written to
-            if (customRegionsRelativeRoomsPath != null && File.Exists(Custom.RootFolderDirectory() + customRegionsRelativeRoomsPath + roomName + ".png") || File.Exists(MainMod.modDirectoryPath + vanillaRelativeRoomsPath + roomName + ".png") && new FileInfo(MainMod.modDirectoryPath + vanillaRelativeRoomsPath + roomName + ".png").Length > 0)
-            {
-                return;
-            }
+            if (File.Exists(filePath) && new FileInfo(filePath).Length > 0) return;
 
             cameraPositions ??= LoadCameraPositions(roomName);
-            if (cameraPositions == null || cameraPositions.Length <= 1) // skip one screen rooms
-            {
-                return;
-            }
+            if (cameraPositions == null) return;
+            if (cameraPositions.Length <= 1) return; // skip one screen rooms
 
             CheckCameraPositions(ref cameraPositions);
             UpdateTextureOffset(abstractRoom, cameraPositions);
@@ -271,45 +211,36 @@ namespace SBCameraScroll
                     return;
                 }
 
-                Color[] pixels = new Color[maxWidth * maxHeight];
-                for (int index = 0; index < pixels.Length; ++index)
+                NativeArray<byte> colors = mergedTexture.GetRawTextureData<byte>();
+                for (int colorIndex = 0; colorIndex < colors.Length; ++colorIndex)
                 {
-                    pixels[index] = new Color(0.004f, 0.0f, 0.0f); // non-transparent black (dark grey)
+                    colors[colorIndex] = (byte)0.004f; // non-transparent black (dark grey)
                 }
-                mergedTexture.SetPixels(pixels); // faster than SetPixel()
 
                 for (int cameraIndex = 0; cameraIndex < cameraPositions.Length; ++cameraIndex)
                 {
-                    string filePath = Custom.RootFolderDirectory() + (customRegionsRelativeRoomsPath ?? vanillaRelativeRoomsPath) + roomName + "_" + (cameraIndex + 1) + ".png";
-                    if (File.Exists(filePath))
+                    string filePath_ = WorldLoader.FindRoomFile(roomName, false, "_" + (cameraIndex + 1) + ".png");
+                    if (File.Exists(filePath_))
                     {
-                        AddCameraTexture(cameraIndex, filePath, cameraPositions, baseTextureOffset); // changes cameraTexture and mergedTexture
+                        AddCameraTexture(cameraIndex, filePath_, cameraPositions, baseTextureOffset); // changes cameraTexture and mergedTexture
                     }
                     else
                     {
-                        filePath = Custom.RootFolderDirectory() + vanillaRelativeRoomsPath + roomName + "_" + (cameraIndex + 1) + ".png";
-                        if (customRegionsRelativeRoomsPath != null && File.Exists(filePath))
-                        {
-                            AddCameraTexture(cameraIndex, filePath, cameraPositions, baseTextureOffset); // changes cameraTexture and mergedTexture
-                        }
-                        else
-                        {
-                            Debug.Log("SBCameraScroll: Could not find or load texture with path " + filePath + ". Blacklist " + roomName + ".");
-                            RoomCameraMod.blacklistedRooms.Add(roomName);
-                            mergedTexture.Resize(1, 1);
-                            cameraTexture.Resize(1, 1);
-                            cameraTexture.Apply();
+                        Debug.Log("SBCameraScroll: Could not find or load texture with path " + filePath_ + ". Blacklist " + roomName + ".");
+                        RoomCameraMod.blacklistedRooms.Add(roomName);
+                        mergedTexture.Resize(1, 1);
+                        cameraTexture.Resize(1, 1);
+                        // cameraTexture.Apply();
 
-                            Resources.UnloadUnusedAssets();
-                            GC.Collect();
-                            GC.WaitForPendingFinalizers();
-                            GC.Collect();
-                            return;
-                        }
+                        Resources.UnloadUnusedAssets();
+                        GC.Collect();
+                        GC.WaitForPendingFinalizers();
+                        GC.Collect();
+                        return;
                     }
                 }
 
-                File.WriteAllBytes(MainMod.modDirectoryPath + vanillaRelativeRoomsPath + roomName + ".png", mergedTexture.EncodeToPNG());
+                File.WriteAllBytes(filePath, mergedTexture.EncodeToPNG());
                 Debug.Log("SBCameraScroll: Merging complete.");
             }
             catch (Exception exception)
@@ -324,8 +255,8 @@ namespace SBCameraScroll
 
             // cameraTexture uses LoadImage() which calls Apply() to upload to the GPU;
             // maybe this is better;
-            // doesn't seem to do much..
-            cameraTexture.Apply();
+            // doesn't seem to do much..; it's also the gpu not cpu;
+            // cameraTexture.Apply();
 
             // this seems to help sometimes; do the loaded images stay in memory otherwise?;
             // there is still some sort of memory fragmentation(?) going on; maybe bc of the resizing;

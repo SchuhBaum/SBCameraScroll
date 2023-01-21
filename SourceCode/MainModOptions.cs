@@ -1,15 +1,31 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using OptionalUI;
-using RWCustom;
+using Menu.Remix.MixedUI;
 using UnityEngine;
 
 namespace SBCameraScroll
 {
     public class MainModOptions : OptionInterface
     {
+        public static MainModOptions instance = new();
+
+        //
+        // options
+        //
+
+        public static Configurable<bool> isFogFullScreenEffectEnabled = instance.config.Bind("fogFullScreenEffect", defaultValue: true, new ConfigurableInfo("When disabled, the full screen fog effect is removed. It depends on the camera position and can noticeably move with the screen.", null, "", "Fog Effect"));
+        public static Configurable<bool> isMergeWhileLoadingEnabled = instance.config.Bind("mergeWhileLoading", defaultValue: true, new ConfigurableInfo("When enabled, the camera textures for each room are merged when the region gets loaded.\nWhen disabled, camera textures are merged for each room on demand. Merging happens only once and might take a while.", null, "", "Merge While Loading")); //Merging happens only once and the files are stored inside the folder \"Mods/SBCameraScroll/\".\nThis process can take a while. Merging all rooms in Deserted Wastelands took me around three minutes.
+        public static Configurable<bool> isOtherFullScreenEffectsEnabled = instance.config.Bind("otherFullScreenEffects", defaultValue: true, new ConfigurableInfo("When disabled, full screen effects (except fog) like bloom and melt are removed.", null, "", "Full Screen Effects"));
+        public static Configurable<bool> isScrollOneScreenRoomsEnabled = instance.config.Bind("scrollOneScreenRooms", defaultValue: false, new ConfigurableInfo("When disabled, the camera does not scroll in rooms with only one screen.", null, "", "One Screen Rooms")); // Automatically enabled when using SplitScreenMod.
+
+        public static Configurable<int> innerCameraBoxX_Position = instance.config.Bind("innerCameraBoxX_Position", defaultValue: 2, new ConfigurableInfo("The camera does not move when the player is closer than this.", new ConfigAcceptableRange<int>(0, 35), "", "Minimum Distance in X (2)"));
+        public static Configurable<int> innerCameraBoxY_Position = instance.config.Bind("innerCameraBoxY_Position", defaultValue: 2, new ConfigurableInfo("The camera does not move when the player is closer than this.", new ConfigAcceptableRange<int>(0, 35), "", "Minimum Distance in Y (2)"));
+        public static Configurable<int> outerCameraBoxX_Vanilla = instance.config.Bind("outerCameraBoxX_Vanilla", defaultValue: 9, new ConfigurableInfo("The camera changes position if the player is closer to the edge of the screen than this value.", new ConfigAcceptableRange<int>(0, 35), "", "Distance from the Edge in X (9)"));
+        public static Configurable<int> outerCameraBoxY_Vanilla = instance.config.Bind("outerCameraBoxY_Vanilla", defaultValue: 1, new ConfigurableInfo("The camera changes position if the player is closer to the edge of the screen than this value.", new ConfigAcceptableRange<int>(0, 35), "", "Distance to the Edge in Y (1)"));
+
+        public static Configurable<int> smoothingFactorX = instance.config.Bind("smoothingFactorX", defaultValue: 8, new ConfigurableInfo("The smoothing factor determines how much of the distance is covered per frame. This is used when switching cameras as well to ensure a smooth transition.", new ConfigAcceptableRange<int>(0, 35), "", "Smoothing Factor for X (8)"));
+        public static Configurable<int> smoothingFactorY = instance.config.Bind("smoothingFactorY", defaultValue: 8, new ConfigurableInfo("The smoothing factor determines how much of the distance is covered per frame. This is used when switching cameras as well to ensure a smooth transition.", new ConfigAcceptableRange<int>(0, 35), "", "Smoothing Factor for Y (8)"));
+
         //
         // parameters
         //
@@ -36,21 +52,22 @@ namespace SBCameraScroll
 
         private readonly List<float> boxEndPositions = new();
 
-        private readonly List<OpCheckBox> checkBoxes = new();
+        private readonly List<Configurable<bool>> checkBoxConfigurables = new();
         private readonly List<OpLabel> checkBoxesTextLabels = new();
 
-        private OpComboBox? cameraType = null;
+        public static Configurable<string> cameraType = instance.config.Bind("cameraType", "position", new ConfigurableInfo("This type tries to stay close to the player. A larger distance means a faster camera.\nThe smoothing factor determines how much of the distance is covered per frame.", null, "", "Camera Type"));
+        private OpComboBox? cameraTypeComboBox = null;
         private int lastCameraType = 0;
 
-        public static OpSimpleButton? clearCacheButton = null;
+        // private OpSimpleButton? clearCacheButton = null;
 
-        private readonly List<OpComboBox> comboBoxes = new();
+        // private readonly List<OpComboBox> comboBoxes = new();
+        private readonly List<Configurable<string>> comboBoxConfigurables = new();
+        private readonly List<List<ListItem>> comboBoxLists = new();
+        private readonly List<bool> comboBoxAllowEmpty = new();
         private readonly List<OpLabel> comboBoxesTextLabels = new();
 
-        private readonly List<string> sliderKeys = new();
-        private readonly List<IntVector2> sliderRanges = new();
-        private readonly List<int> sliderDefaultValues = new();
-        private readonly List<string> sliderDescriptions = new();
+        private readonly List<Configurable<int>> sliderConfigurables = new();
         private readonly List<string> sliderMainTextLabels = new();
         private readonly List<OpLabel> sliderTextLabelsLeft = new();
         private readonly List<OpLabel> sliderTextLabelsRight = new();
@@ -63,7 +80,11 @@ namespace SBCameraScroll
         // main
         //
 
-        public MainModOptions() : base(plugin: MainMod.instance) { }
+        public MainModOptions()
+        {
+            // ambiguity error // why? TODO
+            // OnConfigChanged += MainModOptions_OnConfigChanged;
+        }
 
         //
         // public
@@ -79,7 +100,7 @@ namespace SBCameraScroll
             //-------------//
 
             int tabIndex = 0;
-            Tabs[tabIndex] = new OpTab("General");
+            Tabs[tabIndex] = new OpTab(this, "General");
             InitializeMarginAndPos();
 
             // Title
@@ -89,8 +110,8 @@ namespace SBCameraScroll
 
             // Subtitle
             AddNewLine(0.5f);
-            AddTextLabel("Version " + MainMod.instance?.Info.Metadata.Version, FLabelAlignment.Left);
-            AddTextLabel("by " + MainMod.instance?.author, FLabelAlignment.Right);
+            AddTextLabel("Version " + MainMod.version, FLabelAlignment.Left);
+            AddTextLabel("by " + MainMod.author, FLabelAlignment.Right);
             DrawTextLabels(ref Tabs[tabIndex]);
 
             // Content //
@@ -100,45 +121,47 @@ namespace SBCameraScroll
             List<ListItem> _cameraTypes = new()
             {
                 new ListItem(cameraTypeKeys[0], "Position (Default)") { desc = cameraTypeDescriptions[0] },
-                new ListItem(cameraTypeKeys[1], "Vanilla") { desc = cameraTypeDescriptions[1] },
-                new ListItem(cameraTypeKeys[2], "Velocity") { desc = cameraTypeDescriptions[2] }
+                new ListItem(cameraTypeKeys[1], "Vanilla") { desc = cameraTypeDescriptions[1] }
+                // new ListItem(cameraTypeKeys[2], "Velocity") { desc = cameraTypeDescriptions[2] }
             };
-            AddComboBox(_cameraTypes, "cameraType", "Camera Type", "");
+            AddComboBox(cameraType, _cameraTypes, "Camera Type");
             DrawComboBoxes(ref Tabs[tabIndex]);
 
             AddNewLine(1.25f);
 
-            AddCheckBox("fogFullScreenEffect", "Fog Effect", "When disabled, the full screen fog effect is removed. It depends on the camera position and can noticeably move with the screen.", defaultBool: true);
-            AddCheckBox("otherFullScreenEffects", "Full Screen Effects", "When disabled, full screen effects (except fog) like bloom and melt are removed.", defaultBool: true);
-            AddCheckBox("mergeWhileLoading", "Merge While Loading", "When enabled, the camera textures for each room are merged when the region gets loaded.\nWhen disabled, camera textures are merged for each room on demand. Merging happens only once and the files are stored inside the folder \"Mods/SBCameraScroll/\".\nThis process can take a while. Merging all rooms in Deserted Wastelands took me around three minutes.", defaultBool: true);
-            AddCheckBox("scrollOneScreenRooms", "One Screen Rooms", "When disabled, the camera does not scroll in rooms with only one screen. Automatically enabled when using SplitScreenMod.", defaultBool: false);
+            AddCheckBox(isFogFullScreenEffectEnabled, "Fog Effect");
+            AddCheckBox(isOtherFullScreenEffectsEnabled, "Full Screen Effects");
+            AddCheckBox(isMergeWhileLoadingEnabled, "Merge While Loading");
+            AddCheckBox(isScrollOneScreenRoomsEnabled, "One Screen Rooms");
             DrawCheckBoxes(ref Tabs[tabIndex]);
 
             AddNewLine();
 
-            AddSlider("smoothingFactorX", "Smoothing Factor for X (8)", "The smoothing factor determines how much of the distance is covered per frame. This is used when switching cameras as well to ensure a smooth transition.", new IntVector2(0, 35), defaultValue: 8, "0%", "70%");
+            AddSlider(smoothingFactorX, (string)smoothingFactorX.info.Tags[0], "0%", "70%");
             DrawSliders(ref Tabs[tabIndex]);
 
             AddNewLine(2f);
 
-            AddSlider("smoothingFactorY", "Smoothing Factor for Y (8)", "The smoothing factor determines how much of the distance is covered per frame. This is used when switching cameras as well to ensure a smooth transition.", new IntVector2(0, 35), defaultValue: 8, "0%", "70%");
+            AddSlider(smoothingFactorY, (string)smoothingFactorY.info.Tags[0], "0%", "70%");
             DrawSliders(ref Tabs[tabIndex]);
 
             AddNewLine(3f);
 
-            clearCacheButton = new OpSimpleButton(new Vector2(pos.x + (marginX.y - marginX.x) / 2f - 55f, pos.y), new Vector2(110f, 30f), "clearCache", "CLEAR CACHE") // same size as apply / back button in ConfigMachine
-            {
-                colorEdge = new Color(1f, 1f, 1f, 1f),
-                colorFill = new Color(1f, 0.0f, 0.0f, 0.5f),
-                description = "WARNING: Deletes all merged textures inside the folder \"Mods/SBCameraScroll/\".\nAdding custom regions might change existing room textures. These textures need to be merged again."
-            };
-            Tabs[tabIndex].AddItems(clearCacheButton);
+            //TODO
+            // clearCacheButton = new(new Vector2(pos.x + (marginX.y - marginX.x) / 2f - 55f, pos.y), new Vector2(110f, 30f), "CLEAR CACHE") // same size as apply / back button in ConfigMachine
+            // {
+            //     colorEdge = new Color(1f, 1f, 1f, 1f),
+            //     colorFill = new Color(1f, 0.0f, 0.0f, 0.5f),
+            //     description = "WARNING: Deletes all merged textures inside the folder \"Mods/SBCameraScroll/\".\nAdding custom regions might change existing room textures. These textures need to be merged again."
+            // };
+            // // clearCacheButton.OnClick += ClearCacheButton_OnClick; //TODO
+            // Tabs[tabIndex].AddItems(clearCacheButton);
 
-            if (clearCacheButton != null && Directory.GetFiles(MainMod.modDirectoryPath, "*.*", SearchOption.AllDirectories).Length == 0)
-            {
-                clearCacheButton.colorEdge.a = 0.1f;
-                clearCacheButton.greyedOut = true;
-            }
+            // if (clearCacheButton != null && Directory.GetFiles(MainMod.modDirectoryPath + Path.DirectorySeparatorChar + "world", "*.*", SearchOption.AllDirectories).Length == 0)
+            // {
+            //     clearCacheButton.colorEdge.a = 0.1f;
+            //     clearCacheButton.greyedOut = true;
+            // }
 
             DrawBox(ref Tabs[tabIndex]);
 
@@ -147,7 +170,7 @@ namespace SBCameraScroll
             //-------------------//
 
             tabIndex++;
-            Tabs[tabIndex] = new OpTab("Position");
+            Tabs[tabIndex] = new OpTab(this, "Position");
             InitializeMarginAndPos();
 
             // Title
@@ -157,8 +180,8 @@ namespace SBCameraScroll
 
             // Subtitle
             AddNewLine(0.5f);
-            AddTextLabel("Version " + MainMod.instance?.Info.Metadata.Version, FLabelAlignment.Left);
-            AddTextLabel("by " + MainMod.instance?.author, FLabelAlignment.Right);
+            AddTextLabel("Version " + MainMod.version, FLabelAlignment.Left);
+            AddTextLabel("by " + MainMod.author, FLabelAlignment.Right);
             DrawTextLabels(ref Tabs[tabIndex]);
 
             // Content //
@@ -170,12 +193,12 @@ namespace SBCameraScroll
 
             AddNewLine();
 
-            AddSlider("innerCameraBoxX_Position", "Minimum Distance in X (2)", "The camera does not move when the player is closer than this.", new IntVector2(0, 35), defaultValue: 2, "0 tiles", "35 tiles");
+            AddSlider(innerCameraBoxX_Position, (string)innerCameraBoxX_Position.info.Tags[0], "0 tiles", "35 tiles");
             DrawSliders(ref Tabs[tabIndex]);
 
             AddNewLine(2f);
 
-            AddSlider("innerCameraBoxY_Position", "Minimum Distance in Y (2)", "The camera does not move when the player is closer than this.", new IntVector2(0, 35), defaultValue: 2, "0 tiles", "35 tiles");
+            AddSlider(innerCameraBoxY_Position, (string)innerCameraBoxY_Position.info.Tags[0], "0 tiles", "35 tiles");
             DrawSliders(ref Tabs[tabIndex]);
 
             DrawBox(ref Tabs[tabIndex]);
@@ -185,7 +208,7 @@ namespace SBCameraScroll
             //------------------//
 
             tabIndex++;
-            Tabs[tabIndex] = new OpTab("Vanilla");
+            Tabs[tabIndex] = new OpTab(this, "Vanilla");
             InitializeMarginAndPos();
 
             // Title
@@ -195,8 +218,8 @@ namespace SBCameraScroll
 
             // Subtitle
             AddNewLine(0.5f);
-            AddTextLabel("Version " + MainMod.instance?.Info.Metadata.Version, FLabelAlignment.Left);
-            AddTextLabel("by " + MainMod.instance?.author, FLabelAlignment.Right);
+            AddTextLabel("Version " + MainMod.version, FLabelAlignment.Left);
+            AddTextLabel("by " + MainMod.author, FLabelAlignment.Right);
             DrawTextLabels(ref Tabs[tabIndex]);
 
             // Content //
@@ -208,12 +231,12 @@ namespace SBCameraScroll
 
             AddNewLine();
 
-            AddSlider("outerCameraBoxX_Vanilla", "Distance from the Edge in X (9)", "The camera changes position if the player is closer to the edge of the screen than this value.", new IntVector2(0, 35), defaultValue: 9, "0 tiles", "35 tiles"); // I think 188f would be exactly vanilla
+            AddSlider(outerCameraBoxX_Vanilla, (string)outerCameraBoxX_Vanilla.info.Tags[0], "0 tiles", "35 tiles"); // default is 9 => 180f // I think 188f would be exactly vanilla
             DrawSliders(ref Tabs[tabIndex]);
 
             AddNewLine(2f);
 
-            AddSlider("outerCameraBoxY_Vanilla", " Distance to the Edge in Y (1)", "The camera changes position if the player is closer to the edge of the screen than this value.", new IntVector2(0, 35), defaultValue: 1, "0 tiles", "35 tiles"); // I think 18f would be exactly vanilla
+            AddSlider(outerCameraBoxY_Vanilla, (string)outerCameraBoxY_Vanilla.info.Tags[0], "0 tiles", "35 tiles"); // default is 1 => 20f // I think 18f would be exactly vanilla
             DrawSliders(ref Tabs[tabIndex]);
 
             DrawBox(ref Tabs[tabIndex]);
@@ -222,86 +245,80 @@ namespace SBCameraScroll
             // velocity type tab //
             //-------------------//
 
-            tabIndex++;
-            Tabs[tabIndex] = new OpTab("Velocity");
-            InitializeMarginAndPos();
+            // tabIndex++;
+            // Tabs[tabIndex] = new OpTab(this, "Velocity");
+            // InitializeMarginAndPos();
 
-            // Title
-            AddNewLine();
-            AddTextLabel("SBCameraScroll Mod", bigText: true);
-            DrawTextLabels(ref Tabs[tabIndex]);
+            // // Title
+            // AddNewLine();
+            // AddTextLabel("SBCameraScroll Mod", bigText: true);
+            // DrawTextLabels(ref Tabs[tabIndex]);
 
-            // Subtitle
-            AddNewLine(0.5f);
-            AddTextLabel("Version " + MainMod.instance?.Info.Metadata.Version, FLabelAlignment.Left);
-            AddTextLabel("by " + MainMod.instance?.author, FLabelAlignment.Right);
-            DrawTextLabels(ref Tabs[tabIndex]);
+            // // Subtitle
+            // AddNewLine(0.5f);
+            // AddTextLabel("Version " + MainMod.version, FLabelAlignment.Left);
+            // AddTextLabel("by " + MainMod.author, FLabelAlignment.Right);
+            // DrawTextLabels(ref Tabs[tabIndex]);
 
-            // Content //
-            AddNewLine();
-            AddBox();
+            // // Content //
+            // AddNewLine();
+            // AddBox();
 
-            AddTextLabel("Velocity Type Camera:", FLabelAlignment.Left);
-            DrawTextLabels(ref Tabs[tabIndex]);
+            // AddTextLabel("Velocity Type Camera:", FLabelAlignment.Left);
+            // DrawTextLabels(ref Tabs[tabIndex]);
 
-            AddNewLine();
+            // AddNewLine();
 
-            AddSlider("innerCameraBoxX_Velocity", "Minimum Distance in X (3)", "The camera does not move when the player is closer than this.", new IntVector2(0, 35), defaultValue: 3, "0 tiles", "35 tiles");
-            AddSlider("outerCameraBoxX_Velocity", "Maximum Distance in X (6)", "When this distance is reached the camera always moves as fast as the player.", new IntVector2(0, 35), defaultValue: 6, "0 tiles", "35 tiles");
-            DrawSliders(ref Tabs[tabIndex]);
+            // AddSlider("innerCameraBoxX_Velocity", "Minimum Distance in X (3)", "The camera does not move when the player is closer than this.", new IntVector2(0, 35), defaultValue: 3, "0 tiles", "35 tiles");
+            // AddSlider("outerCameraBoxX_Velocity", "Maximum Distance in X (6)", "When this distance is reached the camera always moves as fast as the player.", new IntVector2(0, 35), defaultValue: 6, "0 tiles", "35 tiles");
+            // DrawSliders(this, ref Tabs[tabIndex]);
 
-            AddNewLine(2f);
+            // AddNewLine(2f);
 
-            AddSlider("innerCameraBoxY_Velocity", "Minimum Distance in Y (4)", "The camera does not move when the player is closer than this.", new IntVector2(0, 35), defaultValue: 4, "0 tiles", "35 tiles");
-            AddSlider("outerCameraBoxY_Velocity", "Maximum Distance in Y (7)", "When this distance is reached the camera always moves as fast as the player.", new IntVector2(0, 35), defaultValue: 7, "0 tiles", "35 tiles");
-            DrawSliders(ref Tabs[tabIndex]);
+            // AddSlider("innerCameraBoxY_Velocity", "Minimum Distance in Y (4)", "The camera does not move when the player is closer than this.", new IntVector2(0, 35), defaultValue: 4, "0 tiles", "35 tiles");
+            // AddSlider("outerCameraBoxY_Velocity", "Maximum Distance in Y (7)", "When this distance is reached the camera always moves as fast as the player.", new IntVector2(0, 35), defaultValue: 7, "0 tiles", "35 tiles");
+            // DrawSliders(this, ref Tabs[tabIndex]);
 
-            DrawBox(ref Tabs[tabIndex]);
+            // DrawBox(ref Tabs[tabIndex]);
 
             // save UI elements in variables for Update() function
             foreach (UIelement uiElement in Tabs[0].items)
             {
-                if (uiElement is OpComboBox opComboBox && opComboBox.key == "cameraType")
+                if (uiElement is OpComboBox opComboBox && opComboBox.Key == "cameraType")
                 {
-                    cameraType = opComboBox;
+                    cameraTypeComboBox = opComboBox;
                 }
             }
         }
 
-        public override void Update(float dt)
+        public override void Update()
         {
-            base.Update(dt);
-            if (cameraType != null)
+            base.Update();
+            if (cameraTypeComboBox != null)
             {
-                int _cameraType = Array.IndexOf(cameraTypeKeys, cameraType.value);
+                int _cameraType = Array.IndexOf(cameraTypeKeys, cameraTypeComboBox.value);
                 if (lastCameraType != _cameraType)
                 {
                     lastCameraType = _cameraType;
-                    cameraType.description = cameraTypeDescriptions[_cameraType];
+                    cameraTypeComboBox.description = cameraTypeDescriptions[_cameraType];
                 }
             }
         }
 
-        public override void ConfigOnChange()
+
+        public void MainModOptions_OnConfigChanged()
         {
-            base.ConfigOnChange();
-
-            RoomCameraMod.cameraType = (CameraType)Array.IndexOf(cameraTypeKeys, config["cameraType"]); // 0: Position type, 1: Vanilla type, 2: Velocity type
-
-            MainMod.isFogFullScreenEffectOptionEnabled = bool.Parse(config["fogFullScreenEffect"]);
-            MainMod.isOtherFullScreenEffectsOptionEnabled = bool.Parse(config["otherFullScreenEffects"]);
-            MainMod.isMergeWhileLoadingOptionEnabled = bool.Parse(config["mergeWhileLoading"]);
-            MainMod.isScrollOneScreenRoomsOptionEnabled = bool.Parse(config["scrollOneScreenRooms"]) || MainMod.isSplitScreenModEnabled; // automatically enable when using SplitScreenMod
+            RoomCameraMod.cameraType = (CameraType)Array.IndexOf(cameraTypeKeys, cameraType.Value); // 0: Position type, 1: Vanilla type, 2: Velocity type
 
             Debug.Log("SBCameraScroll: cameraType " + RoomCameraMod.cameraType);
-            Debug.Log("SBCameraScroll: isFogFullScreenEffectOptionEnabled " + MainMod.isFogFullScreenEffectOptionEnabled);
-            Debug.Log("SBCameraScroll: isOtherFullScreenEffectsOptionEnabled " + MainMod.isOtherFullScreenEffectsOptionEnabled);
-            Debug.Log("SBCameraScroll: isMergeWhileLoadingOptionEnabled " + MainMod.isMergeWhileLoadingOptionEnabled);
-            Debug.Log("SBCameraScroll: isScrollOneScreenOptionEnabled " + MainMod.isScrollOneScreenRoomsOptionEnabled);
+            Debug.Log("SBCameraScroll: isFogFullScreenEffectOptionEnabled " + isFogFullScreenEffectEnabled);
+            Debug.Log("SBCameraScroll: isOtherFullScreenEffectsOptionEnabled " + isOtherFullScreenEffectsEnabled);
+            Debug.Log("SBCameraScroll: isMergeWhileLoadingOptionEnabled " + isMergeWhileLoadingEnabled);
+            Debug.Log("SBCameraScroll: isScrollOneScreenOptionEnabled " + isScrollOneScreenRoomsEnabled);
 
 
-            RoomCameraMod.smoothingFactorX = float.Parse(config["smoothingFactorX"]) / 50f;
-            RoomCameraMod.smoothingFactorY = float.Parse(config["smoothingFactorY"]) / 50f;
+            RoomCameraMod.smoothingFactorX = smoothingFactorX.Value / 50f;
+            RoomCameraMod.smoothingFactorY = smoothingFactorY.Value / 50f;
 
             Debug.Log("SBCameraScroll: smoothingFactorX " + RoomCameraMod.smoothingFactorX);
             Debug.Log("SBCameraScroll: smoothingFactorY " + RoomCameraMod.smoothingFactorY);
@@ -309,52 +326,52 @@ namespace SBCameraScroll
             switch (RoomCameraMod.cameraType)
             {
                 case CameraType.Position:
-                    RoomCameraMod.innerCameraBoxX = 20f * float.Parse(config["innerCameraBoxX_Position"]);
-                    RoomCameraMod.innerCameraBoxY = 20f * float.Parse(config["innerCameraBoxY_Position"]);
+                    RoomCameraMod.innerCameraBoxX = 20f * innerCameraBoxX_Position.Value;
+                    RoomCameraMod.innerCameraBoxY = 20f * innerCameraBoxY_Position.Value;
 
                     Debug.Log("SBCameraScroll: innerCameraBoxX " + RoomCameraMod.innerCameraBoxX);
                     Debug.Log("SBCameraScroll: innerCameraBoxY " + RoomCameraMod.innerCameraBoxY);
                     break;
                 case CameraType.Vanilla:
-                    RoomCameraMod.outerCameraBoxX = 20f * float.Parse(config["outerCameraBoxX_Vanilla"]);
-                    RoomCameraMod.outerCameraBoxY = 20f * float.Parse(config["outerCameraBoxY_Vanilla"]);
+                    RoomCameraMod.outerCameraBoxX = 20f * outerCameraBoxX_Vanilla.Value;
+                    RoomCameraMod.outerCameraBoxY = 20f * outerCameraBoxX_Vanilla.Value;
 
                     Debug.Log("SBCameraScroll: outerCameraBoxX " + RoomCameraMod.outerCameraBoxX);
                     Debug.Log("SBCameraScroll: outerCameraBoxY " + RoomCameraMod.outerCameraBoxY);
                     break;
-                case CameraType.Velocity:
-                    RoomCameraMod.innerCameraBoxX = 20f * float.Parse(config["innerCameraBoxX_Velocity"]);
-                    RoomCameraMod.outerCameraBoxX = 20f * float.Parse(config["outerCameraBoxX_Velocity"]);
-                    RoomCameraMod.innerCameraBoxY = 20f * float.Parse(config["innerCameraBoxY_Velocity"]);
-                    RoomCameraMod.outerCameraBoxY = 20f * float.Parse(config["outerCameraBoxY_Velocity"]);
+                    // case CameraType.Velocity:
+                    //     RoomCameraMod.innerCameraBoxX = 20f * float.Parse(ConvertToString("innerCameraBoxX_Velocity"));
+                    //     RoomCameraMod.outerCameraBoxX = 20f * float.Parse(ConvertToString("outerCameraBoxX_Velocity"));
+                    //     RoomCameraMod.innerCameraBoxY = 20f * float.Parse(ConvertToString("innerCameraBoxY_Velocity"));
+                    //     RoomCameraMod.outerCameraBoxY = 20f * float.Parse(ConvertToString("outerCameraBoxY_Velocity"));
 
-                    Debug.Log("SBCameraScroll: innerCameraBoxX " + RoomCameraMod.innerCameraBoxX);
-                    Debug.Log("SBCameraScroll: innerCameraBoxY " + RoomCameraMod.innerCameraBoxY);
-                    Debug.Log("SBCameraScroll: outerCameraBoxX " + RoomCameraMod.outerCameraBoxX);
-                    Debug.Log("SBCameraScroll: outerCameraBoxY " + RoomCameraMod.outerCameraBoxY);
-                    break;
+                    //     Debug.Log("SBCameraScroll: innerCameraBoxX " + RoomCameraMod.innerCameraBoxX);
+                    //     Debug.Log("SBCameraScroll: innerCameraBoxY " + RoomCameraMod.innerCameraBoxY);
+                    //     Debug.Log("SBCameraScroll: outerCameraBoxX " + RoomCameraMod.outerCameraBoxX);
+                    //     Debug.Log("SBCameraScroll: outerCameraBoxY " + RoomCameraMod.outerCameraBoxY);
+                    //     break;
             }
         }
 
-        public override void Signal(UItrigger trigger, string signal)
-        {
-            if (signal == "clearCache")
-            {
-                FileInfo[] files = new DirectoryInfo(MainMod.modDirectoryPath).GetFiles("*.*", SearchOption.AllDirectories);
-                for (int fileIndex = files.Length - 1; fileIndex >= 0; --fileIndex)
-                {
-                    files[fileIndex].Delete();
-                }
-            }
+        // public void ClearCacheButton_OnClick(UIfocusable _)
+        // {
+        //     // if (signal == "clearCache")
+        //     // {
+        //     FileInfo[] files = new DirectoryInfo(MainMod.modDirectoryPath).GetFiles("*.*", SearchOption.AllDirectories);
+        //     for (int fileIndex = files.Length - 1; fileIndex >= 0; --fileIndex)
+        //     {
+        //         files[fileIndex].Delete();
+        //     }
+        //     // }
 
-            if (clearCacheButton != null && Directory.GetFiles(MainMod.modDirectoryPath, "*.*", SearchOption.AllDirectories).Length == 0)
-            {
-                clearCacheButton.colorEdge.a = 0.1f;
-                clearCacheButton.colorFill = new Color(0.0f, 0.0f, 0.0f, 0.0f);
-                clearCacheButton.greyedOut = true;
-                clearCacheButton.OnChange();
-            }
-        }
+        //     if (clearCacheButton != null && Directory.GetFiles(MainMod.modDirectoryPath, "*.*", SearchOption.AllDirectories).Length == 0)
+        //     {
+        //         clearCacheButton.colorEdge.a = 0.1f;
+        //         clearCacheButton.colorFill = new Color(0.0f, 0.0f, 0.0f, 0.0f);
+        //         clearCacheButton.greyedOut = true;
+        //         // clearCacheButton.OnChange(); //TODO
+        //     }
+        // }
 
         //
         // private
@@ -415,44 +432,39 @@ namespace SBCameraScroll
         //    boxEndPositions.RemoveAt(lastIndex);
         //}
 
-        private void AddCheckBox(string key, string text, string description, bool? defaultBool = null)
+        private void AddCheckBox(Configurable<bool> configurable, string text)
         {
-            OpCheckBox opCheckBox = new(new Vector2(), key, defaultBool: defaultBool ?? false)
-            {
-                description = description
-            };
-
-            checkBoxes.Add(opCheckBox);
+            checkBoxConfigurables.Add(configurable);
             checkBoxesTextLabels.Add(new OpLabel(new Vector2(), new Vector2(), text, FLabelAlignment.Left));
         }
 
         private void DrawCheckBoxes(ref OpTab tab) // changes pos.y but not pos.x
         {
-            if (checkBoxes.Count != checkBoxesTextLabels.Count)
-            {
-                return;
-            }
+            if (checkBoxConfigurables.Count != checkBoxesTextLabels.Count) return;
 
             float width = marginX.y - marginX.x;
             float elementWidth = (width - (numberOfCheckboxes - 1) * 0.5f * spacing) / numberOfCheckboxes;
             pos.y -= checkBoxSize;
             float _posX = pos.x;
 
-            for (int index = 0; index < checkBoxes.Count; ++index)
+            for (int checkBoxIndex = 0; checkBoxIndex < checkBoxConfigurables.Count; ++checkBoxIndex)
             {
-                OpCheckBox checkBox = checkBoxes[index];
-                checkBox.pos = new Vector2(_posX, pos.y);
+                Configurable<bool> configurable = checkBoxConfigurables[checkBoxIndex];
+                OpCheckBox checkBox = new(configurable, new Vector2(_posX, pos.y))
+                {
+                    description = configurable.info?.description ?? ""
+                };
                 tab.AddItems(checkBox);
                 _posX += CheckBoxWithSpacing;
 
-                OpLabel checkBoxLabel = checkBoxesTextLabels[index];
+                OpLabel checkBoxLabel = checkBoxesTextLabels[checkBoxIndex];
                 checkBoxLabel.pos = new Vector2(_posX, pos.y + 2f);
                 checkBoxLabel.size = new Vector2(elementWidth - CheckBoxWithSpacing, fontHeight);
                 tab.AddItems(checkBoxLabel);
 
-                if (index < checkBoxes.Count - 1)
+                if (checkBoxIndex < checkBoxConfigurables.Count - 1)
                 {
-                    if ((index + 1) % numberOfCheckboxes == 0)
+                    if ((checkBoxIndex + 1) % numberOfCheckboxes == 0)
                     {
                         AddNewLine();
                         pos.y -= checkBoxSize;
@@ -465,34 +477,29 @@ namespace SBCameraScroll
                 }
             }
 
-            checkBoxes.Clear();
+            checkBoxConfigurables.Clear();
             checkBoxesTextLabels.Clear();
         }
 
-        private void AddComboBox(List<ListItem> list, string key, string text, string description, string defaultName = "", bool allowEmpty = false)
+        private void AddComboBox(Configurable<string> configurable, List<ListItem> list, string text, bool allowEmpty = false)
         {
             OpLabel opLabel = new(new Vector2(), new Vector2(0.0f, fontHeight), text, FLabelAlignment.Center, false);
             comboBoxesTextLabels.Add(opLabel);
-
-            OpComboBox opComboBox = new(new Vector2(), 200f, key, list, defaultName)
-            {
-                allowEmpty = allowEmpty,
-                description = description
-            };
-            comboBoxes.Add(opComboBox);
+            comboBoxConfigurables.Add(configurable);
+            comboBoxLists.Add(list);
+            comboBoxAllowEmpty.Add(allowEmpty);
         }
 
         private void DrawComboBoxes(ref OpTab tab)
         {
-            if (comboBoxes.Count == 0 || comboBoxes.Count != comboBoxesTextLabels.Count)
-            {
-                return;
-            }
+            if (comboBoxConfigurables.Count != comboBoxesTextLabels.Count) return;
+            if (comboBoxConfigurables.Count != comboBoxLists.Count) return;
+            if (comboBoxConfigurables.Count != comboBoxAllowEmpty.Count) return;
 
             float offsetX = (marginX.y - marginX.x) * 0.1f;
             float width = (marginX.y - marginX.x) * 0.4f;
 
-            for (int comboBoxIndex = 0; comboBoxIndex < comboBoxes.Count; ++comboBoxIndex)
+            for (int comboBoxIndex = 0; comboBoxIndex < comboBoxConfigurables.Count; ++comboBoxIndex)
             {
                 AddNewLine(1.25f);
                 pos.x += offsetX;
@@ -502,15 +509,16 @@ namespace SBCameraScroll
                 opLabel.size += new Vector2(width, 2f); // size.y is already set
                 pos.x += width;
 
-                OpComboBox comboBox = comboBoxes[comboBoxIndex];
-                OpComboBox newComboBox = new(pos, width, comboBox.key, comboBox.GetItemList().ToList(), defaultName: comboBox.defaultValue)
+                Configurable<string> configurable = comboBoxConfigurables[comboBoxIndex];
+                OpComboBox comboBox = new(configurable, pos, width, comboBoxLists[comboBoxIndex])
                 {
-                    allowEmpty = comboBox.allowEmpty,
-                    description = comboBox.description,
+                    allowEmpty = comboBoxAllowEmpty[comboBoxIndex],
+                    description = configurable.info?.description ?? ""
                 };
-                tab.AddItems(opLabel, newComboBox);
+                tab.AddItems(opLabel, comboBox);
 
-                if (comboBoxIndex < checkBoxes.Count - 1)
+                // don't add a new line on the last element
+                if (comboBoxIndex < comboBoxConfigurables.Count - 1)
                 {
                     AddNewLine();
                     pos.x = marginX.x;
@@ -518,89 +526,31 @@ namespace SBCameraScroll
             }
 
             comboBoxesTextLabels.Clear();
-            comboBoxes.Clear();
+            comboBoxConfigurables.Clear();
+            comboBoxLists.Clear();
+            comboBoxAllowEmpty.Clear();
         }
 
-        private void AddSlider(string key, string text, string description, IntVector2 range, int defaultValue, string? sliderTextLeft = null, string? sliderTextRight = null)
+        private void AddSlider(Configurable<int> configurable, string text, string sliderTextLeft = "", string sliderTextRight = "")
         {
-            sliderTextLeft ??= range.x.ToString();
-            sliderTextRight ??= range.y.ToString();
-
+            sliderConfigurables.Add(configurable);
             sliderMainTextLabels.Add(text);
             sliderTextLabelsLeft.Add(new OpLabel(new Vector2(), new Vector2(), sliderTextLeft, alignment: FLabelAlignment.Right)); // set pos and size when drawing
             sliderTextLabelsRight.Add(new OpLabel(new Vector2(), new Vector2(), sliderTextRight, alignment: FLabelAlignment.Left));
-
-            sliderKeys.Add(key);
-            sliderRanges.Add(range);
-            sliderDefaultValues.Add(defaultValue);
-            sliderDescriptions.Add(description);
         }
-
-        //private void DrawSliders(ref OpScrollBox scrollBox)
-        //{
-        //    if (sliderKeys.Count != sliderRanges.Count || sliderKeys.Count != sliderDefaultValues.Count || sliderKeys.Count != sliderDescriptions.Count || sliderKeys.Count != sliderMainTextLabels.Count || sliderKeys.Count != sliderTextLabelsLeft.Count || sliderKeys.Count != sliderTextLabelsRight.Count)
-        //    {
-        //        return;
-        //    }
-
-        //    float width = marginX.y - marginX.x;
-        //    float sliderCenter = marginX.x + 0.5f * width;
-        //    float sliderLabelSizeX = 0.2f * width;
-        //    float sliderSizeX = width - 2f * sliderLabelSizeX - spacing;
-
-        //    for (int sliderIndex = 0; sliderIndex < sliderKeys.Count; ++sliderIndex)
-        //    {
-        //        AddNewLine(2f);
-
-        //        OpLabel opLabel = sliderTextLabelsLeft[sliderIndex];
-        //        opLabel.pos = new Vector2(marginX.x, pos.y + 5f);
-        //        opLabel.size = new Vector2(sliderLabelSizeX, fontHeight);
-        //        scrollBox.AddItems(opLabel);
-
-        //        OpSlider slider = new OpSlider(new Vector2(sliderCenter - 0.5f * sliderSizeX, pos.y), sliderKeys[sliderIndex], sliderRanges[sliderIndex], length: (int)sliderSizeX, defaultValue: sliderDefaultValues[sliderIndex])
-        //        {
-        //            size = new Vector2(sliderSizeX, fontHeight),
-        //            description = sliderDescriptions[sliderIndex]
-        //        };
-        //        scrollBox.AddItems(slider);
-
-        //        opLabel = sliderTextLabelsRight[sliderIndex];
-        //        opLabel.pos = new Vector2(sliderCenter + 0.5f * sliderSizeX + 0.5f * spacing, pos.y + 5f);
-        //        opLabel.size = new Vector2(sliderLabelSizeX, fontHeight);
-        //        scrollBox.AddItems(opLabel);
-
-        //        AddTextLabel(sliderMainTextLabels[sliderIndex]);
-        //        DrawTextLabels(ref scrollBox);
-
-        //        if (sliderIndex < sliderKeys.Count - 1)
-        //        {
-        //            AddNewLine();
-        //        }
-        //    }
-
-        //    sliderKeys.Clear();
-        //    sliderRanges.Clear();
-        //    sliderDefaultValues.Clear();
-        //    sliderDescriptions.Clear();
-
-        //    sliderMainTextLabels.Clear();
-        //    sliderTextLabelsLeft.Clear();
-        //    sliderTextLabelsRight.Clear();
-        //}
 
         private void DrawSliders(ref OpTab tab)
         {
-            if (sliderKeys.Count != sliderRanges.Count || sliderKeys.Count != sliderDefaultValues.Count || sliderKeys.Count != sliderDescriptions.Count || sliderKeys.Count != sliderMainTextLabels.Count || sliderKeys.Count != sliderTextLabelsLeft.Count || sliderKeys.Count != sliderTextLabelsRight.Count)
-            {
-                return;
-            }
+            if (sliderConfigurables.Count != sliderMainTextLabels.Count) return;
+            if (sliderConfigurables.Count != sliderTextLabelsLeft.Count) return;
+            if (sliderConfigurables.Count != sliderTextLabelsRight.Count) return;
 
             float width = marginX.y - marginX.x;
             float sliderCenter = marginX.x + 0.5f * width;
             float sliderLabelSizeX = 0.2f * width;
             float sliderSizeX = width - 2f * sliderLabelSizeX - spacing;
 
-            for (int sliderIndex = 0; sliderIndex < sliderKeys.Count; ++sliderIndex)
+            for (int sliderIndex = 0; sliderIndex < sliderConfigurables.Count; ++sliderIndex)
             {
                 AddNewLine(2f);
 
@@ -609,10 +559,11 @@ namespace SBCameraScroll
                 opLabel.size = new Vector2(sliderLabelSizeX, fontHeight);
                 tab.AddItems(opLabel);
 
-                OpSlider slider = new(new Vector2(sliderCenter - 0.5f * sliderSizeX, pos.y), sliderKeys[sliderIndex], sliderRanges[sliderIndex], length: (int)sliderSizeX, defaultValue: sliderDefaultValues[sliderIndex])
+                Configurable<int> configurable = sliderConfigurables[sliderIndex];
+                OpSlider slider = new(configurable, new Vector2(sliderCenter - 0.5f * sliderSizeX, pos.y), (int)sliderSizeX)
                 {
                     size = new Vector2(sliderSizeX, fontHeight),
-                    description = sliderDescriptions[sliderIndex]
+                    description = configurable.info?.description ?? ""
                 };
                 tab.AddItems(slider);
 
@@ -624,17 +575,13 @@ namespace SBCameraScroll
                 AddTextLabel(sliderMainTextLabels[sliderIndex]);
                 DrawTextLabels(ref tab);
 
-                if (sliderIndex < sliderKeys.Count - 1)
+                if (sliderIndex < sliderConfigurables.Count - 1)
                 {
                     AddNewLine();
                 }
             }
 
-            sliderKeys.Clear();
-            sliderRanges.Clear();
-            sliderDefaultValues.Clear();
-            sliderDescriptions.Clear();
-
+            sliderConfigurables.Clear();
             sliderMainTextLabels.Clear();
             sliderTextLabelsLeft.Clear();
             sliderTextLabelsRight.Clear();
@@ -654,26 +601,6 @@ namespace SBCameraScroll
             };
             textLabels.Add(textLabel);
         }
-
-        //private void DrawTextLabels(ref OpScrollBox scrollBox)
-        //{
-        //    if (textLabels.Count == 0)
-        //    {
-        //        return;
-        //    }
-
-        //    float width = (marginX.y - marginX.x) / textLabels.Count;
-        //    foreach (OpLabel textLabel in textLabels)
-        //    {
-        //        textLabel.pos = pos;
-        //        textLabel.size += new Vector2(width - 20f, 0.0f);
-        //        scrollBox.AddItems(new UIelement[] { textLabel });
-        //        pos.x += width;
-        //    }
-
-        //    pos.x = marginX.x;
-        //    textLabels.Clear();
-        //}
 
         private void DrawTextLabels(ref OpTab tab)
         {

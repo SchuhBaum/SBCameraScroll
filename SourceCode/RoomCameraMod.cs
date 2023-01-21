@@ -443,7 +443,7 @@ namespace SBCameraScroll
             {
                 return;
             }
-            else if (roomCamera.fullScreenEffect.shader.name == "Fog" && !MainMod.isFogFullScreenEffectOptionEnabled || roomCamera.fullScreenEffect.shader.name != "Fog" && !MainMod.isOtherFullScreenEffectsOptionEnabled)
+            else if (roomCamera.fullScreenEffect.shader.name == "Fog" && !MainModOptions.isFogFullScreenEffectEnabled.Value || roomCamera.fullScreenEffect.shader.name != "Fog" && !MainModOptions.isOtherFullScreenEffectsEnabled.Value)
             {
                 roomCamera.fullScreenEffect.RemoveFromContainer();
                 roomCamera.fullScreenEffect = null;
@@ -505,6 +505,9 @@ namespace SBCameraScroll
         // updates all the visual stuff // calls UpdateScreen() // mainly adepts the camera texture to the current (smoothed) position
         private static void RoomCamera_DrawUpdate(On.RoomCamera.orig_DrawUpdate orig, RoomCamera roomCamera, float timeStacker, float timeSpeed)
         {
+            // I could make an IL-Hook but I assume then I could not
+            // easily turn it off and on again;
+            // TODO: try it out
             if (roomCamera.GetAttachedFields().isRoomBlacklisted || !RoomMod.CanScrollCamera(roomCamera.room) || roomCamera.voidSeaMode)
             {
                 orig(roomCamera, timeStacker, timeSpeed);
@@ -516,144 +519,184 @@ namespace SBCameraScroll
                 roomCamera.hud.Draw(timeStacker);
             }
 
-            if (roomCamera.room is Room room)
+            if (roomCamera.room is not Room room) return;
+
+            if (roomCamera.blizzardGraphics != null && room.blizzardGraphics == null)
             {
-                roomCamera.virtualMicrophone.DrawUpdate(timeStacker, timeSpeed);
-                Vector2 cameraPosition = Vector2.Lerp(roomCamera.lastPos, roomCamera.pos, timeStacker); // makes movement look smoother // adds in-between frames
+                roomCamera.blizzardGraphics.lerpBypass = true;
+                room.AddObject(roomCamera.blizzardGraphics);
+                room.blizzardGraphics = roomCamera.blizzardGraphics;
+                room.blizzard = true;
+            }
 
-                if (roomCamera.microShake > 0.0)
+            if (roomCamera.snowChange || roomCamera.fullscreenSync != Screen.fullScreen)
+            {
+                if (room.snow)
                 {
-                    cameraPosition += Custom.RNV() * 8f * roomCamera.microShake * UnityEngine.Random.value;
+                    roomCamera.UpdateSnowLight();
                 }
-
-                // might clamp something when camera shakes
-                cameraPosition.x = Mathf.Clamp(cameraPosition.x, cameraPosition.x + roomCamera.hDisplace - 12f, cameraPosition.x + roomCamera.hDisplace + 28f);
-                cameraPosition.x = Mathf.Floor(cameraPosition.x) - 0.02f;
-
-                cameraPosition.y = Mathf.Clamp(cameraPosition.y, cameraPosition.y + 1f - (!roomCamera.splitScreenMode ? 0.0f : 192f), cameraPosition.y + 33f + (!roomCamera.splitScreenMode ? 0.0f : 192f));
-                cameraPosition.y = Mathf.Floor(cameraPosition.y) - 0.02f;
-
-                roomCamera.levelGraphic.isVisible = true;
-                //cameraPosition += roomCamera.offset; // offset might be needed for multiple cameras // not used by SplitScreenMod
-
-                if (roomCamera.waterLight is WaterLight waterLight)
+                if (roomCamera.blizzardGraphics != null)
                 {
-                    if (room.gameOverRoom)
-                    {
-                        waterLight.CleanOut();
-                    }
-                    else
-                    {
-                        waterLight.DrawUpdate(cameraPosition);
-                    }
+                    roomCamera.blizzardGraphics.TileTexUpdate();
                 }
+            }
 
-                for (int spriteLeaserIndex = roomCamera.spriteLeasers.Count - 1; spriteLeaserIndex >= 0; spriteLeaserIndex--)
-                {
-                    roomCamera.spriteLeasers[spriteLeaserIndex].Update(timeStacker, roomCamera, cameraPosition);
-                    if (roomCamera.spriteLeasers[spriteLeaserIndex].deleteMeNextFrame)
-                    {
-                        roomCamera.spriteLeasers.RemoveAt(spriteLeaserIndex);
-                    }
-                }
+            roomCamera.fullscreenSync = Screen.fullScreen;
+            roomCamera.virtualMicrophone.DrawUpdate(timeStacker, timeSpeed);
+            Vector2 cameraPosition = Vector2.Lerp(roomCamera.lastPos, roomCamera.pos, timeStacker); // makes movement look smoother // adds in-between frames
 
-                foreach (ISingleCameraDrawable singleCameraDrawable in roomCamera.singleCameraDrawables)
-                {
-                    singleCameraDrawable.Draw(roomCamera, timeStacker, cameraPosition);
-                }
+            if (roomCamera.microShake > 0.0)
+            {
+                cameraPosition += Custom.RNV() * 8f * roomCamera.microShake * UnityEngine.Random.value;
+            }
 
-                if (room.game.DEBUGMODE)
-                {
-                    roomCamera.levelGraphic.x = 5000f;
-                }
-                else
-                {
-                    // not sure what this does // seems to visually darken stuff (apply shader or something) when offscreen
-                    // I think that textureOffset is only needed(?) for compatibility reasons with room.cameraPositions
-                    Vector2 textureOffset = room.abstractRoom.GetAttachedFields().textureOffset;
-                    roomCamera.levelGraphic.SetPosition(textureOffset - cameraPosition);
-                    roomCamera.backgroundGraphic.SetPosition(textureOffset - cameraPosition);
-                }
+            // might clamp something when camera shakes
+            cameraPosition.x = Mathf.Clamp(cameraPosition.x, cameraPosition.x + roomCamera.hDisplace - 12f, cameraPosition.x + roomCamera.hDisplace + 28f);
+            cameraPosition.x = Mathf.Floor(cameraPosition.x) - 0.02f;
 
-                roomCamera.shortcutGraphics.Draw(0.0f, cameraPosition);
-                UpdateScreen(roomCamera, cameraPosition); // screen texture // update variables for GPU
+            cameraPosition.y = Mathf.Clamp(cameraPosition.y, cameraPosition.y + 1f - (!roomCamera.splitScreenMode ? 0.0f : 192f), cameraPosition.y + 33f + (!roomCamera.splitScreenMode ? 0.0f : 192f));
+            cameraPosition.y = Mathf.Floor(cameraPosition.y) - 0.02f;
 
-                // mostly vanilla code
-                if (!room.abstractRoom.gate && !room.abstractRoom.shelter)
+            cameraPosition += roomCamera.offset;
+            cameraPosition += roomCamera.hardLevelGfxOffset;
+
+            roomCamera.levelGraphic.isVisible = true;
+            if (roomCamera.backgroundGraphic.isVisible)
+            {
+                roomCamera.backgroundGraphic.color = Color.Lerp(roomCamera.currentPalette.blackColor, roomCamera.currentPalette.fogColor, roomCamera.currentPalette.fogAmount);
+            }
+
+            if (roomCamera.waterLight is WaterLight waterLight)
+            {
+                if (room.gameOverRoom)
                 {
-                    float waterLevel = 0.0f;
-                    if (room.waterObject != null)
-                    {
-                        waterLevel = room.waterObject.fWaterLevel + 100f;
-                    }
-                    else if (room.deathFallGraphic != null)
-                    {
-                        waterLevel = room.deathFallGraphic.height + 180f;
-                    }
-                    Shader.SetGlobalFloat("_waterLevel", Mathf.InverseLerp(roomCamera.sSize.y, 0.0f, waterLevel - cameraPosition.y));
+                    waterLight.CleanOut();
                 }
                 else
                 {
-                    Shader.SetGlobalFloat("_waterLevel", 0.0f);
+                    waterLight.DrawUpdate(cameraPosition);
+                }
+            }
+
+            for (int spriteLeaserIndex = roomCamera.spriteLeasers.Count - 1; spriteLeaserIndex >= 0; spriteLeaserIndex--)
+            {
+                roomCamera.spriteLeasers[spriteLeaserIndex].Update(timeStacker, roomCamera, cameraPosition);
+                if (roomCamera.spriteLeasers[spriteLeaserIndex].deleteMeNextFrame)
+                {
+                    roomCamera.spriteLeasers.RemoveAt(spriteLeaserIndex);
+                }
+            }
+
+            foreach (ISingleCameraDrawable singleCameraDrawable in roomCamera.singleCameraDrawables)
+            {
+                singleCameraDrawable.Draw(roomCamera, timeStacker, cameraPosition);
+            }
+
+            if (room.game.DEBUGMODE)
+            {
+                roomCamera.levelGraphic.x = 5000f;
+            }
+            else
+            {
+                // not sure what this does // seems to visually darken stuff (apply shader or something) when offscreen
+                // I think that textureOffset is only needed(?) for compatibility reasons with room.cameraPositions
+                Vector2 textureOffset = room.abstractRoom.GetAttachedFields().textureOffset;
+                roomCamera.levelGraphic.SetPosition(textureOffset - cameraPosition);
+                roomCamera.backgroundGraphic.SetPosition(textureOffset - cameraPosition);
+            }
+
+            if (Futile.subjectToAspectRatioIrregularity)
+            {
+                int num2 = (int)(room.roomSettings.GetEffectAmount(RoomSettings.RoomEffect.Type.PixelShift) * 8f);
+                roomCamera.levelGraphic.x -= num2 % 3;
+                roomCamera.backgroundGraphic.x -= num2 % 3;
+                roomCamera.levelGraphic.y -= num2 / 3;
+                roomCamera.backgroundGraphic.y -= num2 / 3;
+            }
+
+            roomCamera.shortcutGraphics.Draw(0.0f, cameraPosition);
+            UpdateScreen(roomCamera, cameraPosition); // screen texture // update variables for GPU
+
+            // mostly vanilla code
+            if (!room.abstractRoom.gate && !room.abstractRoom.shelter)
+            {
+                float waterLevel = 0.0f;
+                if (room.waterObject != null)
+                {
+                    waterLevel = room.waterObject.fWaterLevel + 100f;
+                }
+                else if (room.deathFallGraphic != null)
+                {
+                    waterLevel = room.deathFallGraphic.height + 180f;
+                }
+                Shader.SetGlobalFloat("_waterLevel", Mathf.InverseLerp(roomCamera.sSize.y, 0.0f, waterLevel - cameraPosition.y));
+            }
+            else
+            {
+                Shader.SetGlobalFloat("_waterLevel", 0.0f);
+            }
+
+            float lightModifier = 1f;
+            if (room.roomSettings.DangerType != RoomRain.DangerType.None)
+            {
+                lightModifier = room.world.rainCycle.ShaderLight;
+            }
+
+            if (room.lightning is Lightning lightning)
+            {
+                if (!lightning.bkgOnly)
+                {
+                    lightModifier = lightning.CurrentLightLevel(timeStacker);
                 }
 
-                float lightModifier = 1f;
-                if (room.roomSettings.DangerType != RoomRain.DangerType.None)
-                {
-                    lightModifier = room.world.rainCycle.ShaderLight;
-                }
+                roomCamera.paletteTexture.SetPixel(0, 7, lightning.CurrentBackgroundColor(timeStacker, roomCamera.currentPalette));
+                roomCamera.paletteTexture.SetPixel(1, 7, lightning.CurrentFogColor(timeStacker, roomCamera.currentPalette));
+                roomCamera.paletteTexture.Apply();
+            }
 
-                if (room.lightning is Lightning lightning)
-                {
-                    if (!lightning.bkgOnly)
-                    {
-                        lightModifier = lightning.CurrentLightLevel(timeStacker);
-                    }
+            if (room.roomSettings.Clouds == 0.0f)
+            {
+                Shader.SetGlobalFloat("_light", 1f);
+            }
+            else
+            {
+                Shader.SetGlobalFloat("_light", Mathf.Lerp(Mathf.Lerp(lightModifier, -1f, room.roomSettings.Clouds), -0.4f, roomCamera.ghostMode));
+            }
 
-                    roomCamera.paletteTexture.SetPixel(0, 7, lightning.CurrentBackgroundColor(timeStacker, roomCamera.currentPalette));
-                    roomCamera.paletteTexture.SetPixel(1, 7, lightning.CurrentFogColor(timeStacker, roomCamera.currentPalette));
-                    roomCamera.paletteTexture.Apply();
-                }
+            Shader.SetGlobalFloat("_darkness", 1f - roomCamera.effect_darkness);
+            Shader.SetGlobalFloat("_brightness", roomCamera.effect_brightness);
+            Shader.SetGlobalFloat("_contrast", 1f + roomCamera.effect_contrast * 2f);
 
-                if (room.roomSettings.Clouds == 0.0f)
+            Shader.SetGlobalFloat("_saturation", 1f - roomCamera.effect_desaturation);
+            Shader.SetGlobalFloat("_hue", 360f * roomCamera.effect_hue);
+            Shader.SetGlobalFloat("_cloudsSpeed", 1f + 3f * roomCamera.ghostMode);
+
+            if (roomCamera.lightBloomAlphaEffect != RoomSettings.RoomEffect.Type.None)
+            {
+                roomCamera.lightBloomAlpha = room.roomSettings.GetEffectAmount(roomCamera.lightBloomAlphaEffect);
+            }
+
+            if (roomCamera.lightBloomAlphaEffect == RoomSettings.RoomEffect.Type.VoidMelt && roomCamera.fullScreenEffect != null)
+            {
+                if (room.roomSettings.GetEffectAmount(RoomSettings.RoomEffect.Type.VoidSea) > 0.0f)
                 {
-                    Shader.SetGlobalFloat("_light", 1f);
+                    roomCamera.lightBloomAlpha *= roomCamera.voidSeaGoldFilter;
+                    roomCamera.fullScreenEffect.color = new Color(Mathf.InverseLerp(-1200f, -6000f, cameraPosition.y) * Mathf.InverseLerp(0.9f, 0.0f, roomCamera.screenShake), 0.0f, 0.0f);
+                    roomCamera.fullScreenEffect.isVisible = roomCamera.lightBloomAlpha > 0.0f;
                 }
                 else
                 {
-                    Shader.SetGlobalFloat("_light", Mathf.Lerp(Mathf.Lerp(lightModifier, -1f, room.roomSettings.Clouds), -0.4f, roomCamera.ghostMode));
+                    roomCamera.fullScreenEffect.color = new Color(0.0f, 0.0f, 0.0f);
                 }
+            }
 
-                Shader.SetGlobalFloat("_cloudsSpeed", (1f + 3f * roomCamera.ghostMode));
-                if (roomCamera.lightBloomAlphaEffect != RoomSettings.RoomEffect.Type.None)
-                {
-                    roomCamera.lightBloomAlpha = room.roomSettings.GetEffectAmount(roomCamera.lightBloomAlphaEffect);
-                }
-
-                if (roomCamera.lightBloomAlphaEffect == RoomSettings.RoomEffect.Type.VoidMelt && roomCamera.fullScreenEffect != null)
-                {
-                    if (room.roomSettings.GetEffectAmount(RoomSettings.RoomEffect.Type.VoidSea) > 0.0f)
-                    {
-                        roomCamera.lightBloomAlpha *= roomCamera.voidSeaGoldFilter;
-                        roomCamera.fullScreenEffect.color = new Color(Mathf.InverseLerp(-1200f, -6000f, cameraPosition.y) * Mathf.InverseLerp(0.9f, 0.0f, roomCamera.screenShake), 0.0f, 0.0f);
-                        roomCamera.fullScreenEffect.isVisible = roomCamera.lightBloomAlpha > 0.0f;
-                    }
-                    else
-                    {
-                        roomCamera.fullScreenEffect.color = new Color(0.0f, 0.0f, 0.0f);
-                    }
-                }
-
-                if (roomCamera.fullScreenEffect == null)
-                {
-                    return;
-                }
-
+            if (roomCamera.fullScreenEffect != null)
+            {
                 if (roomCamera.lightBloomAlphaEffect == RoomSettings.RoomEffect.Type.Lightning)
                 {
                     roomCamera.fullScreenEffect.alpha = Mathf.InverseLerp(0.0f, 0.2f, roomCamera.lightBloomAlpha) * Mathf.InverseLerp(-0.7f, 0.0f, lightModifier);
                 }
-                else if (roomCamera.lightBloomAlpha > 0.0f && (roomCamera.lightBloomAlphaEffect == RoomSettings.RoomEffect.Type.Bloom || roomCamera.lightBloomAlphaEffect == RoomSettings.RoomEffect.Type.SkyBloom || (roomCamera.lightBloomAlphaEffect == RoomSettings.RoomEffect.Type.SkyAndLightBloom || roomCamera.lightBloomAlphaEffect == RoomSettings.RoomEffect.Type.LightBurn)))
+                else if (roomCamera.lightBloomAlpha > 0.0f && (roomCamera.lightBloomAlphaEffect == RoomSettings.RoomEffect.Type.Bloom || roomCamera.lightBloomAlphaEffect == RoomSettings.RoomEffect.Type.SkyBloom || roomCamera.lightBloomAlphaEffect == RoomSettings.RoomEffect.Type.SkyAndLightBloom || roomCamera.lightBloomAlphaEffect == RoomSettings.RoomEffect.Type.LightBurn))
                 {
                     roomCamera.fullScreenEffect.alpha = roomCamera.lightBloomAlpha * Mathf.InverseLerp(-0.7f, 0.0f, lightModifier);
                 }
@@ -661,6 +704,11 @@ namespace SBCameraScroll
                 {
                     roomCamera.fullScreenEffect.alpha = roomCamera.lightBloomAlpha;
                 }
+            }
+
+            if (roomCamera.sofBlackFade > 0f)
+            {
+                Shader.SetGlobalFloat("_darkness", 1f - roomCamera.sofBlackFade);
             }
         }
 
@@ -682,32 +730,21 @@ namespace SBCameraScroll
         }
 
         // preloads textures // RoomCamera.ApplyPositionChange() is called when they are ready
-        private static void RoomCamera_MoveCamera2(On.RoomCamera.orig_MoveCamera2 orig, RoomCamera roomCamera, string requestedTexture)
+        private static void RoomCamera_MoveCamera2(On.RoomCamera.orig_MoveCamera2 orig, RoomCamera roomCamera, string roomName, int camPos)
         {
             if (roomCamera.game.IsArenaSession)
             {
-                orig(roomCamera, requestedTexture);
+                orig(roomCamera, roomName, camPos);
                 return;
             }
 
-            string relativeFilePath = "World" + requestedTexture.Split(new string[] { Path.DirectorySeparatorChar + "World" }, StringSplitOptions.None)[1];
-            string[] splittedFilePath = relativeFilePath.Split(new char[] { '_' });
-            relativeFilePath = relativeFilePath.Split(new string[] { "_" + splittedFilePath[splittedFilePath.Length - 1] }, StringSplitOptions.None)[0]; // remove camera number at the end // example: LF_ABC_1 becomes LF_ABC
-
-            // check if file without camera number exists // if not use vanilla
-            string filePath = MainMod.modDirectoryPath + relativeFilePath + ".png";
-            if (File.Exists(filePath))
+            if (WorldLoader.FindRoomFile(roomName, false, "_0.png") == null)
             {
-                requestedTexture = "file:///" + filePath;
+                orig(roomCamera, roomName, camPos);
+                return;
             }
 
-            // I forgot // why do I check for merged(?) textures in vanilla folders? // vanilla files always have the format LF_ABC_1(?) // maybe this helps when you directly merge custom regions with vanilla folder // I saw a custom room without a number at the end iirc
-            filePath = Custom.RootFolderDirectory() + relativeFilePath + ".png"; // it does not hurt I guess
-            if (File.Exists(filePath))
-            {
-                requestedTexture = "file:///" + filePath;
-            }
-            orig(roomCamera, requestedTexture);
+            orig(roomCamera, roomName, -1);
         }
 
         private static Color RoomCamera_PixelColorAtCoordinate(On.RoomCamera.orig_PixelColorAtCoordinate orig, RoomCamera roomCamera, Vector2 coord)
