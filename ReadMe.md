@@ -16,7 +16,7 @@ Here is a youtube video showing Rain World 1.5 + SBCameraScroll (+ other mods) i
 - Motion sickness might be a problem. I wonder how much is due to noise (details) in the textures. You can play around with the parameters and see what works for you.
 
 ### Installation
-0. Update Rain World to version 1.9 (Downpour) if needed.
+0. Update Rain World to version 1.9 if needed.
 1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases).
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
@@ -28,12 +28,12 @@ If you have feedback, you can message me on Discord `@SchuhBaum#7246` or write a
 There are two licenses available - MIT and Unlicense. You can choose which one you want to use.  
 
 ### Changelog
-(Rain World 1.9)
+(Rain World v1.9)
 v2.01:
 - Added support for Rain World 1.9.
 - Removed AutoUpdate.
 
-(Rain World 1.5)
+(Rain World v1.5)
 v0.3:
 - Major overhaul. Restructured code.
 - Merges camera texture at runtime.
