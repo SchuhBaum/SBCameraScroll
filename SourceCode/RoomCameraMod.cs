@@ -453,6 +453,7 @@ namespace SBCameraScroll
         private static void RoomCamera_ApplyPositionChange(On.RoomCamera.orig_ApplyPositionChange orig, RoomCamera roomCamera)
         {
             // updates currentCameraPosition;
+            // updated roomCamera.room if needed;
             // resizes the levelTexture automatically (and the corresponding atlas texture);
             // constantly resizing might be a problem (memory fragmentation?)
             // what is the purpose of an atlas?;

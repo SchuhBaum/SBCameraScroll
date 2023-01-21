@@ -6,5 +6,5 @@
   "description": "Creates a smooth, scrolling camera that moves with the slugcat. Based on pipi toki's CameraScroll mod.",
   "requirements": [],
   "requirements_names": [],
-  "checksum_override_version": false
+  "checksum_override_version": true
 }
