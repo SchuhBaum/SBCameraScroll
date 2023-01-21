@@ -458,6 +458,8 @@ namespace SBCameraScroll
             // what is the purpose of an atlas?;
             orig(roomCamera);
 
+            if (roomCamera.GetAttachedFields().isRoomBlacklisted) return;
+
             // www has a texture too;
             // not sure what exactly happens when www.LoadImageIntoTexture(roomCamera.levelTexture) is called in orig();
             // it probably just removes the reference to www.texture (or rather the old room texture) when it is not needed anymore
@@ -482,16 +484,6 @@ namespace SBCameraScroll
             {
                 roomCamera.levelGraphic.width = roomCamera.levelTexture.width;
                 roomCamera.levelGraphic.height = roomCamera.levelTexture.height;
-            }
-
-            if (roomCamera.room == null || blacklistedRooms.Contains(roomCamera.room.abstractRoom.name) || roomCamera.game.rainWorld.safariMode)
-            {
-                Debug.Log("SBCameraScroll: The current room is blacklisted.");
-                roomCamera.GetAttachedFields().isRoomBlacklisted = true;
-            }
-            else
-            {
-                roomCamera.GetAttachedFields().isRoomBlacklisted = false;
             }
             ResetCameraPosition(roomCamera); // uses currentCameraPosition and isRoomBlacklisted
         }
@@ -732,18 +724,22 @@ namespace SBCameraScroll
         // preloads textures // RoomCamera.ApplyPositionChange() is called when they are ready
         private static void RoomCamera_MoveCamera2(On.RoomCamera.orig_MoveCamera2 orig, RoomCamera roomCamera, string roomName, int camPos)
         {
-            if (roomCamera.game.IsArenaSession || roomCamera.game.rainWorld.safariMode)
+            if (roomCamera.room == null || roomCamera.game.IsArenaSession || blacklistedRooms.Contains(roomName) || WorldLoader.FindRoomFile(roomName, false, "_0.png") == null)
             {
+                Debug.Log("SBCameraScroll: The room " + roomName + " is blacklisted.");
+                roomCamera.GetAttachedFields().isRoomBlacklisted = true;
                 orig(roomCamera, roomName, camPos);
                 return;
             }
 
-            if (WorldLoader.FindRoomFile(roomName, false, "_0.png") == null)
+            if (roomCamera.game.rainWorld.safariMode || roomCamera.loadingRoom is Room room && !RoomMod.CanScrollCamera(room))
             {
+                roomCamera.GetAttachedFields().isRoomBlacklisted = true;
                 orig(roomCamera, roomName, camPos);
                 return;
             }
 
+            roomCamera.GetAttachedFields().isRoomBlacklisted = false;
             orig(roomCamera, roomName, -1);
         }
 

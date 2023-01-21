@@ -9,15 +9,18 @@ namespace SBCameraScroll
     public static class AbstractRoomMod
     {
         //
+        // parameters
+        //
+
+        public static readonly int maximumTextureWidth = 16384;
+        public static readonly int maximumTextureHeight = 16384;
+
+        //
         // variables
         //
 
         internal static readonly Dictionary<AbstractRoom, AttachedFields> allAttachedFields = new();
         public static AttachedFields GetAttachedFields(this AbstractRoom abstractRoom) => allAttachedFields[abstractRoom];
-
-        //
-        //
-        //
 
         public static readonly Dictionary<string, Vector2> textureOffsetModifier = new()
         {
@@ -54,10 +57,10 @@ namespace SBCameraScroll
             if (x < 0) cutoffX = -x;
             if (y < 0) cutoffY = -y;
 
-            if (x < 10000 && y < 10000)
+            if (x < maximumTextureWidth && y < maximumTextureHeight)
             {
-                int width = Math.Min(1400 - cutoffX, 10000 - x);
-                int height = Math.Min(800 - cutoffY, 10000 - y);
+                int width = Math.Min(1400 - cutoffX, maximumTextureWidth - x);
+                int height = Math.Min(800 - cutoffY, maximumTextureHeight - y);
 
                 // I would need to de-compress the source first;
                 // how do I even do that?;
@@ -180,11 +183,11 @@ namespace SBCameraScroll
             }
 
             Debug.Log("SBCameraScroll: Merge camera textures for room " + roomName + " with " + cameraPositions.Length + " cameras.");
-            if (maxWidth > 10000 || maxHeight > 10000)
+            if (maxWidth > maximumTextureWidth || maxHeight > maximumTextureHeight)
             {
                 Debug.Log("SBCameraScroll: Warning! Merged texture width or height is too large. Setting to 10000 and hoping for the best.");
-                maxWidth = Mathf.Min(maxWidth, 10000); // 10000 seems to be the limit in Unity v4.
-                maxHeight = Mathf.Min(maxHeight, 10000);
+                maxWidth = Mathf.Min(maxWidth, maximumTextureWidth); // 10000 seems to be the limit in Unity v4.
+                maxHeight = Mathf.Min(maxHeight, maximumTextureHeight);
             }
 
             if (textureOffsetModifier.ContainsKey(roomName))
@@ -214,7 +217,7 @@ namespace SBCameraScroll
                 NativeArray<byte> colors = mergedTexture.GetRawTextureData<byte>();
                 for (int colorIndex = 0; colorIndex < colors.Length; ++colorIndex)
                 {
-                    colors[colorIndex] = (byte)0.004f; // non-transparent black (dark grey)
+                    colors[colorIndex] = colorIndex % 3 == 0 ? (byte)1 : (byte)0; // non-transparent black (dark grey)
                 }
 
                 for (int cameraIndex = 0; cameraIndex < cameraPositions.Length; ++cameraIndex)

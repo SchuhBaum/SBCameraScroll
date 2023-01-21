@@ -1,11 +1,18 @@
 ## SBCameraScroll
-###### Version: 2.02
+###### Version: 2.0.3
 This is a mod for Rain World v1.9.
 
 ### Description
 Creates a smooth, scrolling camera that moves with the slugcat. Based on pipi toki's CameraScroll mod.  
   
 Here is a youtube video showing Rain World 1.5 + SBCameraScroll (+ other mods) in action : https://www.youtube.com/watch?v=ePJbY4GSMck
+
+This mod generates files for each room with multiple cameras. You will be greeted with a "some mods have been 'updated'" notification when restarting.
+
+These files are saved in the folder:
+'Steam\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods\SBCameraScroll\world'
+
+If rooms textures are changed then you need to generate these files again. This might happen when you use custom regions. Simply delete everything or specifically what you need in that folder.
 
 ### Known issues
 - Camera does not follow the overseer or other creatures in the Safari mode.
@@ -31,10 +38,13 @@ There are two licenses available - MIT and Unlicense. You can choose which one y
 
 ### Changelog
 #### (Rain World v1.9)
-v2.02:
+v2.0.3:
 - Added support for Rain World 1.9.
 - Removed AutoUpdate.
 - Disabled this mod for Safari mode for now.
+- Fixed a bug where the base color of textures was not the correct "black". This could lead to lights freaking out at the borders. This does not effect textures that are already generated.
+- Increaded maximum texture size to 16384x16384. Rain World v1.5's Unity version had a limit of 10000x10000. This means that certain room textures in Subterrainian are no longer cropped.
+- Restructured code.
 
 #### (Rain World v1.5)
 v0.3:

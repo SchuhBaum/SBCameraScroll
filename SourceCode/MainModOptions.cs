@@ -154,7 +154,7 @@ namespace SBCameraScroll
             //     colorFill = new Color(1f, 0.0f, 0.0f, 0.5f),
             //     description = "WARNING: Deletes all merged textures inside the folder \"Mods/SBCameraScroll/\".\nAdding custom regions might change existing room textures. These textures need to be merged again."
             // };
-            // // clearCacheButton.OnClick += ClearCacheButton_OnClick; //TODO
+            // clearCacheButton.OnClick += ClearCacheButton_OnClick;
             // Tabs[tabIndex].AddItems(clearCacheButton);
 
             // if (clearCacheButton != null && Directory.GetFiles(MainMod.modDirectoryPath + Path.DirectorySeparatorChar + "world", "*.*", SearchOption.AllDirectories).Length == 0)
