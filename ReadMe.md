@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 2.01
+###### Version: 2.02
 This is a mod for Rain World v1.9.
 
 ### Description
@@ -31,9 +31,10 @@ There are two licenses available - MIT and Unlicense. You can choose which one y
 
 ### Changelog
 #### (Rain World v1.9)
-v2.01:
+v2.02:
 - Added support for Rain World 1.9.
 - Removed AutoUpdate.
+- Disabled this mod for Safari mode for now.
 
 #### (Rain World v1.5)
 v0.3:

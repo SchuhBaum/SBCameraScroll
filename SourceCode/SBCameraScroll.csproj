@@ -5,7 +5,7 @@
     <TargetFramework>net48</TargetFramework>
     <Nullable>enable</Nullable>
 	  <LangVersion>10.0</LangVersion>
-	  <Version>2.01</Version> 
+	  <Version>2.02</Version> 
   </PropertyGroup>
 
   <ItemGroup>

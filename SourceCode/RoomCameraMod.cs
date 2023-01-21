@@ -484,7 +484,7 @@ namespace SBCameraScroll
                 roomCamera.levelGraphic.height = roomCamera.levelTexture.height;
             }
 
-            if (roomCamera.room == null || blacklistedRooms.Contains(roomCamera.room.abstractRoom.name))
+            if (roomCamera.room == null || blacklistedRooms.Contains(roomCamera.room.abstractRoom.name) || roomCamera.game.rainWorld.safariMode)
             {
                 Debug.Log("SBCameraScroll: The current room is blacklisted.");
                 roomCamera.GetAttachedFields().isRoomBlacklisted = true;
@@ -732,7 +732,7 @@ namespace SBCameraScroll
         // preloads textures // RoomCamera.ApplyPositionChange() is called when they are ready
         private static void RoomCamera_MoveCamera2(On.RoomCamera.orig_MoveCamera2 orig, RoomCamera roomCamera, string roomName, int camPos)
         {
-            if (roomCamera.game.IsArenaSession)
+            if (roomCamera.game.IsArenaSession || roomCamera.game.rainWorld.safariMode)
             {
                 orig(roomCamera, roomName, camPos);
                 return;
