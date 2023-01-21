@@ -94,7 +94,7 @@ namespace SBCameraScroll
             AttachedFields attachedFields = roomCamera.GetAttachedFields();
 
             // vanilla copy & paste stuff
-            if (attachedFields.isRoomBlacklisted || !RoomMod.CanScrollCamera(roomCamera.room) || roomCamera.voidSeaMode)
+            if (attachedFields.isRoomBlacklisted || roomCamera.voidSeaMode) //TODO
             {
                 roomCamera.seekPos = roomCamera.CamPos(roomCamera.currentCameraPosition);
                 roomCamera.seekPos.x += roomCamera.hDisplace + 8f;
@@ -458,8 +458,6 @@ namespace SBCameraScroll
             // what is the purpose of an atlas?;
             orig(roomCamera);
 
-            if (roomCamera.GetAttachedFields().isRoomBlacklisted) return;
-
             // www has a texture too;
             // not sure what exactly happens when www.LoadImageIntoTexture(roomCamera.levelTexture) is called in orig();
             // it probably just removes the reference to www.texture (or rather the old room texture) when it is not needed anymore
@@ -485,6 +483,22 @@ namespace SBCameraScroll
                 roomCamera.levelGraphic.width = roomCamera.levelTexture.width;
                 roomCamera.levelGraphic.height = roomCamera.levelTexture.height;
             }
+
+            // if I blacklist too early then the camera might jump in the current room
+            if (roomCamera.room == null || blacklistedRooms.Contains(roomCamera.room.abstractRoom.name))
+            {
+                Debug.Log("SBCameraScroll: The current room is blacklisted.");
+                roomCamera.GetAttachedFields().isRoomBlacklisted = true;
+            }
+            // blacklist instead of checking if you can scroll // they do the same thing anyways
+            else if (roomCamera.game.IsArenaSession || roomCamera.game.rainWorld.safariMode || !RoomMod.CanScrollCamera(roomCamera.room))
+            {
+                roomCamera.GetAttachedFields().isRoomBlacklisted = true;
+            }
+            else
+            {
+                roomCamera.GetAttachedFields().isRoomBlacklisted = false;
+            }
             ResetCameraPosition(roomCamera); // uses currentCameraPosition and isRoomBlacklisted
         }
 
@@ -500,7 +514,7 @@ namespace SBCameraScroll
             // I could make an IL-Hook but I assume then I could not
             // easily turn it off and on again;
             // TODO: try it out
-            if (roomCamera.GetAttachedFields().isRoomBlacklisted || !RoomMod.CanScrollCamera(roomCamera.room) || roomCamera.voidSeaMode)
+            if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode) // || !RoomMod.CanScrollCamera(roomCamera.room) 
             {
                 orig(roomCamera, timeStacker, timeSpeed);
                 return;
@@ -724,22 +738,12 @@ namespace SBCameraScroll
         // preloads textures // RoomCamera.ApplyPositionChange() is called when they are ready
         private static void RoomCamera_MoveCamera2(On.RoomCamera.orig_MoveCamera2 orig, RoomCamera roomCamera, string roomName, int camPos)
         {
-            if (roomCamera.room == null || roomCamera.game.IsArenaSession || blacklistedRooms.Contains(roomName) || WorldLoader.FindRoomFile(roomName, false, "_0.png") == null)
+            // isRoomBlacklisted is not updated yet // needs to be updated in ApplyPositionChange()
+            if (roomCamera.game.IsArenaSession || roomCamera.game.rainWorld.safariMode || WorldLoader.FindRoomFile(roomName, false, "_0.png") == null)
             {
-                Debug.Log("SBCameraScroll: The room " + roomName + " is blacklisted.");
-                roomCamera.GetAttachedFields().isRoomBlacklisted = true;
                 orig(roomCamera, roomName, camPos);
                 return;
             }
-
-            if (roomCamera.game.rainWorld.safariMode || roomCamera.loadingRoom is Room room && !RoomMod.CanScrollCamera(room))
-            {
-                roomCamera.GetAttachedFields().isRoomBlacklisted = true;
-                orig(roomCamera, roomName, camPos);
-                return;
-            }
-
-            roomCamera.GetAttachedFields().isRoomBlacklisted = false;
             orig(roomCamera, roomName, -1);
         }
 
@@ -795,10 +799,8 @@ namespace SBCameraScroll
         private static void RoomCamera_Update(On.RoomCamera.orig_Update orig, RoomCamera roomCamera)
         {
             orig(roomCamera); // updates isRoomBlacklisted
-            if (!roomCamera.GetAttachedFields().isRoomBlacklisted && RoomMod.CanScrollCamera(roomCamera.room) && !roomCamera.voidSeaMode) // don't smooth the camera position in the void sea // treat void sea as being blacklisted
-            {
-                UpdateCameraPosition(roomCamera);
-            }
+            if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode) return; // don't smooth the camera position in the void sea // treat void sea as being blacklisted // && RoomMod.CanScrollCamera(roomCamera.room) TODO
+            UpdateCameraPosition(roomCamera);
         }
 
         //

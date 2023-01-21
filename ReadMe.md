@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 2.0.3
+###### Version: 2.0.4
 This is a mod for Rain World v1.9.
 
 ### Description
@@ -39,13 +39,14 @@ There are two licenses available - MIT and Unlicense. You can choose which one y
 
 ### Changelog
 #### (Rain World v1.9)
-v2.0.3:
+v2.0.4:
 - Added support for Rain World 1.9.
 - Removed AutoUpdate.
 - Disabled this mod for Safari mode for now.
 - Fixed a bug where the base color of textures was not the correct "black". This could lead to lights freaking out at the borders. This does not effect textures that are already generated.
 - Increaded maximum texture size to 16384x16384. Rain World v1.5's Unity version had a limit of 10000x10000. This means that certain room textures in Subterrainian are no longer cropped.
 - Restructured code.
+- Fixed a bug where one screen room textures would be stretched.
 
 #### (Rain World v1.5)
 v0.3:
