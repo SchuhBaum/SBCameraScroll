@@ -28,12 +28,12 @@ If you have feedback, you can message me on Discord `@SchuhBaum#7246` or write a
 There are two licenses available - MIT and Unlicense. You can choose which one you want to use.  
 
 ### Changelog
-(Rain World v1.9)
+(Rain World v1.9)  
 v2.01:
 - Added support for Rain World 1.9.
 - Removed AutoUpdate.
 
-(Rain World v1.5)
+(Rain World v1.5)  
 v0.3:
 - Major overhaul. Restructured code.
 - Merges camera texture at runtime.
