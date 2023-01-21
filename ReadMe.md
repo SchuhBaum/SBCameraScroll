@@ -8,6 +8,8 @@ Creates a smooth, scrolling camera that moves with the slugcat. Based on pipi to
 Here is a youtube video showing Rain World 1.5 + SBCameraScroll (+ other mods) in action : https://www.youtube.com/watch?v=ePJbY4GSMck
 
 ### Known issues
+- Camera does not follow the overseer or other creatures in the Safari mode.
+---
 (not verified for Rain World 1.9; probably all of them are still there; TODO)
 - This mod increases memory consumption. When the game runs low on memory the performance will decline and the game might crash. This might take a while (90+ minutes). Merging room texture accelerates this. This needs to happen once for every room with multiple screens. The textures are saved to disk (cached) and reused. It is recommended to restart the game every now and then.  
  CONTEXT: There might be memory leaks or memory fragmentation. A memory leak would mean that memory is not released when it is not used anymore. Fragmentation might happen because most roomCamera textures are now fairly large and change in size often. This means that they need to be re-allocated in memory often and they require a chunk of memory without "holes".
