@@ -28,15 +28,15 @@ namespace SBCameraScroll
 
         public static CameraType cameraType = CameraType.Position;
 
-        public static float innerCameraBoxX = 0.0f; // don't move camera when player is too close
-        public static float innerCameraBoxY = 0.0f; // set default values in option menu
-        public static float outerCameraBoxX = 0.0f; // the camera will always be at least this close
-        public static float outerCameraBoxY = 0.0f;
-        public static float smoothingFactorX = 0.0f; // set default values in option menu
-        public static float smoothingFactorY = 0.0f;
+        public static float innerCameraBoxX = 40f; // don't move camera when player is too close
+        public static float innerCameraBoxY = 40f;
+        public static float outerCameraBoxX = 180f;
+        public static float outerCameraBoxY = 20f;
+        public static float smoothingFactorX = 0.16f;
+        public static float smoothingFactorY = 0.16f;
 
         public static float maxUpdateShortcut = 3f;
-        public static List<string> blacklistedRooms = new();
+        public static List<string> blacklistedRooms = new() { "RM_AI" };
 
         //
         //
@@ -739,8 +739,11 @@ namespace SBCameraScroll
         // preloads textures // RoomCamera.ApplyPositionChange() is called when they are ready
         private static void RoomCamera_MoveCamera2(On.RoomCamera.orig_MoveCamera2 orig, RoomCamera roomCamera, string roomName, int camPos)
         {
-            // isRoomBlacklisted is not updated yet // needs to be updated in ApplyPositionChange()
-            if (roomCamera.game.IsArenaSession || roomCamera.game.rainWorld.safariMode || WorldLoader.FindRoomFile(roomName, false, "_0.png") == null)
+            // isRoomBlacklisted is not updated yet;
+            // needs to be updated in ApplyPositionChange();
+            // I need to check for blacklisted room anyway 
+            // since for example "RM_AI" can be merged but is incompatible;
+            if (roomCamera.game.IsArenaSession || roomCamera.game.rainWorld.safariMode || blacklistedRooms.Contains(roomName) || WorldLoader.FindRoomFile(roomName, false, "_0.png") == null)
             {
                 orig(roomCamera, roomName, camPos);
                 return;

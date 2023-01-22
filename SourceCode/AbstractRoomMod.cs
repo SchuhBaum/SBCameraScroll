@@ -22,10 +22,7 @@ namespace SBCameraScroll
         internal static readonly Dictionary<AbstractRoom, AttachedFields> allAttachedFields = new();
         public static AttachedFields GetAttachedFields(this AbstractRoom abstractRoom) => allAttachedFields[abstractRoom];
 
-        public static readonly Dictionary<string, Vector2> textureOffsetModifier = new()
-        {
-            ["SB_J03"] = new Vector2(300f, 0.0f)
-        };
+        public static readonly Dictionary<string, Vector2> textureOffsetModifier = new();
 
         public static readonly Texture2D mergedTexture = new(1, 1, TextureFormat.RGB24, false);
         public static readonly Texture2D cameraTexture = new(1, 1, TextureFormat.RGB24, false);
@@ -152,7 +149,7 @@ namespace SBCameraScroll
 
             string roomName = abstractRoom.name;
             string relativeRoomsPath = GetRelativeRoomsPath(regionName);
-            string filePath = MainMod.modDirectoryPath + relativeRoomsPath + roomName + "_0.png";
+            string filePath = MainMod.modDirectoryPath + relativeRoomsPath + roomName.ToLower() + "_0.png";
 
             // check if custom regions already contains the merged room texture // was this needed? // hm..., I think it was
             // ignore empty merged texture files that were created but not written to
