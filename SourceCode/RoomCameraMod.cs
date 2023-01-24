@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using RWCustom;
 using UnityEngine;
 
@@ -50,14 +49,17 @@ namespace SBCameraScroll
             On.RoomCamera.ctor += RoomCamera_ctor;
 
             On.RoomCamera.DrawUpdate += RoomCamera_DrawUpdate;
+            On.RoomCamera.IsViewedByCameraPosition += RoomCamera_IsViewedByCameraPosition;
+            On.RoomCamera.IsVisibleAtCameraPosition += RoomCamera_IsVisibleAtCameraPosition;
             On.RoomCamera.MoveCamera_int += RoomCamera_MoveCamera;
+
             On.RoomCamera.MoveCamera2 += RoomCamera_MoveCamera2;
             On.RoomCamera.PixelColorAtCoordinate += RoomCamera_PixelColorAtCoordinate;
-
             On.RoomCamera.PositionCurrentlyVisible += RoomCamera_PositionCurrentlyVisible;
             On.RoomCamera.PositionVisibleInNextScreen += RoomCamera_PositionVisibleInNextScreen;
-            On.RoomCamera.PreLoadTexture += RoomCamera_PreLoadTexture;
 
+            On.RoomCamera.PreLoadTexture += RoomCamera_PreLoadTexture;
+            On.RoomCamera.RectCurrentlyVisible += RoomCamera_RectCurrentlyVisible;
             On.RoomCamera.ScreenMovement += RoomCamera_ScreenMovement;
             On.RoomCamera.Update += RoomCamera_Update;
         }
@@ -68,10 +70,7 @@ namespace SBCameraScroll
 
         public static void CheckBorders(RoomCamera roomCamera, ref Vector2 position)
         {
-            if (roomCamera.room == null)
-            {
-                return;
-            }
+            if (roomCamera.room == null) return;
 
             Vector2 screenSize = roomCamera.sSize;
             Vector2 textureOffset = roomCamera.room.abstractRoom.GetAttachedFields().textureOffset; // regionGate's texture offset might be unitialized => RegionGateMod
@@ -443,7 +442,7 @@ namespace SBCameraScroll
             {
                 return;
             }
-            else if (roomCamera.fullScreenEffect.shader.name == "Fog" && !MainModOptions.isFogFullScreenEffectEnabled.Value || roomCamera.fullScreenEffect.shader.name != "Fog" && !MainModOptions.isOtherFullScreenEffectsEnabled.Value)
+            else if (roomCamera.fullScreenEffect.shader.name == "Fog" && !MainMod.Option_FogFullScreenEffect || roomCamera.fullScreenEffect.shader.name != "Fog" && !MainMod.Option_OtherFullScreenEffects)
             {
                 roomCamera.fullScreenEffect.RemoveFromContainer();
                 roomCamera.fullScreenEffect = null;
@@ -719,6 +718,26 @@ namespace SBCameraScroll
             }
         }
 
+        private static bool RoomCamera_IsViewedByCameraPosition(On.RoomCamera.orig_IsViewedByCameraPosition orig, RoomCamera roomCamera, int camPos, Vector2 testPos)
+        {
+            if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode)
+            {
+                return orig(roomCamera, camPos, testPos);
+            }
+            return testPos.x > roomCamera.pos.x - 380f && testPos.x < roomCamera.pos.x + 380f + 1400f && testPos.y > roomCamera.pos.y - 20f && testPos.y < roomCamera.pos.y + 20f + 800f;
+        }
+
+        // looking at the source code this seems to be only used with currentCameraPosition at this point;
+        // => treat is like RoomCamera_PositionCurrentlyVisible();
+        private static bool RoomCamera_IsVisibleAtCameraPosition(On.RoomCamera.orig_IsVisibleAtCameraPosition orig, RoomCamera roomCamera, int camPos, Vector2 testPos)
+        {
+            if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode)
+            {
+                return orig(roomCamera, camPos, testPos);
+            }
+            return testPos.x > roomCamera.pos.x - 380f && testPos.x < roomCamera.pos.x + 380f + 1400f && testPos.y > roomCamera.pos.y - 20f && testPos.y < roomCamera.pos.y + 20f + 800f;
+        }
+
         // only called when moving camera positions inside the same room // if the ID changed then do a smooth transition instead // the logic for that is done in UpdateCameraPosition()
         private static void RoomCamera_MoveCamera(On.RoomCamera.orig_MoveCamera_int orig, RoomCamera roomCamera, int camPos)
         {
@@ -769,7 +788,7 @@ namespace SBCameraScroll
             {
                 return orig(roomCamera, testPos, margin, widescreen);
             }
-            return testPos.x > roomCamera.pos.x - margin && testPos.x < roomCamera.pos.x + 1400f + margin && testPos.y > roomCamera.pos.y - margin && testPos.y < roomCamera.pos.y + 800f + margin;
+            return testPos.x > roomCamera.pos.x - 380f + margin && testPos.x < roomCamera.pos.x + 380f + 1400f + margin && testPos.y > roomCamera.pos.y - 20f - margin && testPos.y < roomCamera.pos.y + 20f + 800f + margin;
         }
 
         private static bool RoomCamera_PositionVisibleInNextScreen(On.RoomCamera.orig_PositionVisibleInNextScreen orig, RoomCamera roomCamera, Vector2 testPos, float margin, bool widescreen)
@@ -778,7 +797,7 @@ namespace SBCameraScroll
             {
                 return orig(roomCamera, testPos, margin, widescreen);
             }
-            return testPos.x > roomCamera.pos.x - 1400f - margin && testPos.x < roomCamera.pos.x + 2800f + margin && testPos.y > roomCamera.pos.y - 800f - margin && testPos.y < roomCamera.pos.y + 1600f + margin;
+            return testPos.x > roomCamera.pos.x - 380f - 1400f - margin && testPos.x < roomCamera.pos.x + 380f + 2800f + margin && testPos.y > roomCamera.pos.y - 20f - 800f - margin && testPos.y < roomCamera.pos.y + 20f + 1600f + margin;
         }
 
         private static void RoomCamera_PreLoadTexture(On.RoomCamera.orig_PreLoadTexture orig, RoomCamera roomCamera, Room room, int camPos)
@@ -788,6 +807,21 @@ namespace SBCameraScroll
             {
                 orig(roomCamera, room, camPos);
             }
+        }
+
+        private static bool RoomCamera_RectCurrentlyVisible(On.RoomCamera.orig_RectCurrentlyVisible orig, RoomCamera roomCamera, Rect testRect, float margin, bool widescreen)
+        {
+            if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode)
+            {
+                return orig(roomCamera, testRect, margin, widescreen);
+            }
+
+            Rect otherRect = default;
+            otherRect.xMin = roomCamera.pos.x - 380f - margin;
+            otherRect.xMax = roomCamera.pos.x + 380f + 1400f + margin;
+            otherRect.yMin = roomCamera.pos.y - 20f - margin;
+            otherRect.yMax = roomCamera.pos.y + 20f + 800f + margin;
+            return testRect.CheckIntersect(otherRect);
         }
 
         private static void RoomCamera_ScreenMovement(On.RoomCamera.orig_ScreenMovement orig, RoomCamera roomCamera, Vector2? sourcePos, Vector2 bump, float shake)

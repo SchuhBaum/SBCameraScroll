@@ -14,7 +14,7 @@ namespace SBCameraScroll
     // SplitScreenMod needs to be able to get the current cameraNumber for these methods
     // if I get access to that variable directly (static) I could do that too // but I don't want to carry an instance of SplitScreenMod around => dependency
     // You should be able to change load order now;
-    [BepInPlugin("SchuhBaum.SBCameraScroll", "SBCameraScroll", "2.0.5")]
+    [BepInPlugin("SchuhBaum.SBCameraScroll", "SBCameraScroll", "2.0.6")]
     public class MainMod : BaseUnityPlugin
     {
         //
@@ -24,7 +24,16 @@ namespace SBCameraScroll
         public static string modDirectoryPath = "";
         public static readonly string MOD_ID = "SBCameraScroll";
         public static readonly string author = "SchuhBaum";
-        public static readonly string version = "2.0.5";
+        public static readonly string version = "2.0.6";
+
+        //
+        // options
+        //
+
+        public static bool Option_FogFullScreenEffect => MainModOptions.fogFullScreenEffect.Value;
+        public static bool Option_OtherFullScreenEffects => MainModOptions.otherFullScreenEffects.Value;
+        public static bool Option_MergeWhileLoading => MainModOptions.mergeWhileLoading.Value;
+        public static bool Option_ScrollOneScreenRooms => MainModOptions.scrollOneScreenRooms.Value;
 
         //
         // other mods
@@ -65,7 +74,6 @@ namespace SBCameraScroll
         public static void CreateModRootDirectory()
         {
             modDirectoryPath = Directory.GetParent(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)).FullName + Path.DirectorySeparatorChar;
-            Debug.Log("SBCameraScroll: modDirectoryPath " + modDirectoryPath);
             CreateDirectory(modDirectoryPath + "world");
         }
 
@@ -80,11 +88,11 @@ namespace SBCameraScroll
             if (isInitialized) return;
             isInitialized = true;
 
+            Debug.Log("SBCameraScroll: Version " + version);
+
             //TODO: fix events in MainModOptions
             MachineConnector.SetRegisteredOI(MOD_ID, MainModOptions.instance);
-
             CreateModRootDirectory(); // uses root folder directory // needs to be initialized at this point
-            Debug.Log("SBCameraScroll: Version " + version);
 
             foreach (ModManager.Mod mod in ModManager.ActiveMods)
             {
@@ -104,6 +112,7 @@ namespace SBCameraScroll
                 Debug.Log("SBCameraScroll: SplitScreenMod found. Enable option for scrolling one-screen rooms.");
             }
             Debug.Log("SBCameraScroll: This mod needs to be loaded after SplitScreenMod. The load order can be change manually in Remix. SplitScreenMod does not exist for Rain World 1.9 yet. TODO: fix this.");
+            Debug.Log("SBCameraScroll: modDirectoryPath " + modDirectoryPath);
 
             AboveCloudsViewMod.OnEnable();
             AbstractRoomMod.OnEnable();

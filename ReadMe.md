@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 2.0.5
+###### Version: 2.0.6
 This is a mod for Rain World v1.9.
 
 ### Description
@@ -37,7 +37,7 @@ There are two licenses available - MIT and Unlicense. You can choose which one y
 
 ### Changelog
 #### (Rain World v1.9)
-v2.0.5:
+v2.0.6:
 - Added support for Rain World 1.9.
 - Removed AutoUpdate.
 - Disabled this mod for Safari mode for now.
@@ -46,6 +46,7 @@ v2.0.5:
 - Restructured code.
 - Fixed a bug where one screen room textures would be stretched.
 - Blacklisted the room "RM_AI" since the room textures cannot be merged correctly at this point. The room needs to be re-rendered first.
+- Fixed a bug where graphics of some objects would be visible too late (resulting in pop-ins).
 
 #### (Rain World v1.5)
 v0.3:

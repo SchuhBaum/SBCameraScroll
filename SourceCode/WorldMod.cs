@@ -21,7 +21,7 @@ namespace SBCameraScroll
             // RainWorldGameMod.ClearAllWormGrass(); // safer but too slow // there might worm grass already been created for the (new) world
 
             orig(world, slugcatName, abstractRoomsList, swarmRooms, shelters, gates);
-            if (MainModOptions.isMergeWhileLoadingEnabled.Value && world.game?.IsStorySession == true) // regionState is a function and needs world.game != null
+            if (MainMod.Option_MergeWhileLoading && world.game?.IsStorySession == true) // regionState is a function and needs world.game != null
             {
                 Debug.Log("SBCameraScroll: Check rooms for missing merged textures.");
                 foreach (AbstractRoom abstractRoom in abstractRoomsList)

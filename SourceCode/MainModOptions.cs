@@ -13,10 +13,10 @@ namespace SBCameraScroll
         // options
         //
 
-        public static Configurable<bool> isFogFullScreenEffectEnabled = instance.config.Bind("fogFullScreenEffect", defaultValue: true, new ConfigurableInfo("When disabled, the full screen fog effect is removed. It depends on the camera position and can noticeably move with the screen.", null, "", "Fog Effect"));
-        public static Configurable<bool> isMergeWhileLoadingEnabled = instance.config.Bind("mergeWhileLoading", defaultValue: true, new ConfigurableInfo("When enabled, the camera textures for each room are merged when the region gets loaded.\nWhen disabled, camera textures are merged for each room on demand. Merging happens only once and might take a while.", null, "", "Merge While Loading")); //Merging happens only once and the files are stored inside the folder \"Mods/SBCameraScroll/\".\nThis process can take a while. Merging all rooms in Deserted Wastelands took me around three minutes.
-        public static Configurable<bool> isOtherFullScreenEffectsEnabled = instance.config.Bind("otherFullScreenEffects", defaultValue: true, new ConfigurableInfo("When disabled, full screen effects (except fog) like bloom and melt are removed.", null, "", "Full Screen Effects"));
-        public static Configurable<bool> isScrollOneScreenRoomsEnabled = instance.config.Bind("scrollOneScreenRooms", defaultValue: false, new ConfigurableInfo("When disabled, the camera does not scroll in rooms with only one screen.", null, "", "One Screen Rooms")); // Automatically enabled when using SplitScreenMod.
+        public static Configurable<bool> fogFullScreenEffect = instance.config.Bind("fogFullScreenEffect", defaultValue: true, new ConfigurableInfo("When disabled, the full screen fog effect is removed. It depends on the camera position and can noticeably move with the screen.", null, "", "Fog Effect"));
+        public static Configurable<bool> mergeWhileLoading = instance.config.Bind("mergeWhileLoading", defaultValue: true, new ConfigurableInfo("When enabled, the camera textures for each room are merged when the region gets loaded.\nWhen disabled, camera textures are merged for each room on demand. Merging happens only once and might take a while.", null, "", "Merge While Loading")); //Merging happens only once and the files are stored inside the folder \"Mods/SBCameraScroll/\".\nThis process can take a while. Merging all rooms in Deserted Wastelands took me around three minutes.
+        public static Configurable<bool> otherFullScreenEffects = instance.config.Bind("otherFullScreenEffects", defaultValue: true, new ConfigurableInfo("When disabled, full screen effects (except fog) like bloom and melt are removed.", null, "", "Full Screen Effects"));
+        public static Configurable<bool> scrollOneScreenRooms = instance.config.Bind("scrollOneScreenRooms", defaultValue: false, new ConfigurableInfo("When disabled, the camera does not scroll in rooms with only one screen.", null, "", "One Screen Rooms")); // Automatically enabled when using SplitScreenMod.
 
         public static Configurable<int> innerCameraBoxX_Position = instance.config.Bind("innerCameraBoxX_Position", defaultValue: 2, new ConfigurableInfo("The camera does not move when the player is closer than this.", new ConfigAcceptableRange<int>(0, 35), "", "Minimum Distance in X (2)"));
         public static Configurable<int> innerCameraBoxY_Position = instance.config.Bind("innerCameraBoxY_Position", defaultValue: 2, new ConfigurableInfo("The camera does not move when the player is closer than this.", new ConfigAcceptableRange<int>(0, 35), "", "Minimum Distance in Y (2)"));
@@ -129,10 +129,10 @@ namespace SBCameraScroll
 
             AddNewLine(1.25f);
 
-            AddCheckBox(isFogFullScreenEffectEnabled, "Fog Effect");
-            AddCheckBox(isOtherFullScreenEffectsEnabled, "Full Screen Effects");
-            AddCheckBox(isMergeWhileLoadingEnabled, "Merge While Loading");
-            AddCheckBox(isScrollOneScreenRoomsEnabled, "One Screen Rooms");
+            AddCheckBox(fogFullScreenEffect, "Fog Effect");
+            AddCheckBox(otherFullScreenEffects, "Full Screen Effects");
+            AddCheckBox(mergeWhileLoading, "Merge While Loading");
+            AddCheckBox(scrollOneScreenRooms, "One Screen Rooms");
             DrawCheckBoxes(ref Tabs[tabIndex]);
 
             AddNewLine();
@@ -311,10 +311,10 @@ namespace SBCameraScroll
             RoomCameraMod.cameraType = (CameraType)Array.IndexOf(cameraTypeKeys, cameraType.Value); // 0: Position type, 1: Vanilla type, 2: Velocity type
 
             Debug.Log("SBCameraScroll: cameraType " + RoomCameraMod.cameraType);
-            Debug.Log("SBCameraScroll: isFogFullScreenEffectOptionEnabled " + isFogFullScreenEffectEnabled);
-            Debug.Log("SBCameraScroll: isOtherFullScreenEffectsOptionEnabled " + isOtherFullScreenEffectsEnabled);
-            Debug.Log("SBCameraScroll: isMergeWhileLoadingOptionEnabled " + isMergeWhileLoadingEnabled);
-            Debug.Log("SBCameraScroll: isScrollOneScreenOptionEnabled " + isScrollOneScreenRoomsEnabled);
+            Debug.Log("SBCameraScroll: Option_FogFullScreenEffect " + MainMod.Option_FogFullScreenEffect);
+            Debug.Log("SBCameraScroll: Option_OtherFullScreenEffects " + MainMod.Option_OtherFullScreenEffects);
+            Debug.Log("SBCameraScroll: Option_MergeWhileLoading " + MainMod.Option_MergeWhileLoading);
+            Debug.Log("SBCameraScroll: Option_ScrollOneScreenRooms " + MainMod.Option_ScrollOneScreenRooms);
 
 
             RoomCameraMod.smoothingFactorX = smoothingFactorX.Value / 50f;
