@@ -18,7 +18,10 @@ Q: The mod doesn't work. I can't open the mod's option menu. How to fix this?
 A: One thing that helped multiple people is to delete the 'Rain World\BepInEx' folder and then verifying the integrity of the game files in steam.  
 
 Q: The game freezes when entering a region. How to fix this?  
-A: The game might actually not be frozen. The mod needs to generate files for each region. This can take time (>1 minute). Wait a bit. If the game actually crashed then you have an exceptionLog.txt in your Rain World folder. If that is the case then proceed with the section `Bug reports`.  
+A: The game might actually not be frozen. The mod needs to generate files for each region. This can take time (>1 minute). Wait a bit. If the game actually crashed then you have an exceptionLog.txt in your Rain World folder. If that is the case then proceed with the section `Bug reports`.
+
+Q: My game actually crashed. What happened?
+A: Your game might have run out of memory. So far I haven't found a solution to this. As a workaround, I recommend that you restart your game from time to time (see `Known issues`).
 
 ### Bug reports
 Please post bugs on the Rain World Discord server (https://discord.gg/rainworld) in the channel #modding-support.
