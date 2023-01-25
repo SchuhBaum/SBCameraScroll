@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 2.0.8
+###### Version: 2.0.9
 This is a mod for Rain World v1.9.
 
 ### Description
@@ -50,7 +50,7 @@ There are two licenses available - MIT and Unlicense. You can choose which one y
 
 ### Changelog
 #### (Rain World v1.9)
-v2.0.8:
+v2.0.9:
 - Added support for Rain World 1.9.
 - Removed AutoUpdate.
 - Disabled this mod for Safari mode for now.
@@ -60,9 +60,10 @@ v2.0.8:
 - Fixed a bug where one screen room textures would be stretched.
 - Blacklisted the room "RM_AI" since the room textures cannot be merged correctly at this point. The room needs to be re-rendered first.
 - Fixed a bug where graphics of some objects would be visible too late (resulting in pop-ins).
-- (position type camera) Added new options. The camera now catches up with the player (by default) and can even move ahead of the player when configured.
+- (position type camera) Added new options (disabled by default). The camera can catch up with the player can even move ahead of the player when configured.
 - (position type camera) Offset no longer depends on player inputs. Offset reverses when at border.
-- (position type camera) Added an option for zeroG. If enabled, the camera will focus directly on the player during zeroG ignoring other position type parameters.
+- (position type camera) Added an option for zeroG (disabled by default). If enabled, the camera will focus directly on the player during zeroG ignoring other position type parameters.
+- Fixed a bug where clouds were not aligned.
 
 #### (Rain World v1.5)
 v0.3:
