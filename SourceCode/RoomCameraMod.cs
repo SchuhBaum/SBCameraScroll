@@ -109,7 +109,6 @@ namespace SBCameraScroll
                 return;
             }
 
-            attachedFields.followAbstractCreatureID = null; // do a smooth transition // this actually makes a difference for the vanilla type camera // otherwise the map input would immediately be processed
             UpdateOnScreenPosition(roomCamera);
             CheckBorders(roomCamera, ref attachedFields.onScreenPosition); // do not move past room boundaries
 
@@ -123,6 +122,7 @@ namespace SBCameraScroll
                 // center camera on vanilla position
                 roomCamera.lastPos = roomCamera.seekPos;
                 roomCamera.pos = roomCamera.seekPos;
+                attachedFields.followAbstractCreatureID = null; // do a smooth transition // this actually makes a difference for the vanilla type camera // otherwise the map input would immediately be processed
 
                 attachedFields.seekPosition *= 0.0f;
                 attachedFields.vanillaTypePosition = attachedFields.onScreenPosition;
@@ -134,6 +134,7 @@ namespace SBCameraScroll
                 // center camera on player
                 roomCamera.lastPos = attachedFields.onScreenPosition;
                 roomCamera.pos = attachedFields.onScreenPosition;
+                attachedFields.followAbstractCreatureID = roomCamera.followAbstractCreature?.ID;
             }
             attachedFields.cameraOffset = new();
         }
@@ -148,14 +149,12 @@ namespace SBCameraScroll
         // expanding camera logic from bee's CameraScroll mod
         public static void UpdateCameraPosition(RoomCamera roomCamera)
         {
-            if (roomCamera.followAbstractCreature == null || roomCamera.room == null)
-            {
-                return;
-            }
+            if (roomCamera.followAbstractCreature == null || roomCamera.room == null) return;
 
             UpdateOnScreenPosition(roomCamera);
             AttachedFields attachedFields = roomCamera.GetAttachedFields();
 
+            // if I want this to work with Safari I might need to remove these player checks
             if (attachedFields.followAbstractCreatureID != roomCamera.followAbstractCreature.ID && roomCamera.followAbstractCreature?.realizedCreature is Player player)  // smooth transition when switching cameras in the same room
             {
                 switch (cameraType)
@@ -168,8 +167,8 @@ namespace SBCameraScroll
                         break;
                     case CameraType.Vanilla:
                         attachedFields.followAbstractCreatureID = null; // keep transition going even when switching back
-                        UpdateCamera_PositionType(roomCamera, attachedFields, stopEarlyWhenMovingSlowly: false); // needs followAbstractCreatureID = null // updates cameraOffset
-                        attachedFields.cameraOffset = new(); // don't use offset => keep resetting the camera offset
+                        UpdateCamera_PositionType(roomCamera, attachedFields, stopEarlyWhenMovingSlowly: false, ignoreBoxAndOffset: true); // needs followAbstractCreatureID = null // updates cameraOffset
+                        // attachedFields.cameraOffset = new(); // don't use offset => keep resetting the camera offset
 
                         if (player.input[0].mp && !player.input[1].mp)
                         {
@@ -193,6 +192,12 @@ namespace SBCameraScroll
                 switch (cameraType)
                 {
                     case CameraType.Position:
+                        // EffectiveRoomGravity == 0.0f in shortcuts?
+                        if (MainMod.Option_ZeroG && roomCamera.room.gravity == 0.0f)// roomCamera.followAbstractCreature?.realizedCreature?.EffectiveRoomGravity == 0.0f
+                        {
+                            UpdateCamera_PositionType(roomCamera, attachedFields, ignoreBoxAndOffset: true);
+                            break;
+                        }
                         UpdateCamera_PositionType(roomCamera, attachedFields); // don't skip smooth transition if part or set followAbstractCreatureID here
                         break;
                     case CameraType.Vanilla: // put after transition or map input gets registered immediately
@@ -219,32 +224,67 @@ namespace SBCameraScroll
             }
         }
 
-        public static void UpdateCamera_PositionType(RoomCamera roomCamera, in AttachedFields attachedFields, bool stopEarlyWhenMovingSlowly = true)
+        public static void UpdateCamera_PositionType(RoomCamera roomCamera, in AttachedFields attachedFields, bool stopEarlyWhenMovingSlowly = true, bool ignoreBoxAndOffset = false)
         {
             //
             // setting up by using attachedFields
             //
 
-            Vector2 targetPosition = attachedFields.onScreenPosition + attachedFields.cameraOffset;
+            Vector2 targetPosition = attachedFields.onScreenPosition + (ignoreBoxAndOffset ? new() : attachedFields.cameraOffset);
             CheckBorders(roomCamera, ref targetPosition); // stop at borders
+
+            bool isAtBorderX = false;
+            bool isAtBorderY = false;
 
             // reach exact position during smooth transitions
             float innerCameraBoxX_ = 0.0f;
             float innerCameraBoxY_ = 0.0f;
 
-            if (attachedFields.followAbstractCreatureID != null) // not in a smooth transition
+            if (attachedFields.followAbstractCreatureID != null && !ignoreBoxAndOffset) // not in a smooth transition
             {
+                // if not zero then targetPosition = atBorderPosition because of CheckBorders(); kinda confusing;
+                float atBorderDifferenceX = attachedFields.onScreenPosition.x + attachedFields.cameraOffset.x - targetPosition.x;
+                float atBorderDifferenceY = attachedFields.onScreenPosition.y + attachedFields.cameraOffset.y - targetPosition.y;
+
                 // slow down at borders by making the camera box smaller if needed;
                 // at borders the target position is constant but the onScreenPosition still moves;
-                innerCameraBoxX_ = Math.Max(0.0f, innerCameraBoxX - Mathf.Abs(targetPosition.x - attachedFields.onScreenPosition.x - attachedFields.cameraOffset.x));
-                innerCameraBoxY_ = Math.Max(0.0f, innerCameraBoxY - Mathf.Abs(targetPosition.y - attachedFields.onScreenPosition.y - attachedFields.cameraOffset.y));
+                innerCameraBoxX_ = Math.Max(0.0f, innerCameraBoxX - Mathf.Abs(atBorderDifferenceX));
+                innerCameraBoxY_ = Math.Max(0.0f, innerCameraBoxY - Mathf.Abs(atBorderDifferenceY));
+
+                // reverse when at border;
+                // make a little buffer such that innerCameraBoxX_ stays zero next frame;
+                if (atBorderDifferenceX != 0.0f)
+                {
+                    isAtBorderX = true;
+                    if (atBorderDifferenceX > innerCameraBoxX + 10f)
+                    {
+                        attachedFields.cameraOffset.x = Mathf.Clamp(attachedFields.cameraOffset.x - atBorderDifferenceX + innerCameraBoxX + 10f, -maximumCameraOffsetX, maximumCameraOffsetX);
+                    }
+                    else if (atBorderDifferenceX < -innerCameraBoxX - 10f)
+                    {
+                        attachedFields.cameraOffset.x = Mathf.Clamp(attachedFields.cameraOffset.x - atBorderDifferenceX - innerCameraBoxX - 10f, -maximumCameraOffsetX, maximumCameraOffsetX);
+                    }
+                }
+
+                if (atBorderDifferenceY != 0.0f)
+                {
+                    isAtBorderY = true;
+                    if (atBorderDifferenceY > innerCameraBoxY + 10f)
+                    {
+                        attachedFields.cameraOffset.y = Mathf.Clamp(attachedFields.cameraOffset.y - atBorderDifferenceY + innerCameraBoxY + 10f, -maximumCameraOffsetY, maximumCameraOffsetY);
+                    }
+                    else if (atBorderDifferenceY < -innerCameraBoxY - 10f)
+                    {
+                        attachedFields.cameraOffset.y = Mathf.Clamp(attachedFields.cameraOffset.y - atBorderDifferenceY - innerCameraBoxY - 10f, -maximumCameraOffsetY, maximumCameraOffsetY);
+                    }
+                }
             }
-            else if (cameraType == CameraType.Vanilla && attachedFields.useVanillaPositions)
+            else if (cameraType == CameraType.Vanilla && attachedFields.useVanillaPositions) // kinda messy making these checks here
             {
                 // only case where the player is not the target
                 // don't check borders for this one
-                // seekPos can change during a transition // this extends the transition until the player stops changing screens
-
+                // seekPos can change during a transition
+                // this extends the transition until the player stops changing screens
                 targetPosition = roomCamera.seekPos;
             }
 
@@ -271,10 +311,11 @@ namespace SBCameraScroll
                     roomCamera.pos.x = roomCamera.lastPos.x;
                 }
                 // used next frame;
-                // keep offset when inside camera box;
-                // otherwise the camera box will feel smaller;
+                // keep offset constant when inside camera box; otherwise the camera box will feel smaller;
                 // don't update when the camera is not moving;
-                else if (roomCamera.followAbstractCreature?.realizedCreature is Player player && player.input[0].x != 0 && player.input[0].x == Mathf.Sign(roomCamera.pos.x - roomCamera.lastPos.x) && player.input[0].x == Mathf.Sign(attachedFields.onScreenPosition.x - attachedFields.lastOnScreenPosition.x))
+                // don't update when turning;
+                // reverse instead when at border (see start of this function);
+                else if (!ignoreBoxAndOffset && !isAtBorderX && Mathf.Sign(roomCamera.pos.x - roomCamera.lastPos.x) == Mathf.Sign(attachedFields.onScreenPosition.x - attachedFields.lastOnScreenPosition.x))
                 {
                     attachedFields.cameraOffset.x = Mathf.Clamp(attachedFields.cameraOffset.x + cameraOffsetSpeedMultiplier * (attachedFields.onScreenPosition.x - attachedFields.lastOnScreenPosition.x), -maximumCameraOffsetX, maximumCameraOffsetX);
                 }
@@ -292,7 +333,7 @@ namespace SBCameraScroll
                 {
                     roomCamera.pos.y = roomCamera.lastPos.y;
                 }
-                else if (roomCamera.followAbstractCreature?.realizedCreature is Player player && player.input[0].y != 0 && player.input[0].y == Mathf.Sign(roomCamera.pos.y - roomCamera.lastPos.y) && player.input[0].y == Mathf.Sign(attachedFields.onScreenPosition.y - attachedFields.lastOnScreenPosition.y))
+                else if (!ignoreBoxAndOffset && !isAtBorderY && Mathf.Sign(roomCamera.pos.y - roomCamera.lastPos.y) == Mathf.Sign(attachedFields.onScreenPosition.y - attachedFields.lastOnScreenPosition.y))
                 {
                     attachedFields.cameraOffset.y = Mathf.Clamp(attachedFields.cameraOffset.y + cameraOffsetSpeedMultiplier * (attachedFields.onScreenPosition.y - attachedFields.lastOnScreenPosition.y), -maximumCameraOffsetY, maximumCameraOffsetY);
                 }
@@ -382,8 +423,15 @@ namespace SBCameraScroll
                 }
                 else // use the center (of mass(?)) instead // makes rolls more predictable // use lower y such that crouching does not move camera
                 {
-                    position.x += 0.5f * (player.bodyChunks[0].pos.x + player.bodyChunks[1].pos.x);
-                    position.y += Mathf.Min(player.bodyChunks[0].pos.y, player.bodyChunks[1].pos.y);
+                    if (player.EffectiveRoomGravity == 0.0f || player.animation == Player.AnimationIndex.Roll) // reduce movement when "rolling" in place in ZeroG;
+                    {
+                        position += 0.5f * (player.bodyChunks[0].pos + player.bodyChunks[1].pos);
+                    }
+                    else
+                    {
+                        position.x += 0.5f * (player.bodyChunks[0].pos.x + player.bodyChunks[1].pos.x);
+                        position.y += Mathf.Min(player.bodyChunks[0].pos.y, player.bodyChunks[1].pos.y);
+                    }
                 }
 
                 AttachedFields attachedFields = roomCamera.GetAttachedFields();

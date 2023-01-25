@@ -18,6 +18,7 @@ namespace SBCameraScroll
         public static Configurable<bool> otherFullScreenEffects = instance.config.Bind("otherFullScreenEffects", defaultValue: true, new ConfigurableInfo("When disabled, full screen effects (except fog) like bloom and melt are removed.", null, "", "Full Screen Effects"));
         public static Configurable<bool> scrollOneScreenRooms = instance.config.Bind("scrollOneScreenRooms", defaultValue: false, new ConfigurableInfo("When disabled, the camera does not scroll in rooms with only one screen.", null, "", "One Screen Rooms")); // Automatically enabled when using SplitScreenMod.
 
+        public static Configurable<bool> zeroG_Position = instance.config.Bind("zeroG_Position", defaultValue: true, new ConfigurableInfo("When enabled, the camera centers on the player in zeroG ignoring other position type parameters.", null, "", "ZeroG"));
         public static Configurable<int> innerCameraBoxX_Position = instance.config.Bind("innerCameraBoxX_Position", defaultValue: 2, new ConfigurableInfo("The camera does not move when the player is closer than this.", new ConfigAcceptableRange<int>(0, 35), "", "Minimum Distance in X (2)"));
         public static Configurable<int> innerCameraBoxY_Position = instance.config.Bind("innerCameraBoxY_Position", defaultValue: 2, new ConfigurableInfo("The camera does not move when the player is closer than this.", new ConfigAcceptableRange<int>(0, 35), "", "Minimum Distance in Y (2)"));
         public static Configurable<int> maximumCameraOffsetX_Position = instance.config.Bind("maximumCameraOffsetX_Position", defaultValue: 2, new ConfigurableInfo("Determines how far the camera moves ahead of the player.", new ConfigAcceptableRange<int>(0, 35), "", "Maximum Camera Offset in X (2)"));
@@ -135,10 +136,10 @@ namespace SBCameraScroll
             AddNewLine(1.25f);
             AddNewLine(1.25f);
 
-            AddCheckBox(fogFullScreenEffect, "Fog Effect");
-            AddCheckBox(otherFullScreenEffects, "Full Screen Effects");
-            AddCheckBox(mergeWhileLoading, "Merge While Loading");
-            AddCheckBox(scrollOneScreenRooms, "One Screen Rooms");
+            AddCheckBox(fogFullScreenEffect, (string)fogFullScreenEffect.info.Tags[0]);
+            AddCheckBox(otherFullScreenEffects, (string)otherFullScreenEffects.info.Tags[0]);
+            AddCheckBox(mergeWhileLoading, (string)mergeWhileLoading.info.Tags[0]);
+            AddCheckBox(scrollOneScreenRooms, (string)scrollOneScreenRooms.info.Tags[0]);
             DrawCheckBoxes(ref Tabs[tabIndex]);
 
             AddNewLine();
@@ -196,6 +197,11 @@ namespace SBCameraScroll
 
             AddTextLabel("Position Type Camera:", FLabelAlignment.Left);
             DrawTextLabels(ref Tabs[tabIndex]);
+
+            AddNewLine();
+
+            AddCheckBox(zeroG_Position, (string)zeroG_Position.info.Tags[0]);
+            DrawCheckBoxes(ref Tabs[tabIndex]);
 
             AddNewLine();
 
