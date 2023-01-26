@@ -18,7 +18,6 @@
     <Reference Include="..\..\references\UnityEngine.dll"/> 
     <Reference Include="..\..\references\UnityEngine.CoreModule.dll"/>
     <Reference Include="..\..\references\UnityEngine.ImageConversionModule.dll"/>
-    <Reference Include="..\..\references\UnityEngine.UnityWebRequestWWWModule.dll"/>
   </ItemGroup>
 
 </Project>
