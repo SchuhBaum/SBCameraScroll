@@ -5,17 +5,20 @@
     <TargetFramework>net48</TargetFramework>
     <Nullable>enable</Nullable>
 	  <LangVersion>10.0</LangVersion>
-	  <Version>2.0.9</Version> 
+	  <Version>2.1.0</Version> 
   </PropertyGroup>
 
   <ItemGroup>
     <Reference Include="..\..\references\PUBLIC-Assembly-CSharp.dll"/>
     <Reference Include="..\..\references\BepInEx.dll"/>
     <Reference Include="..\..\references\HOOKS-Assembly-CSharp.dll"/>
+    <Reference Include="..\..\references\Mono.Cecil.dll"/>
+    <Reference Include="..\..\references\MonoMod.Utils.dll"/>
     <Reference Include="..\..\references\SplitScreenMod.dll"/>
     <Reference Include="..\..\references\UnityEngine.dll"/> 
     <Reference Include="..\..\references\UnityEngine.CoreModule.dll"/>
     <Reference Include="..\..\references\UnityEngine.ImageConversionModule.dll"/>
+    <Reference Include="..\..\references\UnityEngine.UnityWebRequestWWWModule.dll"/>
   </ItemGroup>
 
 </Project>

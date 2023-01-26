@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 2.0.9
+###### Version: 2.1.0
 This is a mod for Rain World v1.9.
 
 ### Description
@@ -28,6 +28,7 @@ Please post bugs on the Rain World Discord server (https://discord.gg/rainworld)
 
 ### Known issues
 - Camera does not follow the overseer or other creatures in the Safari mode.
+- There are blue outlines in certain rooms (shader issues?).
 ---
 (not verified for Rain World 1.9; probably all of them are still there; TODO)
 - This mod increases memory consumption. When the game runs low on memory the performance will decline and the game might crash. This might take a while (90+ minutes). Merging room texture accelerates this. This needs to happen once for every room with multiple screens. The textures are saved to disk (cached) and reused. It is recommended to restart the game every now and then.  
@@ -50,7 +51,7 @@ There are two licenses available - MIT and Unlicense. You can choose which one y
 
 ### Changelog
 #### (Rain World v1.9)
-v2.0.9:
+v2.1.0:
 - Added support for Rain World 1.9.
 - Removed AutoUpdate.
 - Disabled this mod for Safari mode for now.
@@ -64,6 +65,7 @@ v2.0.9:
 - (position type camera) Offset no longer depends on player inputs. Offset reverses when at border.
 - (position type camera) Added an option for zeroG (disabled by default). If enabled, the camera will focus directly on the player during zeroG ignoring other position type parameters.
 - Fixed a bug where clouds were not aligned.
+- Changed implementation for RoomCamera_DrawUpdate() to an IL-Hook. This should improve compatibility with other mods.
 
 #### (Rain World v1.5)
 v0.3:

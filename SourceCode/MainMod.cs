@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Security;
 using System.Security.Permissions;
 using BepInEx;
+using MonoMod.Cil;
 using UnityEngine;
 
 // temporary fix // should be added automatically //TODO
@@ -14,7 +15,7 @@ namespace SBCameraScroll
     // SplitScreenMod needs to be able to get the current cameraNumber for these methods
     // if I get access to that variable directly (static) I could do that too // but I don't want to carry an instance of SplitScreenMod around => dependency
     // You should be able to change load order now;
-    [BepInPlugin("SchuhBaum.SBCameraScroll", "SBCameraScroll", "2.0.9")]
+    [BepInPlugin("SchuhBaum.SBCameraScroll", "SBCameraScroll", "2.1.0")]
     public class MainMod : BaseUnityPlugin
     {
         //
@@ -24,7 +25,7 @@ namespace SBCameraScroll
         public static string modDirectoryPath = "";
         public static readonly string MOD_ID = "SBCameraScroll";
         public static readonly string author = "SchuhBaum";
-        public static readonly string version = "2.0.9";
+        public static readonly string version = "2.1.0";
 
         //
         // options
@@ -71,6 +72,70 @@ namespace SBCameraScroll
             CreateDirectory(modDirectoryPath + "world");
         }
 
+        public static void LogAllInstructions(ILContext? context, int indexStringLength = 9, int opCodeStringLength = 14)
+        {
+            if (context == null) return;
+
+            Debug.Log("-----------------------------------------------------------------");
+            Debug.Log("SBCameraScroll: Log all IL-instructions.");
+            Debug.Log("Index:" + new string(' ', indexStringLength - 6) + "OpCode:" + new string(' ', opCodeStringLength - 7) + "Operand:");
+
+            ILCursor cursor = new(context);
+            ILCursor labelCursor = cursor.Clone();
+
+            string cursorIndexString;
+            string opCodeString;
+            string operandString;
+
+            while (true)
+            {
+                // this might return too early;
+                // if (cursor.Next.MatchRet()) break;
+
+                // should always break at some point;
+                // only TryGotoNext() doesn't seem to be enough;
+                // it still throws an exception;
+                try
+                {
+                    if (cursor.TryGotoNext(MoveType.Before))
+                    {
+                        cursorIndexString = cursor.Index.ToString();
+                        cursorIndexString = cursorIndexString.Length < indexStringLength ? cursorIndexString + new string(' ', indexStringLength - cursorIndexString.Length) : cursorIndexString;
+                        opCodeString = cursor.Next.OpCode.ToString();
+
+                        if (cursor.Next.Operand is ILLabel label)
+                        {
+                            labelCursor.GotoLabel(label);
+                            operandString = "Label >>> " + labelCursor.Index;
+                        }
+                        else
+                        {
+                            operandString = cursor.Next.Operand?.ToString() ?? "";
+                        }
+
+                        if (operandString == "")
+                        {
+                            Debug.Log(cursorIndexString + opCodeString);
+                        }
+                        else
+                        {
+                            opCodeString = opCodeString.Length < opCodeStringLength ? opCodeString + new string(' ', opCodeStringLength - opCodeString.Length) : opCodeString;
+                            Debug.Log(cursorIndexString + opCodeString + operandString);
+                        }
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                catch
+                {
+                    break;
+                }
+            }
+            Debug.Log("-----------------------------------------------------------------");
+        }
+
         //
         // private
         //
@@ -105,7 +170,6 @@ namespace SBCameraScroll
             {
                 Debug.Log("SBCameraScroll: SplitScreenMod found. Enable option for scrolling one-screen rooms.");
             }
-            Debug.Log("SBCameraScroll: This mod needs to be loaded after SplitScreenMod. The load order can be change manually in Remix. SplitScreenMod does not exist for Rain World 1.9 yet. TODO: fix this.");
             Debug.Log("SBCameraScroll: modDirectoryPath " + modDirectoryPath);
 
             AboveCloudsViewMod.OnEnable();

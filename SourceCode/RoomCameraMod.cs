@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using Mono.Cecil.Cil;
+using MonoMod.Cil;
 using RWCustom;
 using UnityEngine;
 
@@ -47,22 +49,23 @@ namespace SBCameraScroll
 
         internal static void OnEnable()
         {
+            IL.RoomCamera.DrawUpdate += IL_RoomCamera_DrawUpdate;
+
             On.RoomCamera.ApplyDepth += RoomCamera_ApplyDepth;
             On.RoomCamera.ApplyPalette += RoomCamera_ApplyPalette;
             On.RoomCamera.ApplyPositionChange += RoomCamera_ApplyPositionChange;
             On.RoomCamera.ctor += RoomCamera_ctor;
 
-            On.RoomCamera.DrawUpdate += RoomCamera_DrawUpdate;
             On.RoomCamera.IsViewedByCameraPosition += RoomCamera_IsViewedByCameraPosition;
             On.RoomCamera.IsVisibleAtCameraPosition += RoomCamera_IsVisibleAtCameraPosition;
             On.RoomCamera.MoveCamera_int += RoomCamera_MoveCamera;
-
             On.RoomCamera.MoveCamera2 += RoomCamera_MoveCamera2;
+
             On.RoomCamera.PixelColorAtCoordinate += RoomCamera_PixelColorAtCoordinate;
             On.RoomCamera.PositionCurrentlyVisible += RoomCamera_PositionCurrentlyVisible;
             On.RoomCamera.PositionVisibleInNextScreen += RoomCamera_PositionVisibleInNextScreen;
-
             On.RoomCamera.PreLoadTexture += RoomCamera_PreLoadTexture;
+
             On.RoomCamera.RectCurrentlyVisible += RoomCamera_RectCurrentlyVisible;
             On.RoomCamera.ScreenMovement += RoomCamera_ScreenMovement;
             On.RoomCamera.Update += RoomCamera_Update;
@@ -168,7 +171,6 @@ namespace SBCameraScroll
                     case CameraType.Vanilla:
                         attachedFields.followAbstractCreatureID = null; // keep transition going even when switching back
                         UpdateCamera_PositionType(roomCamera, attachedFields, stopEarlyWhenMovingSlowly: false, ignoreBoxAndOffset: true); // needs followAbstractCreatureID = null // updates cameraOffset
-                        // attachedFields.cameraOffset = new(); // don't use offset => keep resetting the camera offset
 
                         if (player.input[0].mp && !player.input[1].mp)
                         {
@@ -423,7 +425,7 @@ namespace SBCameraScroll
                 }
                 else // use the center (of mass(?)) instead // makes rolls more predictable // use lower y such that crouching does not move camera
                 {
-                    if (player.EffectiveRoomGravity == 0.0f || player.animation == Player.AnimationIndex.Roll) // reduce movement when "rolling" in place in ZeroG;
+                    if (player.room?.gravity == 0.0f || player.animation == Player.AnimationIndex.Roll) // reduce movement when "rolling" in place in ZeroG;
                     {
                         position += 0.5f * (player.bodyChunks[0].pos + player.bodyChunks[1].pos);
                     }
@@ -440,26 +442,160 @@ namespace SBCameraScroll
             }
         }
 
-        public static void UpdateScreen(RoomCamera roomCamera, Vector2 cameraPosition)
-        {
-            if (roomCamera.room == null)
-            {
-                return;
-            }
-
-            // this is what you see from levelGraphic / levelTexture on screen
-            // scroll texture left when moving right and vice versa
-            Vector2 startPosition = new(roomCamera.levelGraphic.x, roomCamera.levelGraphic.y);
-            Vector2 endPosition = startPosition + new Vector2(roomCamera.levelGraphic.width, roomCamera.levelGraphic.height);
-
-            Shader.SetGlobalVector("_spriteRect", new Vector4((startPosition.x - 0.5f) / roomCamera.sSize.x, (startPosition.y + 0.5f) / roomCamera.sSize.y, (endPosition.x - 0.5f) / roomCamera.sSize.x, (endPosition.y + 0.5f) / roomCamera.sSize.y)); // if the 0.5f is missing then you get black outlines
-            Shader.SetGlobalVector("_camInRoomRect", new Vector4(cameraPosition.x / roomCamera.room.PixelWidth, cameraPosition.y / roomCamera.room.PixelHeight, roomCamera.sSize.x / roomCamera.room.PixelWidth, roomCamera.sSize.y / roomCamera.room.PixelHeight));
-            Shader.SetGlobalVector("_screenSize", roomCamera.sSize);
-        }
-
         // ---------------- //
         // private function //
         // ---------------- //
+
+        private static void IL_RoomCamera_DrawUpdate(ILContext context)
+        {
+            ILCursor cursor = new(context);
+            // MainMod.LogAllInstructions(context);
+
+            if (cursor.TryGotoNext(instruction => instruction.MatchCall<RoomCamera>("CamPos")))
+            {
+                Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate_1: Index " + cursor.Index); // before: 100 // after: 100
+                cursor.Goto(cursor.Index - 2);
+                cursor.RemoveRange(3); // remove CamPos(currentCameraPosition)
+
+                cursor.Emit(OpCodes.Ldloc_1);
+                cursor.EmitDelegate<Func<RoomCamera, Vector2, Vector2>>((roomCamera, cameraPosition) =>
+               {
+                   if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode)
+                   {
+                       return roomCamera.CamPos(roomCamera.currentCameraPosition);
+                   }
+                   return cameraPosition;
+               });
+            }
+            else
+            {
+                Debug.LogException(new Exception("SBCameraScroll: IL_RoomCamera_DrawUpdate_1 failed."));
+            }
+
+            if (cursor.TryGotoNext(instruction => instruction.MatchCall<RoomCamera>("CamPos")))
+            {
+                Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate_2: Index " + cursor.Index); // before: 112 // after: 109
+                cursor.Goto(cursor.Index - 2);
+                cursor.RemoveRange(3);
+
+                cursor.Emit(OpCodes.Ldloc_1);
+                cursor.EmitDelegate<Func<RoomCamera, Vector2, Vector2>>((roomCamera, cameraPosition) =>
+               {
+                   if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode)
+                   {
+                       return roomCamera.CamPos(roomCamera.currentCameraPosition);
+                   }
+                   return cameraPosition;
+               });
+            }
+            else
+            {
+                Debug.LogException(new Exception("SBCameraScroll: IL_RoomCamera_DrawUpdate_2 failed."));
+            }
+
+            if (cursor.TryGotoNext(instruction => instruction.MatchCall<RoomCamera>("CamPos")))
+            {
+                Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate_3: Index " + cursor.Index); // before: 129 // after: 123
+                cursor.Goto(cursor.Index - 2);
+                cursor.RemoveRange(3);
+
+                cursor.Emit(OpCodes.Ldloc_1);
+                cursor.EmitDelegate<Func<RoomCamera, Vector2, Vector2>>((roomCamera, cameraPosition) =>
+               {
+                   if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode)
+                   {
+                       return roomCamera.CamPos(roomCamera.currentCameraPosition);
+                   }
+                   return cameraPosition;
+               });
+            }
+            else
+            {
+                Debug.LogException(new Exception("SBCameraScroll: IL_RoomCamera_DrawUpdate_3 failed."));
+            }
+
+            if (cursor.TryGotoNext(instruction => instruction.MatchCall<RoomCamera>("CamPos")))
+            {
+                Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate_4: Index " + cursor.Index); // before: 145 // after: 136
+                cursor.Goto(cursor.Index - 2);
+                cursor.RemoveRange(3);
+
+                cursor.Emit(OpCodes.Ldloc_1);
+                cursor.EmitDelegate<Func<RoomCamera, Vector2, Vector2>>((roomCamera, cameraPosition) =>
+               {
+                   if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode)
+                   {
+                       return roomCamera.CamPos(roomCamera.currentCameraPosition);
+                   }
+                   return cameraPosition;
+               });
+            }
+            else
+            {
+                Debug.LogException(new Exception("SBCameraScroll: IL_RoomCamera_DrawUpdate_4 failed."));
+            }
+
+            if (cursor.TryGotoNext(instruction => instruction.MatchCall<RoomCamera>("CamPos")))
+            {
+                Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate_5: Index " + cursor.Index); // before: 321 // after: 309
+                cursor.Goto(cursor.Index - 4);
+                cursor.RemoveRange(43); // 317-359
+
+                cursor.Emit(OpCodes.Ldloc_1);
+                cursor.EmitDelegate<Action<RoomCamera, Vector2>>((roomCamera, cameraPosition) =>
+                {
+                    if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode)
+                    {
+                        roomCamera.levelGraphic.x = roomCamera.CamPos(roomCamera.currentCameraPosition).x - cameraPosition.x;
+                        roomCamera.levelGraphic.y = roomCamera.CamPos(roomCamera.currentCameraPosition).y - cameraPosition.y;
+                        roomCamera.backgroundGraphic.x = roomCamera.CamPos(roomCamera.currentCameraPosition).x - cameraPosition.x;
+                        roomCamera.backgroundGraphic.y = roomCamera.CamPos(roomCamera.currentCameraPosition).y - cameraPosition.y;
+                        return;
+                    }
+
+                    // not sure what this does // seems to visually darken stuff (apply shader or something) when offscreen
+                    // I think that textureOffset is only needed(?) for compatibility reasons with room.cameraPositions
+                    Vector2 textureOffset = roomCamera.room.abstractRoom.GetAttachedFields().textureOffset;
+                    roomCamera.levelGraphic.SetPosition(textureOffset - cameraPosition);
+                    roomCamera.backgroundGraphic.SetPosition(textureOffset - cameraPosition);
+                });
+            }
+            else
+            {
+                Debug.LogException(new Exception("SBCameraScroll: IL_RoomCamera_DrawUpdate_5 failed."));
+            }
+
+            if (cursor.TryGotoNext(instruction => instruction.MatchCall<RoomCamera>("CamPos")))
+            {
+                Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate_6: Index " + cursor.Index); // before: 425 // after: 374
+                cursor.Goto(cursor.Index - 9);
+                cursor.RemoveRange(71); // 416-486
+
+                cursor.Emit(OpCodes.Ldarg_0);
+                cursor.Emit(OpCodes.Ldloc_1);
+                cursor.EmitDelegate<Action<RoomCamera, Vector2>>((roomCamera, cameraPosition) =>
+                {
+                    if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode)
+                    {
+                        Shader.SetGlobalVector("_spriteRect", new Vector4((0f - cameraPosition.x - 0.5f + roomCamera.CamPos(roomCamera.currentCameraPosition).x) / roomCamera.sSize.x, (0f - cameraPosition.y + 0.5f + roomCamera.CamPos(roomCamera.currentCameraPosition).y) / roomCamera.sSize.y, (0f - cameraPosition.x - 0.5f + roomCamera.levelGraphic.width + roomCamera.CamPos(roomCamera.currentCameraPosition).x) / roomCamera.sSize.x, (0f - cameraPosition.y + 0.5f + roomCamera.levelGraphic.height + roomCamera.CamPos(roomCamera.currentCameraPosition).y) / roomCamera.sSize.y));
+                        return;
+                    }
+
+                    Vector2 startPosition = new(roomCamera.levelGraphic.x, roomCamera.levelGraphic.y);
+                    Vector2 endPosition = startPosition + new Vector2(roomCamera.levelGraphic.width, roomCamera.levelGraphic.height);
+                    Shader.SetGlobalVector("_spriteRect", new Vector4((0f + startPosition.x - 0.5f) / roomCamera.sSize.x, (0f + startPosition.y + 0.5f) / roomCamera.sSize.y, (0f + endPosition.x - 0.5f) / roomCamera.sSize.x, (0f + endPosition.y + 0.5f) / roomCamera.sSize.y)); // if the 0.5f is missing then you get black outlines
+                });
+            }
+            else
+            {
+                Debug.LogException(new Exception("SBCameraScroll: IL_RoomCamera_DrawUpdate_6 failed."));
+            }
+            // MainMod.LogAllInstructions(context);
+        }
+
+        //
+        //
+        //
 
         private static Vector2 RoomCamera_ApplyDepth(On.RoomCamera.orig_ApplyDepth orig, RoomCamera roomCamera, Vector2 ps, float depth)
         {
@@ -519,6 +655,12 @@ namespace SBCameraScroll
                 roomCamera.levelGraphic.height = roomCamera.levelTexture.height;
             }
 
+            if (roomCamera.backgroundGraphic.width != roomCamera.backgroundTexture.width || roomCamera.backgroundGraphic.height != roomCamera.backgroundTexture.height)
+            {
+                roomCamera.backgroundGraphic.width = roomCamera.backgroundTexture.width;
+                roomCamera.backgroundGraphic.height = roomCamera.backgroundTexture.height;
+            }
+
             // if I blacklist too early then the camera might jump in the current room
             if (roomCamera.room == null || blacklistedRooms.Contains(roomCamera.room.abstractRoom.name))
             {
@@ -541,216 +683,6 @@ namespace SBCameraScroll
         {
             orig(roomCamera, game, cameraNumber);
             allAttachedFields.Add(roomCamera, new AttachedFields());
-        }
-
-        // updates all the visual stuff // calls UpdateScreen() // mainly adepts the camera texture to the current (smoothed) position
-        private static void RoomCamera_DrawUpdate(On.RoomCamera.orig_DrawUpdate orig, RoomCamera roomCamera, float timeStacker, float timeSpeed)
-        {
-            // I could make an IL-Hook but I assume then I could not
-            // easily turn it off and on again;
-            // TODO: try it out
-            if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode) // || !RoomMod.CanScrollCamera(roomCamera.room) 
-            {
-                orig(roomCamera, timeStacker, timeSpeed);
-                return;
-            }
-
-            if (roomCamera.hud != null)
-            {
-                roomCamera.hud.Draw(timeStacker);
-            }
-
-            if (roomCamera.room is not Room room) return;
-
-            if (roomCamera.blizzardGraphics != null && room.blizzardGraphics == null)
-            {
-                roomCamera.blizzardGraphics.lerpBypass = true;
-                room.AddObject(roomCamera.blizzardGraphics);
-                room.blizzardGraphics = roomCamera.blizzardGraphics;
-                room.blizzard = true;
-            }
-
-            if (roomCamera.snowChange || roomCamera.fullscreenSync != Screen.fullScreen)
-            {
-                if (room.snow)
-                {
-                    roomCamera.UpdateSnowLight();
-                }
-                if (roomCamera.blizzardGraphics != null)
-                {
-                    roomCamera.blizzardGraphics.TileTexUpdate();
-                }
-            }
-
-            roomCamera.fullscreenSync = Screen.fullScreen;
-            roomCamera.virtualMicrophone.DrawUpdate(timeStacker, timeSpeed);
-            Vector2 cameraPosition = Vector2.Lerp(roomCamera.lastPos, roomCamera.pos, timeStacker); // makes movement look smoother // adds in-between frames
-
-            if (roomCamera.microShake > 0.0)
-            {
-                cameraPosition += Custom.RNV() * 8f * roomCamera.microShake * UnityEngine.Random.value;
-            }
-
-            // might clamp something when camera shakes
-            cameraPosition.x = Mathf.Clamp(cameraPosition.x, cameraPosition.x + roomCamera.hDisplace - 12f, cameraPosition.x + roomCamera.hDisplace + 28f);
-            cameraPosition.x = Mathf.Floor(cameraPosition.x) - 0.02f;
-
-            cameraPosition.y = Mathf.Clamp(cameraPosition.y, cameraPosition.y + 1f - (!roomCamera.splitScreenMode ? 0.0f : 192f), cameraPosition.y + 33f + (!roomCamera.splitScreenMode ? 0.0f : 192f));
-            cameraPosition.y = Mathf.Floor(cameraPosition.y) - 0.02f;
-
-            cameraPosition += roomCamera.offset;
-            cameraPosition += roomCamera.hardLevelGfxOffset;
-
-            roomCamera.levelGraphic.isVisible = true;
-            if (roomCamera.backgroundGraphic.isVisible)
-            {
-                roomCamera.backgroundGraphic.color = Color.Lerp(roomCamera.currentPalette.blackColor, roomCamera.currentPalette.fogColor, roomCamera.currentPalette.fogAmount);
-            }
-
-            if (roomCamera.waterLight is WaterLight waterLight)
-            {
-                if (room.gameOverRoom)
-                {
-                    waterLight.CleanOut();
-                }
-                else
-                {
-                    waterLight.DrawUpdate(cameraPosition);
-                }
-            }
-
-            for (int spriteLeaserIndex = roomCamera.spriteLeasers.Count - 1; spriteLeaserIndex >= 0; spriteLeaserIndex--)
-            {
-                roomCamera.spriteLeasers[spriteLeaserIndex].Update(timeStacker, roomCamera, cameraPosition);
-                if (roomCamera.spriteLeasers[spriteLeaserIndex].deleteMeNextFrame)
-                {
-                    roomCamera.spriteLeasers.RemoveAt(spriteLeaserIndex);
-                }
-            }
-
-            foreach (ISingleCameraDrawable singleCameraDrawable in roomCamera.singleCameraDrawables)
-            {
-                singleCameraDrawable.Draw(roomCamera, timeStacker, cameraPosition);
-            }
-
-            if (room.game.DEBUGMODE)
-            {
-                roomCamera.levelGraphic.x = 5000f;
-            }
-            else
-            {
-                // not sure what this does // seems to visually darken stuff (apply shader or something) when offscreen
-                // I think that textureOffset is only needed(?) for compatibility reasons with room.cameraPositions
-                Vector2 textureOffset = room.abstractRoom.GetAttachedFields().textureOffset;
-                roomCamera.levelGraphic.SetPosition(textureOffset - cameraPosition);
-                roomCamera.backgroundGraphic.SetPosition(textureOffset - cameraPosition);
-            }
-
-            if (Futile.subjectToAspectRatioIrregularity)
-            {
-                int num2 = (int)(room.roomSettings.GetEffectAmount(RoomSettings.RoomEffect.Type.PixelShift) * 8f);
-                roomCamera.levelGraphic.x -= num2 % 3;
-                roomCamera.backgroundGraphic.x -= num2 % 3;
-                roomCamera.levelGraphic.y -= num2 / 3;
-                roomCamera.backgroundGraphic.y -= num2 / 3;
-            }
-
-            roomCamera.shortcutGraphics.Draw(0.0f, cameraPosition);
-            UpdateScreen(roomCamera, cameraPosition); // screen texture // update variables for GPU
-
-            // mostly vanilla code
-            if (!room.abstractRoom.gate && !room.abstractRoom.shelter)
-            {
-                float waterLevel = 0.0f;
-                if (room.waterObject != null)
-                {
-                    waterLevel = room.waterObject.fWaterLevel + 100f;
-                }
-                else if (room.deathFallGraphic != null)
-                {
-                    waterLevel = room.deathFallGraphic.height + 180f;
-                }
-                Shader.SetGlobalFloat("_waterLevel", Mathf.InverseLerp(roomCamera.sSize.y, 0.0f, waterLevel - cameraPosition.y));
-            }
-            else
-            {
-                Shader.SetGlobalFloat("_waterLevel", 0.0f);
-            }
-
-            float lightModifier = 1f;
-            if (room.roomSettings.DangerType != RoomRain.DangerType.None)
-            {
-                lightModifier = room.world.rainCycle.ShaderLight;
-            }
-
-            if (room.lightning is Lightning lightning)
-            {
-                if (!lightning.bkgOnly)
-                {
-                    lightModifier = lightning.CurrentLightLevel(timeStacker);
-                }
-
-                roomCamera.paletteTexture.SetPixel(0, 7, lightning.CurrentBackgroundColor(timeStacker, roomCamera.currentPalette));
-                roomCamera.paletteTexture.SetPixel(1, 7, lightning.CurrentFogColor(timeStacker, roomCamera.currentPalette));
-                roomCamera.paletteTexture.Apply();
-            }
-
-            if (room.roomSettings.Clouds == 0.0f)
-            {
-                Shader.SetGlobalFloat("_light", 1f);
-            }
-            else
-            {
-                Shader.SetGlobalFloat("_light", Mathf.Lerp(Mathf.Lerp(lightModifier, -1f, room.roomSettings.Clouds), -0.4f, roomCamera.ghostMode));
-            }
-
-            Shader.SetGlobalFloat("_darkness", 1f - roomCamera.effect_darkness);
-            Shader.SetGlobalFloat("_brightness", roomCamera.effect_brightness);
-            Shader.SetGlobalFloat("_contrast", 1f + roomCamera.effect_contrast * 2f);
-
-            Shader.SetGlobalFloat("_saturation", 1f - roomCamera.effect_desaturation);
-            Shader.SetGlobalFloat("_hue", 360f * roomCamera.effect_hue);
-            Shader.SetGlobalFloat("_cloudsSpeed", 1f + 3f * roomCamera.ghostMode);
-
-            if (roomCamera.lightBloomAlphaEffect != RoomSettings.RoomEffect.Type.None)
-            {
-                roomCamera.lightBloomAlpha = room.roomSettings.GetEffectAmount(roomCamera.lightBloomAlphaEffect);
-            }
-
-            if (roomCamera.lightBloomAlphaEffect == RoomSettings.RoomEffect.Type.VoidMelt && roomCamera.fullScreenEffect != null)
-            {
-                if (room.roomSettings.GetEffectAmount(RoomSettings.RoomEffect.Type.VoidSea) > 0.0f)
-                {
-                    roomCamera.lightBloomAlpha *= roomCamera.voidSeaGoldFilter;
-                    roomCamera.fullScreenEffect.color = new Color(Mathf.InverseLerp(-1200f, -6000f, cameraPosition.y) * Mathf.InverseLerp(0.9f, 0.0f, roomCamera.screenShake), 0.0f, 0.0f);
-                    roomCamera.fullScreenEffect.isVisible = roomCamera.lightBloomAlpha > 0.0f;
-                }
-                else
-                {
-                    roomCamera.fullScreenEffect.color = new Color(0.0f, 0.0f, 0.0f);
-                }
-            }
-
-            if (roomCamera.fullScreenEffect != null)
-            {
-                if (roomCamera.lightBloomAlphaEffect == RoomSettings.RoomEffect.Type.Lightning)
-                {
-                    roomCamera.fullScreenEffect.alpha = Mathf.InverseLerp(0.0f, 0.2f, roomCamera.lightBloomAlpha) * Mathf.InverseLerp(-0.7f, 0.0f, lightModifier);
-                }
-                else if (roomCamera.lightBloomAlpha > 0.0f && (roomCamera.lightBloomAlphaEffect == RoomSettings.RoomEffect.Type.Bloom || roomCamera.lightBloomAlphaEffect == RoomSettings.RoomEffect.Type.SkyBloom || roomCamera.lightBloomAlphaEffect == RoomSettings.RoomEffect.Type.SkyAndLightBloom || roomCamera.lightBloomAlphaEffect == RoomSettings.RoomEffect.Type.LightBurn))
-                {
-                    roomCamera.fullScreenEffect.alpha = roomCamera.lightBloomAlpha * Mathf.InverseLerp(-0.7f, 0.0f, lightModifier);
-                }
-                else
-                {
-                    roomCamera.fullScreenEffect.alpha = roomCamera.lightBloomAlpha;
-                }
-            }
-
-            if (roomCamera.sofBlackFade > 0f)
-            {
-                Shader.SetGlobalFloat("_darkness", 1f - roomCamera.sofBlackFade);
-            }
         }
 
         private static bool RoomCamera_IsViewedByCameraPosition(On.RoomCamera.orig_IsViewedByCameraPosition orig, RoomCamera roomCamera, int camPos, Vector2 testPos)
