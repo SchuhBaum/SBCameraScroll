@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 2.1.0
+###### Version: 2.1.1
 This is a mod for Rain World v1.9.
 
 ### Description
@@ -66,6 +66,9 @@ v2.1.0:
 - (position type camera) Added an option for zeroG (disabled by default). If enabled, the camera will focus directly on the player during zeroG ignoring other position type parameters.
 - Fixed a bug where clouds were not aligned.
 - Changed implementation for RoomCamera_DrawUpdate() to an IL-Hook. This should improve compatibility with other mods.
+
+v2.1.1:
+- Fixed a bug where you would lose access to the options menu when the mod was disabled (without applying) and enabled immediately again.
 
 #### (Rain World v1.5)
 v0.3:
