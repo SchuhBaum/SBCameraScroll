@@ -13,6 +13,12 @@ This mod generates files for each room with multiple cameras. These files are sa
 
 If rooms textures are changed then you need to generate these files again. This might happen when you use custom regions. Simply delete everything or specifically what you need in that folder.
 
+### Installation
+0. Update Rain World to version 1.9 if needed.
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases).
+2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
+3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
+
 ### FAQ
 Q: The mod doesn't work. I can't open the mod's option menu. How to fix this?  
 A: One thing that helped multiple people is to delete the 'Rain World\BepInEx' folder and then verifying the integrity of the game files in steam.  
@@ -23,9 +29,6 @@ A: The game might actually not be frozen. The mod needs to generate files for ea
 Q: My game actually crashed. What happened?  
 A: Your game might have run out of memory. So far I haven't found a solution to this. As a workaround, I recommend that you restart your game from time to time (see `Known issues`).  
 
-### Bug reports
-Please post bugs on the Rain World Discord server (https://discord.gg/rainworld) in the channel #modding-support.
-
 ### Known issues
 - Camera does not follow the overseer or other creatures in the Safari mode.
 - There are blue outlines in certain rooms (shader issues?).
@@ -34,12 +37,6 @@ Please post bugs on the Rain World Discord server (https://discord.gg/rainworld)
 - The underwater shaders do not work correctly. In large rooms they can smear sprites.
 - Shadows at the edge of the screen seem to flicker or stretch in some rooms. I can see the same thing without camera scroll. Maybe a vanilla bug.
 - Motion sickness might be a problem. I wonder how much is due to noise (details) in the textures. You can play around with the parameters and see what works for you.
-
-### Installation
-0. Update Rain World to version 1.9 if needed.
-1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases).
-2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
-3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
 ### Bug reports
 Please post bugs on the Rain World Discord server (https://discord.gg/rainworld) in the channel #modding-support.
