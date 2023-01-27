@@ -75,6 +75,22 @@ namespace SBCameraScroll
         // public functions //
         // ---------------- //
 
+        public static void AddFadeTransition(RoomCamera roomCamera)
+        {
+            if (roomCamera.room.roomSettings.fadePalette == null) return;
+            if (roomCamera.currentCameraPosition == roomCamera.mostLikelyNextCamPos) return;
+            if (roomCamera.mostLikelyNextCamPos < 0) return;
+            if (roomCamera.mostLikelyNextCamPos >= roomCamera.room.cameraPositions.Length) return;
+
+            Vector2 cameraPosition_A = roomCamera.CamPos(roomCamera.currentCameraPosition);
+            Vector2 cameraPosition_B = roomCamera.CamPos(roomCamera.mostLikelyNextCamPos);
+            Vector2 closestPoint = Custom.ClosestPointOnLineSegment(cameraPosition_A, cameraPosition_B, roomCamera.pos);
+            float t = (cameraPosition_B - closestPoint).magnitude / (cameraPosition_B - cameraPosition_A).magnitude;
+
+            roomCamera.paletteBlend = Mathf.Lerp(roomCamera.paletteBlend, t * roomCamera.room.roomSettings.fadePalette.fades[roomCamera.currentCameraPosition] + (1 - t) * roomCamera.room.roomSettings.fadePalette.fades[roomCamera.mostLikelyNextCamPos], 0.05f);
+            roomCamera.ApplyFade();
+        }
+
         public static void CheckBorders(RoomCamera roomCamera, ref Vector2 position)
         {
             if (roomCamera.room == null) return;
@@ -807,6 +823,7 @@ namespace SBCameraScroll
 
             if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode) return; // don't smooth the camera position in the void sea // treat void sea as being blacklisted 
             UpdateCameraPosition(roomCamera);
+            AddFadeTransition(roomCamera);
         }
 
         //

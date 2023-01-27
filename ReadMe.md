@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 2.1.4
+###### Version: 2.1.5
 This is a mod for Rain World v1.9.
 
 ### Description
@@ -65,10 +65,11 @@ v2.1.0:
 - Fixed a bug where clouds were not aligned.
 - Changed implementation for RoomCamera_DrawUpdate() to an IL-Hook. This should improve compatibility with other mods.
 
-v2.1.4:
+v2.1.5:
 - Fixed a bug where you would lose access to the options menu when the mod was disabled (without applying) and enabled immediately again.
 - There are visual issues with snow (pop ins) that I couldn't figure out. As a workaround, snow is invisible now.
 - Blacklisted Artificer's dream rooms.
+- Added a transition for fade palettes.
 
 #### (Rain World v1.5)
 v0.3:
