@@ -134,10 +134,7 @@ namespace SBCameraScroll
                 wormGrassPatch.Update();
             }
 
-            if (wormGrass.slatedForDeletetion)
-            {
-                return;
-            }
+            if (wormGrass.slatedForDeletetion) return;
 
             // different update logic for worms
             // update each tile based on distance

@@ -51,6 +51,7 @@ namespace SBCameraScroll
         {
             IL.RoomCamera.DrawUpdate += IL_RoomCamera_DrawUpdate;
             IL.RoomCamera.Update += IL_RoomCamera_Update;
+            // On.RoomCamera.Update += RoomCamera_Update;
 
             On.RoomCamera.ApplyDepth += RoomCamera_ApplyDepth;
             On.RoomCamera.ApplyPalette += RoomCamera_ApplyPalette;
@@ -69,7 +70,6 @@ namespace SBCameraScroll
             On.RoomCamera.PreLoadTexture += RoomCamera_PreLoadTexture;
             On.RoomCamera.RectCurrentlyVisible += RoomCamera_RectCurrentlyVisible;
             On.RoomCamera.ScreenMovement += RoomCamera_ScreenMovement;
-            // On.RoomCamera.Update += RoomCamera_Update;
         }
 
         // ---------------- //
@@ -83,6 +83,13 @@ namespace SBCameraScroll
             if (roomCamera.mostLikelyNextCamPos < 0) return;
             if (roomCamera.mostLikelyNextCamPos >= roomCamera.room.cameraPositions.Length) return;
 
+            AttachedFields attachedFields = roomCamera.GetAttachedFields();
+            if (attachedFields.paletteTransitionCooldown > 0)
+            {
+                --attachedFields.paletteTransitionCooldown;
+                return;
+            }
+
             Vector2 cameraPosition_A = roomCamera.CamPos(roomCamera.currentCameraPosition);
             Vector2 cameraPosition_B = roomCamera.CamPos(roomCamera.mostLikelyNextCamPos);
             Vector2 closestPoint = Custom.ClosestPointOnLineSegment(cameraPosition_A, cameraPosition_B, roomCamera.pos);
@@ -90,6 +97,7 @@ namespace SBCameraScroll
 
             roomCamera.paletteBlend = Mathf.Lerp(roomCamera.paletteBlend, t * roomCamera.room.roomSettings.fadePalette.fades[roomCamera.currentCameraPosition] + (1 - t) * roomCamera.room.roomSettings.fadePalette.fades[roomCamera.mostLikelyNextCamPos], 0.05f);
             roomCamera.ApplyFade();
+            attachedFields.paletteTransitionCooldown = 10;
         }
 
         public static void CheckBorders(RoomCamera roomCamera, ref Vector2 position)
@@ -156,7 +164,9 @@ namespace SBCameraScroll
                 roomCamera.pos = attachedFields.onScreenPosition;
                 attachedFields.followAbstractCreatureID = roomCamera.followAbstractCreature?.ID;
             }
+
             attachedFields.cameraOffset = new();
+            attachedFields.paletteTransitionCooldown = 0;
         }
 
         public static Vector2 SplitScreenMod_GetScreenOffset(in Vector2 screenSize) => SplitScreenMod.SplitScreenMod.CurrentSplitMode switch
@@ -815,7 +825,7 @@ namespace SBCameraScroll
             {
                 return orig(roomCamera, testPos, margin, widescreen);
             }
-            return testPos.x > roomCamera.pos.x - 380f + margin && testPos.x < roomCamera.pos.x + 380f + 1400f + margin && testPos.y > roomCamera.pos.y - 20f - margin && testPos.y < roomCamera.pos.y + 20f + 800f + margin;
+            return testPos.x > roomCamera.pos.x - 380f - margin && testPos.x < roomCamera.pos.x + 380f + 1400f + margin && testPos.y > roomCamera.pos.y - 20f - margin && testPos.y < roomCamera.pos.y + 20f + 800f + margin;
         }
 
         private static bool RoomCamera_PositionVisibleInNextScreen(On.RoomCamera.orig_PositionVisibleInNextScreen orig, RoomCamera roomCamera, Vector2 testPos, float margin, bool widescreen)
@@ -882,12 +892,13 @@ namespace SBCameraScroll
 
             public EntityID? followAbstractCreatureID = null;
 
+            public int paletteTransitionCooldown = 0;
+
+            public Vector2 cameraOffset = new();
             public Vector2 lastOnScreenPosition = new();
             public Vector2 onScreenPosition = new();
             public Vector2 seekPosition = new();
             public Vector2 vanillaTypePosition = new();
-
-            public Vector2 cameraOffset = new();
         }
     }
 }
