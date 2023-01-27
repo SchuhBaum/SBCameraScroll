@@ -50,6 +50,7 @@ namespace SBCameraScroll
         internal static void OnEnable()
         {
             IL.RoomCamera.DrawUpdate += IL_RoomCamera_DrawUpdate;
+            IL.RoomCamera.Update += IL_RoomCamera_Update;
 
             On.RoomCamera.ApplyDepth += RoomCamera_ApplyDepth;
             On.RoomCamera.ApplyPalette += RoomCamera_ApplyPalette;
@@ -64,11 +65,11 @@ namespace SBCameraScroll
             On.RoomCamera.PixelColorAtCoordinate += RoomCamera_PixelColorAtCoordinate;
             On.RoomCamera.PositionCurrentlyVisible += RoomCamera_PositionCurrentlyVisible;
             On.RoomCamera.PositionVisibleInNextScreen += RoomCamera_PositionVisibleInNextScreen;
-            On.RoomCamera.PreLoadTexture += RoomCamera_PreLoadTexture;
 
+            On.RoomCamera.PreLoadTexture += RoomCamera_PreLoadTexture;
             On.RoomCamera.RectCurrentlyVisible += RoomCamera_RectCurrentlyVisible;
             On.RoomCamera.ScreenMovement += RoomCamera_ScreenMovement;
-            On.RoomCamera.Update += RoomCamera_Update;
+            // On.RoomCamera.Update += RoomCamera_Update;
         }
 
         // ---------------- //
@@ -609,6 +610,49 @@ namespace SBCameraScroll
             // MainMod.LogAllInstructions(context);
         }
 
+        private static void IL_RoomCamera_Update(ILContext context)
+        {
+            ILCursor cursor = new(context);
+            // MainMod.LogAllInstructions(context);
+
+            // maybe it is just me or is stuff noticeably slower when using On-Hooks + GPU stuff?
+            // IL_RoomCamera_DrawUpdate() seems to do a lot..
+            // maybe it is better to do Update as an IL-Hook as well;
+
+            if (cursor.TryGotoNext(instruction => instruction.MatchCall<RoomCamera>("UpdateDayNightPalette")))
+            {
+                Debug.Log("SBCameraScroll: IL_RoomCamera_Update_1: Index " + cursor.Index); // 400
+                cursor.EmitDelegate<Action<RoomCamera>>(roomCamera => // put before UpdateDayNightPalette()
+                {
+                    if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode) return;
+                    AddFadeTransition(roomCamera);
+                });
+                cursor.Emit(OpCodes.Ldarg_0);
+            }
+            else
+            {
+                Debug.LogException(new Exception("SBCameraScroll: IL_RoomCamera_Update_1 failed."));
+            }
+
+            // putting it after normal pos updates but before the screen shake effect;
+            // in the On-Hook it was after; so the screen shake did nothing;
+            if (cursor.TryGotoNext(instruction => instruction.MatchCall<RoomCamera>("get_screenShake")))
+            {
+                Debug.Log("SBCameraScroll: IL_RoomCamera_Update_2: Index " + cursor.Index); // before: 916 // after: 920
+                cursor.EmitDelegate<Action<RoomCamera>>(roomCamera =>
+                {
+                    if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode) return;
+                    UpdateCameraPosition(roomCamera);
+                });
+                cursor.Emit(OpCodes.Ldarg_0);
+            }
+            else
+            {
+                Debug.LogException(new Exception("SBCameraScroll: IL_RoomCamera_Update_2 failed."));
+            }
+            // MainMod.LogAllInstructions(context);
+        }
+
         //
         //
         //
@@ -817,14 +861,14 @@ namespace SBCameraScroll
         }
 
         // updated physics related things like the camera position
-        private static void RoomCamera_Update(On.RoomCamera.orig_Update orig, RoomCamera roomCamera)
-        {
-            orig(roomCamera); // updates isRoomBlacklisted
+        // private static void RoomCamera_Update(On.RoomCamera.orig_Update orig, RoomCamera roomCamera)
+        // {
+        //     orig(roomCamera); // updates isRoomBlacklisted
 
-            if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode) return; // don't smooth the camera position in the void sea // treat void sea as being blacklisted 
-            UpdateCameraPosition(roomCamera);
-            AddFadeTransition(roomCamera);
-        }
+        //     if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode) return; // don't smooth the camera position in the void sea // treat void sea as being blacklisted 
+        //     UpdateCameraPosition(roomCamera);
+        //     AddFadeTransition(roomCamera);
+        // }
 
         //
         //
