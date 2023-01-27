@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 2.1.1
+###### Version: 2.1.2
 This is a mod for Rain World v1.9.
 
 ### Description
@@ -65,8 +65,9 @@ v2.1.0:
 - Fixed a bug where clouds were not aligned.
 - Changed implementation for RoomCamera_DrawUpdate() to an IL-Hook. This should improve compatibility with other mods.
 
-v2.1.1:
+v2.1.2:
 - Fixed a bug where you would lose access to the options menu when the mod was disabled (without applying) and enabled immediately again.
+- There are visual issues with snow that I couldn't figure out. As a workaround, snow is invisible now.
 
 #### (Rain World v1.5)
 v0.3:

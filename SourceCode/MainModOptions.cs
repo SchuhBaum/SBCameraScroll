@@ -13,6 +13,8 @@ namespace SBCameraScroll
         // options
         //
 
+        public static Configurable<string> cameraType = instance.config.Bind("cameraType", "position", new ConfigurableInfo("This type tries to stay close to the player. A larger distance means a faster camera.\nThe smoothing factor determines how much of the distance is covered per frame.", null, "", "Camera Type"));
+
         public static Configurable<bool> fogFullScreenEffect = instance.config.Bind("fogFullScreenEffect", defaultValue: true, new ConfigurableInfo("When disabled, the full screen fog effect is removed. It depends on the camera position and can noticeably move with the screen.", null, "", "Fog Effect"));
         public static Configurable<bool> mergeWhileLoading = instance.config.Bind("mergeWhileLoading", defaultValue: true, new ConfigurableInfo("When enabled, the camera textures for each room are merged when the region gets loaded.\nWhen disabled, camera textures are merged for each room on demand. Merging happens only once and might take a while.", null, "", "Merge While Loading")); //Merging happens only once and the files are stored inside the folder \"Mods/SBCameraScroll/\".\nThis process can take a while. Merging all rooms in Deserted Wastelands took me around three minutes.
         public static Configurable<bool> otherFullScreenEffects = instance.config.Bind("otherFullScreenEffects", defaultValue: true, new ConfigurableInfo("When disabled, full screen effects (except fog) like bloom and melt are removed.", null, "", "Full Screen Effects"));
@@ -39,6 +41,7 @@ namespace SBCameraScroll
         private readonly float fontHeight = 20f;
         private readonly int numberOfCheckboxes = 3;
         private readonly float checkBoxSize = 24f;
+        private float CheckBoxWithSpacing => checkBoxSize + 0.25f * spacing;
 
         private readonly string[] cameraTypeKeys = new string[2] { "position", "vanilla" };
         private readonly string[] cameraTypeDescriptions = new string[2]
@@ -59,13 +62,11 @@ namespace SBCameraScroll
         private readonly List<Configurable<bool>> checkBoxConfigurables = new();
         private readonly List<OpLabel> checkBoxesTextLabels = new();
 
-        public static Configurable<string> cameraType = instance.config.Bind("cameraType", "position", new ConfigurableInfo("This type tries to stay close to the player. A larger distance means a faster camera.\nThe smoothing factor determines how much of the distance is covered per frame.", null, "", "Camera Type"));
         private OpComboBox? cameraTypeComboBox = null;
         private int lastCameraType = 0;
 
         // private OpSimpleButton? clearCacheButton = null;
 
-        // private readonly List<OpComboBox> comboBoxes = new();
         private readonly List<Configurable<string>> comboBoxConfigurables = new();
         private readonly List<List<ListItem>> comboBoxLists = new();
         private readonly List<bool> comboBoxAllowEmpty = new();
@@ -77,8 +78,6 @@ namespace SBCameraScroll
         private readonly List<OpLabel> sliderTextLabelsRight = new();
 
         private readonly List<OpLabel> textLabels = new();
-
-        private float CheckBoxWithSpacing => checkBoxSize + 0.25f * spacing;
 
         //
         // main
@@ -127,7 +126,7 @@ namespace SBCameraScroll
                 new ListItem(cameraTypeKeys[0], "Position (Default)") { desc = cameraTypeDescriptions[0] },
                 new ListItem(cameraTypeKeys[1], "Vanilla") { desc = cameraTypeDescriptions[1] }
             };
-            AddComboBox(cameraType, _cameraTypes, "Camera Type");
+            AddComboBox(cameraType, _cameraTypes, (string)cameraType.info.Tags[0]);
             DrawComboBoxes(ref Tabs[tabIndex]);
 
             AddNewLine(1.25f);
@@ -419,30 +418,6 @@ namespace SBCameraScroll
             tab.AddItems(new OpRect(pos, new Vector2(boxWidth, boxEndPositions[lastIndex] - pos.y)));
             boxEndPositions.RemoveAt(lastIndex);
         }
-
-        //private OpScrollBox AddScrollBox(ref OpTab tab, float spacingModifier = 1f)
-        //{
-        //    float boxWidth = marginX.y - marginX.x;
-        //    float marginY = spacingModifier * spacing;
-        //    boxEndPositions.Add(pos.y);
-
-        //    OpScrollBox scrollBox = new OpScrollBox(new Vector2(marginX.x, marginY), new Vector2(boxWidth, Math.Max(pos.y - marginY, spacing)), boxWidth);
-        //    tab.AddItems(scrollBox);
-
-        //    marginX -= new Vector2(30f, 70f);
-        //    AddNewLine(0.5f);
-        //    return scrollBox;
-        //}
-
-        //private void DrawScrollBox(ref OpScrollBox scrollBox)
-        //{
-        //    AddNewLine(1.5f);
-        //    int lastIndex = boxEndPositions.Count - 1;
-
-        //    scrollBox.SetContentSize(boxEndPositions[lastIndex] - pos.y);
-        //    scrollBox.ScrollToTop();
-        //    boxEndPositions.RemoveAt(lastIndex);
-        //}
 
         private void AddCheckBox(Configurable<bool> configurable, string text)
         {
