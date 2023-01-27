@@ -1,7 +1,7 @@
 {
   "id": "SBCameraScroll",
   "name": "SBCameraScroll",
-  "version": "2.1.2",
+  "version": "2.1.3",
   "authors": "SchuhBaum",
   "description": "Creates a smooth, scrolling camera that moves with the slugcat. Based on pipi toki's CameraScroll mod.",
   "requirements": [],

@@ -32,6 +32,7 @@ namespace SBCameraScroll
 
         // private static int SnowSource_CheckVisibility(On.MoreSlugcats.SnowSource.orig_CheckVisibility orig, MoreSlugcats.SnowSource snowSource, int cameraIndex)
         // {
+        //     // add check if room is blacklisted
         //     Vector2 cameraPosition = snowSource.room.game.cameras[0].pos;
         //     if (snowSource.pos.x > cameraPosition.x - snowSource.rad && snowSource.pos.x < cameraPosition.x + snowSource.rad + 1400f && snowSource.pos.y > cameraPosition.y - snowSource.rad && snowSource.pos.y < cameraPosition.y + snowSource.rad + 800f)
         //     {
@@ -51,6 +52,7 @@ namespace SBCameraScroll
             // if I do this constantly then I have performance issues;
             // I also couldn't get it to work that the result
             // before jumps is the same as after jumps;
+            if (snowSource.room?.game.cameras[0] is not RoomCamera roomCamera || roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode) return;
             snowSource.room.game.cameras[0].snowChange = false;
         }
     }
