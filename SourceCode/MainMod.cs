@@ -1,13 +1,12 @@
 using System.IO;
 using System.Reflection;
-using System.Security;
 using System.Security.Permissions;
 using BepInEx;
 using MonoMod.Cil;
 using UnityEngine;
 
 // temporary fix // should be added automatically //TODO
-[module: UnverifiableCode]
+#pragma warning disable CS0618
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 namespace SBCameraScroll
 {
@@ -15,7 +14,7 @@ namespace SBCameraScroll
     // SplitScreenMod needs to be able to get the current cameraNumber for these methods
     // if I get access to that variable directly (static) I could do that too // but I don't want to carry an instance of SplitScreenMod around => dependency
     // You should be able to change load order now;
-    [BepInPlugin("SchuhBaum.SBCameraScroll", "SBCameraScroll", "2.1.7")]
+    [BepInPlugin("SchuhBaum.SBCameraScroll", "SBCameraScroll", "2.1.8")]
     public class MainMod : BaseUnityPlugin
     {
         //
@@ -25,7 +24,7 @@ namespace SBCameraScroll
         public static string modDirectoryPath = "";
         public static readonly string MOD_ID = "SBCameraScroll";
         public static readonly string author = "SchuhBaum";
-        public static readonly string version = "2.1.7";
+        public static readonly string version = "2.1.8";
 
         //
         // options

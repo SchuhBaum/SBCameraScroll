@@ -41,6 +41,12 @@ namespace SBCameraScroll
                 return;
             }
 
+            if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode)
+            {
+                orig(closeCloud, spriteLeaser, roomCamera, timeStacker, cameraPosition);
+                return;
+            }
+
             Vector2 roomCameraPosition = roomCamera.room.cameraPositions[roomCamera.currentCameraPosition];
             roomCamera.room.cameraPositions[roomCamera.currentCameraPosition] = roomCamera.room.cameraPositions[0];
             orig(closeCloud, spriteLeaser, roomCamera, timeStacker, cameraPosition);
@@ -50,6 +56,12 @@ namespace SBCameraScroll
         private static void DistantCloud_DrawSprites(On.AboveCloudsView.DistantCloud.orig_DrawSprites orig, AboveCloudsView.DistantCloud distantCloud, RoomCamera.SpriteLeaser spriteLeaser, RoomCamera roomCamera, float timeStacker, Vector2 cameraPosition)
         {
             if (roomCamera.room == null)
+            {
+                orig(distantCloud, spriteLeaser, roomCamera, timeStacker, cameraPosition);
+                return;
+            }
+
+            if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode)
             {
                 orig(distantCloud, spriteLeaser, roomCamera, timeStacker, cameraPosition);
                 return;
@@ -69,6 +81,12 @@ namespace SBCameraScroll
                 return;
             }
 
+            if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode)
+            {
+                orig(distantLightning, spriteLeaser, roomCamera, timeStacker, cameraPosition);
+                return;
+            }
+
             Vector2 roomCameraPosition = roomCamera.room.cameraPositions[roomCamera.currentCameraPosition];
             roomCamera.room.cameraPositions[roomCamera.currentCameraPosition] = roomCamera.room.cameraPositions[0];
             orig(distantLightning, spriteLeaser, roomCamera, timeStacker, cameraPosition);
@@ -78,6 +96,12 @@ namespace SBCameraScroll
         private static void FlyingCloud_DrawSprites(On.AboveCloudsView.FlyingCloud.orig_DrawSprites orig, AboveCloudsView.FlyingCloud flyingCloud, RoomCamera.SpriteLeaser spriteLeaser, RoomCamera roomCamera, float timeStacker, Vector2 cameraPosition)
         {
             if (roomCamera.room == null)
+            {
+                orig(flyingCloud, spriteLeaser, roomCamera, timeStacker, cameraPosition);
+                return;
+            }
+
+            if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode)
             {
                 orig(flyingCloud, spriteLeaser, roomCamera, timeStacker, cameraPosition);
                 return;

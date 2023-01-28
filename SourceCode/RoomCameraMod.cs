@@ -97,7 +97,7 @@ namespace SBCameraScroll
 
             roomCamera.paletteBlend = Mathf.Lerp(roomCamera.paletteBlend, t * roomCamera.room.roomSettings.fadePalette.fades[roomCamera.currentCameraPosition] + (1 - t) * roomCamera.room.roomSettings.fadePalette.fades[roomCamera.mostLikelyNextCamPos], 0.05f);
             roomCamera.ApplyFade();
-            attachedFields.paletteTransitionCooldown = 10;
+            attachedFields.paletteTransitionCooldown = 5;
         }
 
         public static void CheckBorders(RoomCamera roomCamera, ref Vector2 position)
