@@ -197,7 +197,7 @@ namespace SBCameraScroll
                         break;
                     case CameraType.Vanilla:
                         attachedFields.followAbstractCreatureID = null; // keep transition going even when switching back
-                        UpdateCamera_PositionType(roomCamera, attachedFields, stopEarlyWhenMovingSlowly: false, ignoreBoxAndOffset: true); // needs followAbstractCreatureID = null // updates cameraOffset
+                        UpdateCamera_VanillaType_Transition(roomCamera, attachedFields); // needs followAbstractCreatureID = null // updates cameraOffset
 
                         if (player.input[0].mp && !player.input[1].mp)
                         {
@@ -224,7 +224,7 @@ namespace SBCameraScroll
                         // EffectiveRoomGravity == 0.0f in shortcuts?
                         if (MainMod.Option_ZeroG && roomCamera.room.gravity == 0.0f)// roomCamera.followAbstractCreature?.realizedCreature?.EffectiveRoomGravity == 0.0f
                         {
-                            UpdateCamera_PositionType(roomCamera, attachedFields, ignoreBoxAndOffset: true);
+                            UpdateCamera_PositionType_IgnoreBoxAndOffset(roomCamera, attachedFields);
                             break;
                         }
                         UpdateCamera_PositionType(roomCamera, attachedFields); // don't skip smooth transition if part or set followAbstractCreatureID here
@@ -253,68 +253,53 @@ namespace SBCameraScroll
             }
         }
 
-        public static void UpdateCamera_PositionType(RoomCamera roomCamera, in AttachedFields attachedFields, bool stopEarlyWhenMovingSlowly = true, bool ignoreBoxAndOffset = false)
+        public static void UpdateCamera_PositionType(RoomCamera roomCamera, in AttachedFields attachedFields)
         {
             //
             // setting up by using attachedFields
             //
 
-            Vector2 targetPosition = attachedFields.onScreenPosition + (ignoreBoxAndOffset ? new() : attachedFields.cameraOffset);
+            Vector2 targetPosition = attachedFields.onScreenPosition + attachedFields.cameraOffset;
             CheckBorders(roomCamera, ref targetPosition); // stop at borders
 
             bool isAtBorderX = false;
             bool isAtBorderY = false;
 
-            // reach exact position during smooth transitions
-            float innerCameraBoxX_ = 0.0f;
-            float innerCameraBoxY_ = 0.0f;
+            // if not zero then targetPosition = atBorderPosition because of CheckBorders(); kinda confusing;
+            float atBorderDifferenceX = attachedFields.onScreenPosition.x + attachedFields.cameraOffset.x - targetPosition.x;
+            float atBorderDifferenceY = attachedFields.onScreenPosition.y + attachedFields.cameraOffset.y - targetPosition.y;
 
-            if (attachedFields.followAbstractCreatureID != null && !ignoreBoxAndOffset) // not in a smooth transition
+            // slow down at borders by making the camera box smaller if needed;
+            // at borders the target position is constant but the onScreenPosition still moves;
+            float innerCameraBoxX_ = Math.Max(0.0f, innerCameraBoxX - Mathf.Abs(atBorderDifferenceX));
+            float innerCameraBoxY_ = Math.Max(0.0f, innerCameraBoxY - Mathf.Abs(atBorderDifferenceY));
+
+            // reverse cameraOffset when at border;
+            // make a little buffer such that innerCameraBoxX_ stays zero next frame;
+            if (atBorderDifferenceX != 0.0f)
             {
-                // if not zero then targetPosition = atBorderPosition because of CheckBorders(); kinda confusing;
-                float atBorderDifferenceX = attachedFields.onScreenPosition.x + attachedFields.cameraOffset.x - targetPosition.x;
-                float atBorderDifferenceY = attachedFields.onScreenPosition.y + attachedFields.cameraOffset.y - targetPosition.y;
-
-                // slow down at borders by making the camera box smaller if needed;
-                // at borders the target position is constant but the onScreenPosition still moves;
-                innerCameraBoxX_ = Math.Max(0.0f, innerCameraBoxX - Mathf.Abs(atBorderDifferenceX));
-                innerCameraBoxY_ = Math.Max(0.0f, innerCameraBoxY - Mathf.Abs(atBorderDifferenceY));
-
-                // reverse when at border;
-                // make a little buffer such that innerCameraBoxX_ stays zero next frame;
-                if (atBorderDifferenceX != 0.0f)
+                isAtBorderX = true;
+                if (atBorderDifferenceX > innerCameraBoxX + 10f)
                 {
-                    isAtBorderX = true;
-                    if (atBorderDifferenceX > innerCameraBoxX + 10f)
-                    {
-                        attachedFields.cameraOffset.x = Mathf.Clamp(attachedFields.cameraOffset.x - atBorderDifferenceX + innerCameraBoxX + 10f, -maximumCameraOffsetX, maximumCameraOffsetX);
-                    }
-                    else if (atBorderDifferenceX < -innerCameraBoxX - 10f)
-                    {
-                        attachedFields.cameraOffset.x = Mathf.Clamp(attachedFields.cameraOffset.x - atBorderDifferenceX - innerCameraBoxX - 10f, -maximumCameraOffsetX, maximumCameraOffsetX);
-                    }
+                    attachedFields.cameraOffset.x = Mathf.Clamp(attachedFields.cameraOffset.x - atBorderDifferenceX + innerCameraBoxX + 10f, -maximumCameraOffsetX, maximumCameraOffsetX);
                 }
-
-                if (atBorderDifferenceY != 0.0f)
+                else if (atBorderDifferenceX < -innerCameraBoxX - 10f)
                 {
-                    isAtBorderY = true;
-                    if (atBorderDifferenceY > innerCameraBoxY + 10f)
-                    {
-                        attachedFields.cameraOffset.y = Mathf.Clamp(attachedFields.cameraOffset.y - atBorderDifferenceY + innerCameraBoxY + 10f, -maximumCameraOffsetY, maximumCameraOffsetY);
-                    }
-                    else if (atBorderDifferenceY < -innerCameraBoxY - 10f)
-                    {
-                        attachedFields.cameraOffset.y = Mathf.Clamp(attachedFields.cameraOffset.y - atBorderDifferenceY - innerCameraBoxY - 10f, -maximumCameraOffsetY, maximumCameraOffsetY);
-                    }
+                    attachedFields.cameraOffset.x = Mathf.Clamp(attachedFields.cameraOffset.x - atBorderDifferenceX - innerCameraBoxX - 10f, -maximumCameraOffsetX, maximumCameraOffsetX);
                 }
             }
-            else if (cameraType == CameraType.Vanilla && attachedFields.useVanillaPositions) // kinda messy making these checks here
+
+            if (atBorderDifferenceY != 0.0f)
             {
-                // only case where the player is not the target
-                // don't check borders for this one
-                // seekPos can change during a transition
-                // this extends the transition until the player stops changing screens
-                targetPosition = roomCamera.seekPos;
+                isAtBorderY = true;
+                if (atBorderDifferenceY > innerCameraBoxY + 10f)
+                {
+                    attachedFields.cameraOffset.y = Mathf.Clamp(attachedFields.cameraOffset.y - atBorderDifferenceY + innerCameraBoxY + 10f, -maximumCameraOffsetY, maximumCameraOffsetY);
+                }
+                else if (atBorderDifferenceY < -innerCameraBoxY - 10f)
+                {
+                    attachedFields.cameraOffset.y = Mathf.Clamp(attachedFields.cameraOffset.y - atBorderDifferenceY - innerCameraBoxY - 10f, -maximumCameraOffsetY, maximumCameraOffsetY);
+                }
             }
 
             //
@@ -335,7 +320,7 @@ namespace SBCameraScroll
                 // stop when moving too slow;
                 // downside is that the targetposition might not be reached exactly;
                 // depending on smoothingFactorX this can be a couple of pixels far away from targetPosition;
-                if (stopEarlyWhenMovingSlowly && Mathf.Abs(roomCamera.pos.x - roomCamera.lastPos.x) < 1f)
+                if (Mathf.Abs(roomCamera.pos.x - roomCamera.lastPos.x) < 1f)
                 {
                     roomCamera.pos.x = roomCamera.lastPos.x;
                 }
@@ -344,7 +329,7 @@ namespace SBCameraScroll
                 // don't update when the camera is not moving;
                 // don't update when turning;
                 // reverse instead when at border (see start of this function);
-                else if (!ignoreBoxAndOffset && !isAtBorderX && Mathf.Sign(roomCamera.pos.x - roomCamera.lastPos.x) == Mathf.Sign(attachedFields.onScreenPosition.x - attachedFields.lastOnScreenPosition.x))
+                else if (!isAtBorderX && Mathf.Sign(roomCamera.pos.x - roomCamera.lastPos.x) == Mathf.Sign(attachedFields.onScreenPosition.x - attachedFields.lastOnScreenPosition.x))
                 {
                     attachedFields.cameraOffset.x = Mathf.Clamp(attachedFields.cameraOffset.x + cameraOffsetSpeedMultiplier * (attachedFields.onScreenPosition.x - attachedFields.lastOnScreenPosition.x), -maximumCameraOffsetX, maximumCameraOffsetX);
                 }
@@ -358,11 +343,11 @@ namespace SBCameraScroll
             if (distanceY > innerCameraBoxY_)
             {
                 roomCamera.pos.y = Mathf.Lerp(roomCamera.lastPos.y, targetPosition.y, smoothingFactorY * (distanceY - innerCameraBoxY_) / distanceY);
-                if (stopEarlyWhenMovingSlowly && Mathf.Abs(roomCamera.pos.y - roomCamera.lastPos.y) < 1f)
+                if (Mathf.Abs(roomCamera.pos.y - roomCamera.lastPos.y) < 1f)
                 {
                     roomCamera.pos.y = roomCamera.lastPos.y;
                 }
-                else if (!ignoreBoxAndOffset && !isAtBorderY && Mathf.Sign(roomCamera.pos.y - roomCamera.lastPos.y) == Mathf.Sign(attachedFields.onScreenPosition.y - attachedFields.lastOnScreenPosition.y))
+                else if (!isAtBorderY && Mathf.Sign(roomCamera.pos.y - roomCamera.lastPos.y) == Mathf.Sign(attachedFields.onScreenPosition.y - attachedFields.lastOnScreenPosition.y))
                 {
                     attachedFields.cameraOffset.y = Mathf.Clamp(attachedFields.cameraOffset.y + cameraOffsetSpeedMultiplier * (attachedFields.onScreenPosition.y - attachedFields.lastOnScreenPosition.y), -maximumCameraOffsetY, maximumCameraOffsetY);
                 }
@@ -371,6 +356,14 @@ namespace SBCameraScroll
             {
                 roomCamera.pos.y = roomCamera.lastPos.y;
             }
+        }
+
+        public static void UpdateCamera_PositionType_IgnoreBoxAndOffset(RoomCamera roomCamera, in AttachedFields attachedFields)
+        {
+            Vector2 targetPosition = attachedFields.onScreenPosition;
+            CheckBorders(roomCamera, ref targetPosition); // stop at borders
+            roomCamera.pos.x = Mathf.Lerp(roomCamera.lastPos.x, targetPosition.x, smoothingFactorX);
+            roomCamera.pos.y = Mathf.Lerp(roomCamera.lastPos.y, targetPosition.y, smoothingFactorY);
         }
 
         public static void UpdateCamera_VanillaType(RoomCamera roomCamera, in AttachedFields attachedFields)
@@ -429,6 +422,26 @@ namespace SBCameraScroll
             CheckBorders(roomCamera, ref attachedFields.vanillaTypePosition);
             CheckBorders(roomCamera, ref roomCamera.lastPos);
             CheckBorders(roomCamera, ref roomCamera.pos);
+        }
+
+        public static void UpdateCamera_VanillaType_Transition(RoomCamera roomCamera, in AttachedFields attachedFields)
+        {
+            Vector2 targetPosition;
+            if (attachedFields.useVanillaPositions)
+            {
+                // only in case when the player is not the target
+                // seekPos can change during a transition
+                // this extends the transition until the player stops changing screens
+                targetPosition = roomCamera.seekPos;
+            }
+            else
+            {
+                targetPosition = attachedFields.onScreenPosition;
+                CheckBorders(roomCamera, ref targetPosition); // stop at borders
+            }
+
+            roomCamera.pos.x = Mathf.Lerp(roomCamera.lastPos.x, targetPosition.x, smoothingFactorX);
+            roomCamera.pos.y = Mathf.Lerp(roomCamera.lastPos.y, targetPosition.y, smoothingFactorY);
         }
 
         // accounts for room boundaries and shortcuts
