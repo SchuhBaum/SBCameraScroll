@@ -185,29 +185,33 @@ namespace SBCameraScroll
             AttachedFields attachedFields = roomCamera.GetAttachedFields();
 
             // if I want this to work with Safari I might need to remove these player checks
-            if (attachedFields.followAbstractCreatureID != roomCamera.followAbstractCreature.ID && roomCamera.followAbstractCreature?.realizedCreature is Player player)  // smooth transition when switching cameras in the same room
+            if (attachedFields.followAbstractCreatureID != roomCamera.followAbstractCreature.ID && roomCamera.followAbstractCreature?.realizedCreature is Creature creature)  // smooth transition when switching cameras in the same room
             {
                 switch (cameraType)
                 {
                     case CameraType.Position:
                         attachedFields.followAbstractCreatureID = roomCamera.followAbstractCreature.ID;
-                        attachedFields.cameraOffset.x = player.input[0].x * maximumCameraOffsetX;
-                        attachedFields.cameraOffset.y = player.input[0].y * maximumCameraOffsetY;
                         roomCamera.pos = roomCamera.lastPos; // just wait this frame and resume next frame;
+
+                        if (creature is Player player)
+                        {
+                            attachedFields.cameraOffset.x = player.input[0].x * maximumCameraOffsetX;
+                            attachedFields.cameraOffset.y = player.input[0].y * maximumCameraOffsetY;
+                        }
                         break;
                     case CameraType.Vanilla:
                         attachedFields.followAbstractCreatureID = null; // keep transition going even when switching back
                         UpdateCamera_VanillaType_Transition(roomCamera, attachedFields); // needs followAbstractCreatureID = null // updates cameraOffset
 
-                        if (player.input[0].mp && !player.input[1].mp)
+                        if (creature is Player player_ && player_.input[0].mp && !player_.input[1].mp)
                         {
                             attachedFields.useVanillaPositions = !attachedFields.useVanillaPositions;
                         }
 
                         // stop transition earlier when player is moving && vanilla positions are not used
                         if (roomCamera.pos == roomCamera.lastPos || !attachedFields.useVanillaPositions &&
-                            (Mathf.Abs(player.mainBodyChunk.vel.x) <= 1f && roomCamera.pos.x == roomCamera.lastPos.x || Mathf.Abs(player.mainBodyChunk.vel.x) > 1f && Mathf.Abs(roomCamera.pos.x - roomCamera.lastPos.x) <= 10f) &&
-                            (Mathf.Abs(player.mainBodyChunk.vel.y) <= 1f && roomCamera.pos.y == roomCamera.lastPos.y || Mathf.Abs(player.mainBodyChunk.vel.y) > 1f && Mathf.Abs(roomCamera.pos.y - roomCamera.lastPos.y) <= 10f))
+                            (Mathf.Abs(creature.mainBodyChunk.vel.x) <= 1f && roomCamera.pos.x == roomCamera.lastPos.x || Mathf.Abs(creature.mainBodyChunk.vel.x) > 1f && Mathf.Abs(roomCamera.pos.x - roomCamera.lastPos.x) <= 10f) &&
+                            (Mathf.Abs(creature.mainBodyChunk.vel.y) <= 1f && roomCamera.pos.y == roomCamera.lastPos.y || Mathf.Abs(creature.mainBodyChunk.vel.y) > 1f && Mathf.Abs(roomCamera.pos.y - roomCamera.lastPos.y) <= 10f))
                         {
                             attachedFields.followAbstractCreatureID = roomCamera.followAbstractCreature.ID;
                             attachedFields.vanillaTypePosition = roomCamera.pos;
@@ -240,7 +244,11 @@ namespace SBCameraScroll
                             UpdateCamera_VanillaType(roomCamera, attachedFields);
                         }
 
-                        if (roomCamera.followAbstractCreature?.realizedCreature is Player player_ && player_.input[0].mp && !player_.input[1].mp)
+                        // in Safari mode the camera might follow other creatures;
+                        // this means that inputs are ignored;
+                        // this means that you can't center the camera and it is
+                        // just the vanilla camera;
+                        if (roomCamera.followAbstractCreature?.realizedCreature is Player player && player.input[0].mp && !player.input[1].mp)
                         {
                             if (attachedFields.useVanillaPositions || attachedFields.isCentered)
                             {
@@ -474,6 +482,25 @@ namespace SBCameraScroll
                         position.x += 0.5f * (player.bodyChunks[0].pos.x + player.bodyChunks[1].pos.x);
                         position.y += Mathf.Min(player.bodyChunks[0].pos.y, player.bodyChunks[1].pos.y);
                     }
+                }
+
+                AttachedFields attachedFields = roomCamera.GetAttachedFields();
+                attachedFields.lastOnScreenPosition = attachedFields.onScreenPosition;
+                attachedFields.onScreenPosition = position;
+            }
+            else if (roomCamera.followAbstractCreature?.realizedCreature is Creature creature)
+            {
+                if (creature.inShortcut && ShortcutHandlerMod.GetShortcutVessel(roomCamera.game.shortcuts, roomCamera.followAbstractCreature) is ShortcutHandler.ShortCutVessel shortcutVessel)
+                {
+                    Vector2 currentPosition = roomCamera.room.MiddleOfTile(shortcutVessel.pos);
+                    Vector2 nextInShortcutPosition = roomCamera.room.MiddleOfTile(ShortcutHandler.NextShortcutPosition(shortcutVessel.pos, shortcutVessel.lastPos, roomCamera.room));
+
+                    // shortcuts get only updated every 3 frames => calculate exact position here // in JollyCoopFixesAndStuff it can also be 2 frames in order to remove slowdown, i.e. compensate for the mushroom effect
+                    position += Vector2.Lerp(currentPosition, nextInShortcutPosition, roomCamera.game.updateShortCut / maxUpdateShortcut);
+                }
+                else // use the center (of mass(?)) instead // makes rolls more predictable // use lower y such that crouching does not move camera
+                {
+                    position += creature.mainBodyChunk.pos;
                 }
 
                 AttachedFields attachedFields = roomCamera.GetAttachedFields();
@@ -751,7 +778,7 @@ namespace SBCameraScroll
                 roomCamera.GetAttachedFields().isRoomBlacklisted = true;
             }
             // blacklist instead of checking if you can scroll // they do the same thing anyways
-            else if (roomCamera.game.IsArenaSession || roomCamera.game.rainWorld.safariMode || !RoomMod.CanScrollCamera(roomCamera.room))
+            else if (roomCamera.game.IsArenaSession || !RoomMod.CanScrollCamera(roomCamera.room))
             {
                 roomCamera.GetAttachedFields().isRoomBlacklisted = true;
             }
@@ -812,7 +839,7 @@ namespace SBCameraScroll
             // needs to be updated in ApplyPositionChange();
             // I need to check for blacklisted room anyway 
             // since for example "RM_AI" can be merged but is incompatible;
-            if (roomCamera.game.IsArenaSession || roomCamera.game.rainWorld.safariMode || blacklistedRooms.Contains(roomName) || WorldLoader.FindRoomFile(roomName, false, "_0.png") == null)
+            if (roomCamera.game.IsArenaSession || blacklistedRooms.Contains(roomName) || WorldLoader.FindRoomFile(roomName, false, "_0.png") == null)
             {
                 orig(roomCamera, roomName, camPos);
                 return;

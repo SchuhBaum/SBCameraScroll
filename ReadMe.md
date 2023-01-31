@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 2.2.1
+###### Version: 2.2.2
 This is a mod for Rain World v1.9.
 
 ### Description
@@ -30,7 +30,6 @@ Q: My game actually crashed. What happened?
 A: Your game might have run out of memory. So far I haven't found a solution to this. As a workaround, I recommend that you restart your game from time to time (see `Known issues`).  
 
 ### Known issues
-- Camera does not follow the overseer or other creatures in the Safari mode.
 - There are blue outlines in certain rooms (shader issues?).
 - This mod increases memory consumption. When the game runs low on memory the performance will decline and the game might crash. This might take a while (90+ minutes). Merging room texture accelerates this. This needs to happen once for every room with multiple screens. The textures are saved to disk (cached) and reused. It is recommended to restart the game every now and then.  
  CONTEXT: There might be memory leaks or memory fragmentation. A memory leak would mean that memory is not released when it is not used anymore. Fragmentation might happen because most roomCamera textures are now fairly large and change in size often. This means that they need to be re-allocated in memory often and they require a chunk of memory without "holes".
@@ -76,8 +75,9 @@ v2.2.0:
 - Blacklisted the room 'SB_E05SAINT'.
 - Removed the room 'GW_E02_PAST' from blacklisted rooms. The Artificer dream sequence is working for me. This room is also used as a regular room.
 
-v2.2.1:
+v2.2.2:
 - Restructured code.
+- Added support for the Safari mode.
 
 #### (Rain World v1.5)
 v0.3:

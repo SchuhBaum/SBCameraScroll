@@ -23,17 +23,6 @@ namespace SBCameraScroll
             Debug.Log("SBCameraScroll: Initialize variables.");
             MainModOptions.instance.MainModOptions_OnConfigChanged(); //TODO // remporary fix for events not working
             orig(game, manager);
-
-            foreach (AbstractCreature abstractPlayer in game.Players)
-            {
-                int playerNumber = ((PlayerState)abstractPlayer.state).playerNumber;
-                EntityID entityID = new(-1, playerNumber);
-
-                if (abstractPlayer.ID != entityID) // copied from JollyCoopFixesAndStuff // I had multiple player with the ID of player 2
-                {
-                    abstractPlayer.ID = entityID;
-                }
-            }
         }
 
         private static void RainWorldGame_ShutDownProcess(On.RainWorldGame.orig_ShutDownProcess orig, RainWorldGame game)
