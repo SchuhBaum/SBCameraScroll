@@ -41,7 +41,7 @@ namespace SBCameraScroll
         public static float smoothingFactorY = 0.16f;
 
         public static float maxUpdateShortcut = 3f;
-        public static List<string> blacklistedRooms = new() { "RM_AI", "GW_E02_PAST", "GW_TOWER06", "GW_ARTYSCENES", "GW_ARTYNIGHTMARE", "SB_E05SAINT" };
+        public static List<string> blacklistedRooms = new() { "RM_AI", "GW_ARTYSCENES", "GW_ARTYNIGHTMARE", "SB_E05SAINT" };
 
         //
         //

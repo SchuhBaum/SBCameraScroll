@@ -199,11 +199,6 @@ namespace SBCameraScroll
 
             AddNewLine();
 
-            AddCheckBox(zeroG_Position, (string)zeroG_Position.info.Tags[0]);
-            DrawCheckBoxes(ref Tabs[tabIndex]);
-
-            AddNewLine();
-
             AddSlider(innerCameraBoxX_Position, (string)innerCameraBoxX_Position.info.Tags[0], "0 tiles", "35 tiles");
             DrawSliders(ref Tabs[tabIndex]);
 
@@ -234,8 +229,13 @@ namespace SBCameraScroll
             AddNewLine();
             AddBox();
 
-            AddTextLabel("Position Type Camera:", FLabelAlignment.Left);
+            AddTextLabel("Position Type Camera (Experimental Features):", FLabelAlignment.Left);
             DrawTextLabels(ref Tabs[tabIndex]);
+
+            AddNewLine();
+
+            AddCheckBox(zeroG_Position, (string)zeroG_Position.info.Tags[0]);
+            DrawCheckBoxes(ref Tabs[tabIndex]);
 
             AddNewLine();
 
