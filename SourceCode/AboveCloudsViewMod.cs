@@ -51,6 +51,10 @@ namespace SBCameraScroll
             roomCamera.room.cameraPositions[roomCamera.currentCameraPosition] = roomCamera.room.cameraPositions[0];
             orig(closeCloud, spriteLeaser, roomCamera, timeStacker, cameraPosition);
             roomCamera.room.cameraPositions[roomCamera.currentCameraPosition] = roomCameraPosition;
+
+            // this makes the position as it should be // i.e. it respects a moving camera (even without scrolling the camera moves)
+            // however this messes with the light of the cloud shader // the clouds look like light bulbs turning on and off when scrolling very quickly
+            // spriteLeaser.sprites[1].x -= cameraPosition.x;
         }
 
         private static void DistantCloud_DrawSprites(On.AboveCloudsView.DistantCloud.orig_DrawSprites orig, AboveCloudsView.DistantCloud distantCloud, RoomCamera.SpriteLeaser spriteLeaser, RoomCamera roomCamera, float timeStacker, Vector2 cameraPosition)
@@ -71,6 +75,8 @@ namespace SBCameraScroll
             roomCamera.room.cameraPositions[roomCamera.currentCameraPosition] = roomCamera.room.cameraPositions[0];
             orig(distantCloud, spriteLeaser, roomCamera, timeStacker, cameraPosition);
             roomCamera.room.cameraPositions[roomCamera.currentCameraPosition] = roomCameraPosition;
+
+            // spriteLeaser.sprites[1].x -= cameraPosition.x;
         }
 
         private static void DistantLightning_DrawSprites(On.AboveCloudsView.DistantLightning.orig_DrawSprites orig, AboveCloudsView.DistantLightning distantLightning, RoomCamera.SpriteLeaser spriteLeaser, RoomCamera roomCamera, float timeStacker, Vector2 cameraPosition)
@@ -91,6 +97,9 @@ namespace SBCameraScroll
             roomCamera.room.cameraPositions[roomCamera.currentCameraPosition] = roomCamera.room.cameraPositions[0];
             orig(distantLightning, spriteLeaser, roomCamera, timeStacker, cameraPosition);
             roomCamera.room.cameraPositions[roomCamera.currentCameraPosition] = roomCameraPosition;
+
+            // the sprites for this are already positioned correctly;
+            // spriteLeaser.sprites[0].x -= cameraPosition.x; // wrong
         }
 
         private static void FlyingCloud_DrawSprites(On.AboveCloudsView.FlyingCloud.orig_DrawSprites orig, AboveCloudsView.FlyingCloud flyingCloud, RoomCamera.SpriteLeaser spriteLeaser, RoomCamera roomCamera, float timeStacker, Vector2 cameraPosition)
@@ -111,6 +120,8 @@ namespace SBCameraScroll
             roomCamera.room.cameraPositions[roomCamera.currentCameraPosition] = roomCamera.room.cameraPositions[0];
             orig(flyingCloud, spriteLeaser, roomCamera, timeStacker, cameraPosition);
             roomCamera.room.cameraPositions[roomCamera.currentCameraPosition] = roomCameraPosition;
+
+            // spriteLeaser.sprites[0].x -= cameraPosition.x;
         }
     }
 }
