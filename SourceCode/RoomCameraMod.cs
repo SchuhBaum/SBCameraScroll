@@ -78,7 +78,7 @@ namespace SBCameraScroll
 
         public static void AddFadeTransition(RoomCamera roomCamera)
         {
-            if (roomCamera.room.roomSettings.fadePalette == null) return;
+            if (roomCamera.room?.roomSettings.fadePalette == null) return;
 
             // the fade is automatically applied in RoomCamera.Update();
             roomCamera.paletteBlend = Mathf.Lerp(roomCamera.paletteBlend, roomCamera.room.roomSettings.fadePalette.fades[roomCamera.currentCameraPosition], 0.01f);
