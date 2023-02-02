@@ -151,10 +151,10 @@ namespace SBCameraScroll
             attachedFields.cameraOffset = new();
         }
 
-        public static Vector2 SplitScreenMod_GetScreenOffset(in Vector2 screenSize) => SplitScreenMod.SplitScreenMod.CurrentSplitMode switch
+        public static Vector2 SplitScreenMod_GetScreenOffset(in Vector2 screenSize) => SplitScreenCoop.SplitScreenCoop.CurrentSplitMode switch
         {
-            SplitScreenMod.SplitScreenMod.SplitMode.SplitVertical => new Vector2(0.25f * screenSize.x, 0.0f),
-            SplitScreenMod.SplitScreenMod.SplitMode.SplitHorizontal => new Vector2(0.0f, 0.25f * screenSize.y),
+            SplitScreenCoop.SplitScreenCoop.SplitMode.SplitVertical => new Vector2(0.25f * screenSize.x, 0.0f),
+            SplitScreenCoop.SplitScreenCoop.SplitMode.SplitHorizontal => new Vector2(0.0f, 0.25f * screenSize.y),
             _ => new Vector2(),
         };
 

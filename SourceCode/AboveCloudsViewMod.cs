@@ -39,7 +39,11 @@ namespace SBCameraScroll
             // this makes the position as it should be // i.e. it respects a moving camera (even without scrolling the camera moves);
             // however this messes with the light of the cloud shader // the clouds look like light bulbs turning on and off when scrolling very quickly;
             // I need to preserve the offset (683f) for some rooms;
-            spriteLeaser.sprites[1].x += closeCloud.DrawPos(cameraPosition, roomCamera.hDisplace).x;
+            //
+            // at this point I think that these cloud background overlay(?) objects are too small;
+            // scrolling them leads to problems one way or another;
+            // I probably need to change the cloud shader instead?;
+            // spriteLeaser.sprites[1].x -= closeCloud.DrawPos(cameraPosition, roomCamera.hDisplace).x;
         }
 
         private static void DistantCloud_DrawSprites(On.AboveCloudsView.DistantCloud.orig_DrawSprites orig, AboveCloudsView.DistantCloud distantCloud, RoomCamera.SpriteLeaser spriteLeaser, RoomCamera roomCamera, float timeStacker, Vector2 cameraPosition)
@@ -61,7 +65,7 @@ namespace SBCameraScroll
             orig(distantCloud, spriteLeaser, roomCamera, timeStacker, cameraPosition);
             roomCamera.room.cameraPositions[roomCamera.currentCameraPosition] = roomCameraPosition;
 
-            spriteLeaser.sprites[1].x += distantCloud.DrawPos(cameraPosition, roomCamera.hDisplace).x;
+            // spriteLeaser.sprites[1].x += distantCloud.DrawPos(cameraPosition, roomCamera.hDisplace).x;
         }
 
         private static void DistantLightning_DrawSprites(On.AboveCloudsView.DistantLightning.orig_DrawSprites orig, AboveCloudsView.DistantLightning distantLightning, RoomCamera.SpriteLeaser spriteLeaser, RoomCamera roomCamera, float timeStacker, Vector2 cameraPosition)
@@ -106,7 +110,7 @@ namespace SBCameraScroll
             orig(flyingCloud, spriteLeaser, roomCamera, timeStacker, cameraPosition);
             roomCamera.room.cameraPositions[roomCamera.currentCameraPosition] = roomCameraPosition;
 
-            spriteLeaser.sprites[0].x += flyingCloud.DrawPos(cameraPosition, roomCamera.hDisplace).x;
+            // spriteLeaser.sprites[0].x += flyingCloud.DrawPos(cameraPosition, roomCamera.hDisplace).x;
         }
     }
 }

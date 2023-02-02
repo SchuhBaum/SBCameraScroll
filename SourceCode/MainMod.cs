@@ -14,7 +14,7 @@ namespace SBCameraScroll
     // SplitScreenMod needs to be able to get the current cameraNumber for these methods
     // if I get access to that variable directly (static) I could do that too // but I don't want to carry an instance of SplitScreenMod around => dependency
     // You should be able to change load order now;
-    [BepInPlugin("SchuhBaum.SBCameraScroll", "SBCameraScroll", "2.2.4")]
+    [BepInPlugin("SchuhBaum.SBCameraScroll", "SBCameraScroll", "2.2.5")]
     public class MainMod : BaseUnityPlugin
     {
         //
@@ -24,7 +24,7 @@ namespace SBCameraScroll
         public static string modDirectoryPath = "";
         public static readonly string MOD_ID = "SBCameraScroll";
         public static readonly string author = "SchuhBaum";
-        public static readonly string version = "2.2.4";
+        public static readonly string version = "2.2.5";
 
         //
         // options
@@ -33,7 +33,7 @@ namespace SBCameraScroll
         public static bool Option_FogFullScreenEffect => MainModOptions.fogFullScreenEffect.Value;
         public static bool Option_OtherFullScreenEffects => MainModOptions.otherFullScreenEffects.Value;
         public static bool Option_MergeWhileLoading => MainModOptions.mergeWhileLoading.Value;
-        public static bool Option_ScrollOneScreenRooms => MainModOptions.scrollOneScreenRooms.Value;
+        public static bool Option_ScrollOneScreenRooms => MainModOptions.scrollOneScreenRooms.Value || isSplitScreenModEnabled;
         public static bool Option_ZeroG => MainModOptions.zeroG_Position.Value;
 
         //
@@ -153,10 +153,11 @@ namespace SBCameraScroll
 
             Debug.Log("SBCameraScroll: Version " + version);
             CreateModRootDirectory(); // uses root folder directory // needs to be initialized at this point
+            Debug.Log("SBCameraScroll: modDirectoryPath " + modDirectoryPath);
 
             foreach (ModManager.Mod mod in ModManager.ActiveMods)
             {
-                if (mod.name == "SplitScreenMod")
+                if (mod.id == "henpemaz_splitscreencoop")
                 {
                     isSplitScreenModEnabled = true;
                     break;
@@ -165,13 +166,12 @@ namespace SBCameraScroll
 
             if (!isSplitScreenModEnabled)
             {
-                Debug.Log("SBCameraScroll: SplitScreenMod not found.");
+                Debug.Log("SBCameraScroll: SplitScreen Co-op not found.");
             }
             else
             {
-                Debug.Log("SBCameraScroll: SplitScreenMod found. Enable option for scrolling one-screen rooms.");
+                Debug.Log("SBCameraScroll: SplitScreen Co-op found. Enable scrolling one-screen rooms.");
             }
-            Debug.Log("SBCameraScroll: modDirectoryPath " + modDirectoryPath);
 
             AboveCloudsViewMod.OnEnable();
             AbstractRoomMod.OnEnable();
