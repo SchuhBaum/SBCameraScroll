@@ -110,13 +110,19 @@ namespace SBCameraScroll
             attachedFields.wormGrass = null;
         }
 
-
         // creates directories if they don't exist
         public static string GetRelativeRoomsPath(string? regionName)
         {
             if (regionName == null) return "";
 
             string relativeRegionPath = "world" + Path.DirectorySeparatorChar + regionName.ToLower() + "-rooms";
+            MainMod.CreateDirectory(MainMod.modDirectoryPath + relativeRegionPath);
+            return relativeRegionPath + Path.DirectorySeparatorChar;
+        }
+
+        public static string GetRelativeRoomsPath_Arena()
+        {
+            string relativeRegionPath = "levels";
             MainMod.CreateDirectory(MainMod.modDirectoryPath + relativeRegionPath);
             return relativeRegionPath + Path.DirectorySeparatorChar;
         }
@@ -144,11 +150,27 @@ namespace SBCameraScroll
         public static void MergeCameraTextures(AbstractRoom? abstractRoom, string? regionName, Vector2[]? cameraPositions = null)
         {
             if (abstractRoom == null) return;
-            if (regionName == null) return;
-            if (RoomCameraMod.blacklistedRooms.Contains(abstractRoom.name)) return;
+            if (abstractRoom.offScreenDen) return;
 
             string roomName = abstractRoom.name;
-            string relativeRoomsPath = GetRelativeRoomsPath(regionName);
+            if (RoomCameraMod.blacklistedRooms.Contains(roomName)) return;
+
+            string relativeRoomsPath;
+            if (regionName == null)
+            {
+                if (abstractRoom.world == null || !abstractRoom.world.game.IsArenaSession)
+                {
+                    Debug.Log("SBCameraScroll: Region is null. Blacklist room " + roomName + ".");
+                    RoomCameraMod.blacklistedRooms.Add(roomName);
+                    return;
+                }
+                relativeRoomsPath = GetRelativeRoomsPath_Arena();
+            }
+            else
+            {
+                relativeRoomsPath = GetRelativeRoomsPath(regionName);
+            }
+
             string filePath = MainMod.modDirectoryPath + relativeRoomsPath + roomName.ToLower() + "_0.png";
 
             // check if custom regions already contains the merged room texture // was this needed? // hm..., I think it was
@@ -156,7 +178,12 @@ namespace SBCameraScroll
             if (File.Exists(filePath) && new FileInfo(filePath).Length > 0) return;
 
             cameraPositions ??= LoadCameraPositions(roomName);
-            if (cameraPositions == null) return;
+            if (cameraPositions == null)
+            {
+                Debug.Log("SBCameraScroll: Camera positions could not be loaded. Blacklist room " + roomName + ".");
+                RoomCameraMod.blacklistedRooms.Add(roomName);
+                return;
+            }
             if (cameraPositions.Length <= 1) return; // skip one screen rooms
 
             CheckCameraPositions(ref cameraPositions);

@@ -758,7 +758,7 @@ namespace SBCameraScroll
                 roomCamera.GetAttachedFields().isRoomBlacklisted = true;
             }
             // blacklist instead of checking if you can scroll // they do the same thing anyways
-            else if (roomCamera.game.IsArenaSession || !RoomMod.CanScrollCamera(roomCamera.room))
+            else if (!RoomMod.CanScrollCamera(roomCamera.room)) // roomCamera.game.IsArenaSession ||
             {
                 roomCamera.GetAttachedFields().isRoomBlacklisted = true;
             }
@@ -819,7 +819,7 @@ namespace SBCameraScroll
             // needs to be updated in ApplyPositionChange();
             // I need to check for blacklisted room anyway 
             // since for example "RM_AI" can be merged but is incompatible;
-            if (roomCamera.game.IsArenaSession || blacklistedRooms.Contains(roomName) || WorldLoader.FindRoomFile(roomName, false, "_0.png") == null)
+            if (blacklistedRooms.Contains(roomName) || WorldLoader.FindRoomFile(roomName, false, "_0.png") == null) // roomCamera.game.IsArenaSession ||
             {
                 orig(roomCamera, roomName, camPos);
                 return;

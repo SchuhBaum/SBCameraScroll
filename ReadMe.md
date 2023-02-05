@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 2.2.5
+###### Version: 2.2.6
 This is a mod for Rain World v1.9.
 
 ### Description
@@ -19,6 +19,10 @@ If rooms textures are changed then you need to generate these files again. This 
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
+### Bug reports
+Please post bugs on the Rain World Discord server in the channel #modding-support:  
+https://discord.gg/rainworld
+
 ### FAQ
 Q: The mod doesn't work. I can't open the mod's option menu. How to fix this?  
 A: One thing that helped multiple people is to delete the 'Rain World\BepInEx' folder and then verifying the integrity of the game files in steam.  
@@ -36,9 +40,6 @@ A: Your game might have run out of memory. So far I haven't found a solution to 
 - The underwater shaders do not work correctly. In large rooms they can smear sprites.
 - Shadows at the edge of the screen seem to flicker or stretch in some rooms. I can see the same thing without camera scroll. Maybe a vanilla bug.
 - Motion sickness might be a problem. I wonder how much is due to noise (details) in the textures. You can play around with the parameters and see what works for you.
-
-### Bug reports
-Please post bugs on the Rain World Discord server (https://discord.gg/rainworld) in the channel #modding-support.
 
 ### Contact
 If you have feedback, you can message me on Discord `@SchuhBaum#7246` or write an email to SchuhBaum71@gmail.com.
@@ -75,12 +76,13 @@ v2.2.0:
 - Blacklisted the room 'SB_E05SAINT'.
 - Removed the room 'GW_E02_PAST' from blacklisted rooms. The Artificer dream sequence is working for me. This room is also used as a regular room.
 
-v2.2.5:
+v2.2.6:
 - Restructured code.
 - Added support for the Safari mode.
 - Simplified implementation of fade palettes.
 - Reverted clouds such that they scroll. Added an offset instead such the edges are not visible in certain rooms.
 - Added support for SplitScreen Co-op.
+- Added support for multi-screen arena challenges.
 
 #### (Rain World v1.5)
 v0.3:

@@ -1,6 +1,8 @@
 SourceCode/bin
 SourceCode/obj
+SBCameraScroll/levels
 SBCameraScroll/world
+levels
 world
 
 SBCameraScroll/plugins/SBCameraScroll.dll
