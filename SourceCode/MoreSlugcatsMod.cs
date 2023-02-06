@@ -1,6 +1,7 @@
 using System;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
+using RWCustom;
 using UnityEngine;
 
 namespace SBCameraScroll
@@ -14,7 +15,7 @@ namespace SBCameraScroll
             On.MoreSlugcats.BlizzardGraphics.Update += BlizzardGraphics_Update;
 
             // On.MoreSlugcats.SnowSource.CheckVisibility += SnowSource_CheckVisibility;
-            // On.MoreSlugcats.SnowSource.PackSnowData += SnowSource_PackSnowData;
+            On.MoreSlugcats.SnowSource.PackSnowData += SnowSource_PackSnowData;
             On.MoreSlugcats.SnowSource.Update += SnowSource_Update;
 
             // On.MoreSlugcats.Snow.DrawSprites += Snow_DrawSprites;
@@ -218,48 +219,77 @@ namespace SBCameraScroll
         // private static int SnowSource_CheckVisibility(On.MoreSlugcats.SnowSource.orig_CheckVisibility orig, MoreSlugcats.SnowSource snowSource, int cameraIndex)
         // {
         //     // add check if room is blacklisted
-        //     Vector2 cameraPosition = snowSource.room.game.cameras[0].pos;
-        //     if (snowSource.pos.x > cameraPosition.x - snowSource.rad && snowSource.pos.x < cameraPosition.x + snowSource.rad + 1400f && snowSource.pos.y > cameraPosition.y - snowSource.rad && snowSource.pos.y < cameraPosition.y + snowSource.rad + 800f)
+        //     RoomCamera roomCamera = snowSource.room.game.cameras[0];
+        //     if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode)
         //     {
-        //         return 1;
+        //         return orig(snowSource, cameraIndex);
         //     }
+
+        //     if (snowSource.pos.x > roomCamera.pos.x - snowSource.rad && snowSource.pos.x < roomCamera.pos.x + snowSource.rad + 1400f && snowSource.pos.y > roomCamera.pos.y - snowSource.rad && snowSource.pos.y < roomCamera.pos.y + snowSource.rad + 800f) return 1;
         //     return 0;
         // }
 
-        // private static Vector4[] SnowSource_PackSnowData(On.MoreSlugcats.SnowSource.orig_PackSnowData orig, MoreSlugcats.SnowSource snowSource)
-        // {
-        //     // maybe use fixed anchor instead of roomCamera.pos
-        //     // and use the whole room instead of 1400x800; TODO?
-        //     if (snowSource.room == null) return orig(snowSource);
+        private static Vector4[] SnowSource_PackSnowData(On.MoreSlugcats.SnowSource.orig_PackSnowData orig, MoreSlugcats.SnowSource snowSource)
+        {
+            // maybe use fixed anchor instead of roomCamera.pos
+            // and use the whole room instead of 1400x800; TODO?
+            if (snowSource.room == null) return orig(snowSource);
 
-        //     RoomCamera roomCamera = snowSource.room.game.cameras[0];
-        //     if (roomCamera.GetAttachedFields().isRoomBlacklisted) return orig(snowSource);
-        //     if (roomCamera.voidSeaMode) return orig(snowSource);
+            RoomCamera roomCamera = snowSource.room.game.cameras[0];
+            if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode) return orig(snowSource);
 
-        //     // what does this exactly do?
-        //     // generating red green values out of one float?
-        //     // simply a better storage thing?
-        //     Vector2 xRedGreen = Custom.EncodeFloatRG((snowSource.pos.x - roomCamera.pos.x) / 1400f * 0.3f + 0.3f);
-        //     Vector2 yRedGreen = Custom.EncodeFloatRG((snowSource.pos.y - roomCamera.pos.y) / 800f * 0.3f + 0.3f);
-        //     Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / 1600f);
+            // what does this exactly do?
+            // generating red green values out of one float?
+            // simply a better storage thing?
+            // Vector2 xRedGreen = Custom.EncodeFloatRG((snowSource.pos.x - roomCamera.pos.x) / 1400f * 0.3f + 0.3f);
+            // Vector2 yRedGreen = Custom.EncodeFloatRG((snowSource.pos.y - roomCamera.pos.y) / 800f * 0.3f + 0.3f);
+            // Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / 1600f);
 
-        //     Vector4[] array = new Vector4[3];
-        //     array[0] = new Vector4(xRedGreen.x, xRedGreen.y, yRedGreen.x, yRedGreen.y);
-        //     array[1] = new Vector4(rRedGreen.x, rRedGreen.y, snowSource.intensity, snowSource.noisiness);
-        //     array[2] = new Vector4(0f, 0f, 0f, (int)snowSource.shape / 5f);
-        //     return array;
-        // }
+            // Vector2 xRedGreen = Custom.EncodeFloatRG((snowSource.pos.x - roomCamera.pos.x) / roomCamera.levelTexture.width * 0.3f + 0.3f);
+            // Vector2 yRedGreen = Custom.EncodeFloatRG((snowSource.pos.y - roomCamera.pos.y) / roomCamera.levelTexture.height * 0.3f + 0.3f);
+            // Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / (2f * roomCamera.levelTexture.height));
+
+            // prevent the texture scrolling with the camera;
+            // instead have fixed positions;
+            // how does rad need to change?;
+            // leaving it at snowSource.rad/1600f creates too much snow;
+            Vector2 xRedGreen = Custom.EncodeFloatRG(snowSource.pos.x / roomCamera.levelTexture.width * 0.3f + 0.3f);
+            Vector2 yRedGreen = Custom.EncodeFloatRG(snowSource.pos.y / roomCamera.levelTexture.height * 0.3f + 0.3f);
+            // Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / 1600f);
+            // Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / (2f * roomCamera.levelTexture.height));
+            // Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / (roomCamera.levelTexture.width + 200f));
+            Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / (1600f * 0.5f * (roomCamera.levelTexture.width / 1400f + roomCamera.levelTexture.height / 800f)));
+            // Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / (1400f + 200f * 0.5f * (roomCamera.levelTexture.width / 1400f + roomCamera.levelTexture.height / 800f)));
+            // Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / (1600f * snowSource.room.cameraPositions.Count()));
+
+            // Vector2 xRedGreen = Custom.EncodeFloatRG(snowSource.pos.x / 1400f * 0.3f + 0.3f);
+            // Vector2 yRedGreen = Custom.EncodeFloatRG(snowSource.pos.y / 800f * 0.3f + 0.3f);
+            // Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / 1600f);
+
+            Vector4[] array = new Vector4[3];
+            array[0] = new Vector4(xRedGreen.x, xRedGreen.y, yRedGreen.x, yRedGreen.y);
+            array[1] = new Vector4(rRedGreen.x, rRedGreen.y, snowSource.intensity, snowSource.noisiness);
+            array[2] = new Vector4(0f, 0f, 0f, (float)snowSource.shape / 5f);
+            return array;
+        }
 
         private static void SnowSource_Update(On.MoreSlugcats.SnowSource.orig_Update orig, MoreSlugcats.SnowSource snowSource, bool eu)
         {
             orig(snowSource, eu);
 
             // snowChange updates the overlay texture for fallen snow;
-            // skip that for now;
-            // jumps too much;
             if (snowSource.room?.game.cameras[0] is not RoomCamera roomCamera) return;
             if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode) return;
-            snowSource.room.game.cameras[0].snowChange = false;
+
+            // visibility equal to one means that it is used when the snow light is updated in roomCamera;
+            // there doesn't seem to be downside to always setting it to one;
+            // snowSource.visibility = roomCamera.CheckVisibility(snowSource);
+            // snowSource.visibility = roomCamera.PositionVisibleInNextScreen(snowSource.pos, 100f, true) ? 1 : 0;
+            snowSource.visibility = 1;
+
+            // this is too performance intensive;
+            // changing visibility seems to be enough anyways;
+            // roomCamera.snowChange = true;
         }
     }
 }

@@ -104,6 +104,13 @@ namespace SBCameraScroll
             }
         }
 
+        // public static int CheckVisibility(this RoomCamera roomCamera, MoreSlugcats.SnowSource snowSource)
+        // {
+        //     if (roomCamera.PositionVisibleInNextScreen(snowSource.pos, 100f, true)) return 1;
+        //     // if (snowSource.pos.x > roomCamera.pos.x - snowSource.rad && snowSource.pos.x < roomCamera.pos.x + snowSource.rad + 1400f && snowSource.pos.y > roomCamera.pos.y - snowSource.rad && snowSource.pos.y < roomCamera.pos.y + snowSource.rad + 800f) return 1;
+        //     return 0;
+        // }
+
         public static void ResetCameraPosition(RoomCamera roomCamera)
         {
             AttachedFields attachedFields = roomCamera.GetAttachedFields();
@@ -745,6 +752,17 @@ namespace SBCameraScroll
                 roomCamera.levelGraphic.height = roomCamera.levelTexture.height;
             }
 
+            // doesn't help;
+            // also seems to kill performance;
+            // if (roomCamera.room != null && roomCamera.room.snow && (roomCamera.SnowTexture.width != roomCamera.levelTexture.width || roomCamera.SnowTexture.height != roomCamera.levelTexture.height))
+            // {
+            //     roomCamera.SnowTexture = new(roomCamera.levelTexture.width, roomCamera.levelTexture.height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear)
+            //     {
+            //         filterMode = FilterMode.Point
+            //     };
+            //     Shader.SetGlobalTexture("_SnowTex", roomCamera.SnowTexture);
+            // }
+
             if (roomCamera.backgroundGraphic.width != roomCamera.backgroundTexture.width || roomCamera.backgroundGraphic.height != roomCamera.backgroundTexture.height)
             {
                 roomCamera.backgroundGraphic.width = roomCamera.backgroundTexture.width;
@@ -781,7 +799,14 @@ namespace SBCameraScroll
             {
                 return orig(roomCamera, camPos, testPos);
             }
-            return testPos.x > roomCamera.pos.x - 380f && testPos.x < roomCamera.pos.x + 380f + 1400f && testPos.y > roomCamera.pos.y - 20f && testPos.y < roomCamera.pos.y + 20f + 800f;
+
+            // snow can be fall down into screens that should be outside of the visibility range;
+            // changing this back to vanilla + roomCamera.pos didn't help with the snow;
+            // but for consistency it might be better to leave it as is;
+            return testPos.x > roomCamera.pos.x - 188f && testPos.x < roomCamera.pos.x + 188f + 1024f && testPos.y > roomCamera.pos.y - 18f && testPos.y < roomCamera.pos.y + 18f + 768f;
+            // buffer: 200f
+            // return testPos.x > roomCamera.pos.x - 200f - 188f && testPos.x < roomCamera.pos.x + 200f + 188f + 1024f && testPos.y > roomCamera.pos.y - 200f - 18f && testPos.y < roomCamera.pos.y + 200f + 18f + 768f;
+            // return testPos.x > roomCamera.pos.x - 380f && testPos.x < roomCamera.pos.x + 380f + 1400f && testPos.y > roomCamera.pos.y - 20f && testPos.y < roomCamera.pos.y + 20f + 800f;
         }
 
         // looking at the source code this seems to be only used with currentCameraPosition at this point;
@@ -792,7 +817,9 @@ namespace SBCameraScroll
             {
                 return orig(roomCamera, camPos, testPos);
             }
-            return testPos.x > roomCamera.pos.x - 380f && testPos.x < roomCamera.pos.x + 380f + 1400f && testPos.y > roomCamera.pos.y - 20f && testPos.y < roomCamera.pos.y + 20f + 800f;
+            return testPos.x > roomCamera.pos.x - 188f && testPos.x < roomCamera.pos.x + 188f + roomCamera.game.rainWorld.options.ScreenSize.x && testPos.y > roomCamera.pos.y - 18f && testPos.y < roomCamera.pos.y + 18f + 768f;
+            // return testPos.x > roomCamera.pos.x - 200f - 188f && testPos.x < roomCamera.pos.x + 200f + 188f + roomCamera.game.rainWorld.options.ScreenSize.x && testPos.y > roomCamera.pos.y - 200f - 18f && testPos.y < roomCamera.pos.y + 200f + 18f + 768f;
+            // return testPos.x > roomCamera.pos.x - 380f && testPos.x < roomCamera.pos.x + 380f + 1400f && testPos.y > roomCamera.pos.y - 20f && testPos.y < roomCamera.pos.y + 20f + 800f;
         }
 
         // only called when moving camera positions inside the same room // if the ID changed then do a smooth transition instead // the logic for that is done in UpdateCameraPosition()
@@ -845,7 +872,9 @@ namespace SBCameraScroll
             {
                 return orig(roomCamera, testPos, margin, widescreen);
             }
-            return testPos.x > roomCamera.pos.x - 380f - margin && testPos.x < roomCamera.pos.x + 380f + 1400f + margin && testPos.y > roomCamera.pos.y - 20f - margin && testPos.y < roomCamera.pos.y + 20f + 800f + margin;
+            return testPos.x > roomCamera.pos.x - 188f - margin - (widescreen ? 190f : 0f) && testPos.x < roomCamera.pos.x + 188f + (ModManager.MMF ? roomCamera.game.rainWorld.options.ScreenSize.x : 1024f) + margin + (widescreen ? 190f : 0f) && testPos.y > roomCamera.pos.y - 18f - margin && testPos.y < roomCamera.pos.y + 18f + 768f + margin;
+            // return testPos.x > roomCamera.pos.x - 200f - 188f - margin - (widescreen ? 190f : 0f) && testPos.x < roomCamera.pos.x + 200f + 188f + (ModManager.MMF ? roomCamera.game.rainWorld.options.ScreenSize.x : 1024f) + margin + (widescreen ? 190f : 0f) && testPos.y > roomCamera.pos.y - 200f - 18f - margin && testPos.y < roomCamera.pos.y + 200f + 18f + 768f + margin;
+            // return testPos.x > roomCamera.pos.x - 380f - margin && testPos.x < roomCamera.pos.x + 380f + 1400f + margin && testPos.y > roomCamera.pos.y - 20f - margin && testPos.y < roomCamera.pos.y + 20f + 800f + margin;
         }
 
         private static bool RoomCamera_PositionVisibleInNextScreen(On.RoomCamera.orig_PositionVisibleInNextScreen orig, RoomCamera roomCamera, Vector2 testPos, float margin, bool widescreen)
@@ -854,7 +883,11 @@ namespace SBCameraScroll
             {
                 return orig(roomCamera, testPos, margin, widescreen);
             }
-            return testPos.x > roomCamera.pos.x - 380f - 1400f - margin && testPos.x < roomCamera.pos.x + 380f + 2800f + margin && testPos.y > roomCamera.pos.y - 20f - 800f - margin && testPos.y < roomCamera.pos.y + 20f + 1600f + margin;
+
+            float screenSizeX = ModManager.MMF ? roomCamera.game.rainWorld.options.ScreenSize.x : 1024f;
+            return testPos.x > roomCamera.pos.x - screenSizeX - 188f - margin - (widescreen ? 190f : 0f) && testPos.x < roomCamera.pos.x + 2f * screenSizeX + 188f + margin + (widescreen ? 190f : 0f) && testPos.y > roomCamera.pos.y - 768f - 18f - margin && testPos.y < roomCamera.pos.y + 2f * 768f + 18f + margin;
+            // return testPos.x > roomCamera.pos.x - (ModManager.MMF ? roomCamera.game.rainWorld.options.ScreenSize.x : 1024f) - 200f - 188f - margin - (widescreen ? 190f : 0f) && testPos.x < roomCamera.pos.x + 2f * (ModManager.MMF ? roomCamera.game.rainWorld.options.ScreenSize.x : 1024f) + 200f + 188f + margin + (widescreen ? 190f : 0f) && testPos.y > roomCamera.pos.y - 768f - 200f - 18f - margin && testPos.y < roomCamera.pos.y + 2f * 768f + 200f + 18f + margin;
+            // return testPos.x > roomCamera.pos.x - 380f - 1400f - margin && testPos.x < roomCamera.pos.x + 380f + 2800f + margin && testPos.y > roomCamera.pos.y - 20f - 800f - margin && testPos.y < roomCamera.pos.y + 20f + 1600f + margin;
         }
 
         private static void RoomCamera_PreLoadTexture(On.RoomCamera.orig_PreLoadTexture orig, RoomCamera roomCamera, Room room, int camPos)
@@ -874,10 +907,22 @@ namespace SBCameraScroll
             }
 
             Rect otherRect = default;
-            otherRect.xMin = roomCamera.pos.x - 380f - margin;
-            otherRect.xMax = roomCamera.pos.x + 380f + 1400f + margin;
-            otherRect.yMin = roomCamera.pos.y - 20f - margin;
-            otherRect.yMax = roomCamera.pos.y + 20f + 800f + margin;
+
+            otherRect.xMin = roomCamera.pos.x - 188f - margin - (widescreen ? 190f : 0f);
+            otherRect.xMax = roomCamera.pos.x + 188f + (ModManager.MMF ? roomCamera.game.rainWorld.options.ScreenSize.x : 1024f) + margin + (widescreen ? 190f : 0f);
+            otherRect.yMin = roomCamera.pos.y - 18f - margin;
+            otherRect.yMax = roomCamera.pos.y + 18f + 768f + margin;
+
+            // otherRect.xMin = roomCamera.pos.x - 200f - 188f - margin - (widescreen ? 190f : 0f);
+            // otherRect.xMax = roomCamera.pos.x + 200f + 188f + (ModManager.MMF ? roomCamera.game.rainWorld.options.ScreenSize.x : 1024f) + margin + (widescreen ? 190f : 0f);
+            // otherRect.yMin = roomCamera.pos.y - 200f - 18f - margin;
+            // otherRect.yMax = roomCamera.pos.y + 200f + 18f + 768f + margin;
+
+            // otherRect.xMin = roomCamera.pos.x - 380f - margin;
+            // otherRect.xMax = roomCamera.pos.x + 380f + 1400f + margin;
+            // otherRect.yMin = roomCamera.pos.y - 20f - margin;
+            // otherRect.yMax = roomCamera.pos.y + 20f + 800f + margin;
+
             return testRect.CheckIntersect(otherRect);
         }
 

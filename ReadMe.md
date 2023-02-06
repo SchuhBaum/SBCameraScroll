@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 2.2.7
+###### Version: 2.2.8
 This is a mod for Rain World v1.9.
 
 ### Description
@@ -15,7 +15,7 @@ If rooms textures are changed then you need to generate these files again. This 
 
 ### Installation
 0. Update Rain World to version 1.9 if needed.
-1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.2.7).
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.2.8).
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
@@ -76,7 +76,7 @@ v2.2.0:
 - Blacklisted the room 'SB_E05SAINT'.
 - Removed the room 'GW_E02_PAST' from blacklisted rooms. The Artificer dream sequence is working for me. This room is also used as a regular room.
 
-v2.2.7:
+v2.2.8:
 - Restructured code.
 - Added support for the Safari mode.
 - Simplified implementation of fade palettes.
@@ -84,6 +84,7 @@ v2.2.7:
 - Added support for SplitScreen Co-op.
 - Added support for multi-screen arena challenges.
 - Fixed a bug where you couldn't access the options menu.
+- Re-enabled and improving snow showing on room textures.
 
 #### (Rain World v1.5)
 v0.3:
