@@ -753,17 +753,6 @@ namespace SBCameraScroll
                 roomCamera.levelGraphic.height = roomCamera.levelTexture.height;
             }
 
-            // doesn't help;
-            // also seems to kill performance;
-            // if (roomCamera.room != null && roomCamera.room.snow && (roomCamera.SnowTexture.width != roomCamera.levelTexture.width || roomCamera.SnowTexture.height != roomCamera.levelTexture.height))
-            // {
-            //     roomCamera.SnowTexture = new(roomCamera.levelTexture.width, roomCamera.levelTexture.height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear)
-            //     {
-            //         filterMode = FilterMode.Point
-            //     };
-            //     Shader.SetGlobalTexture("_SnowTex", roomCamera.SnowTexture);
-            // }
-
             if (roomCamera.backgroundGraphic.width != roomCamera.backgroundTexture.width || roomCamera.backgroundGraphic.height != roomCamera.backgroundTexture.height)
             {
                 roomCamera.backgroundGraphic.width = roomCamera.backgroundTexture.width;
@@ -771,9 +760,10 @@ namespace SBCameraScroll
             }
 
             // if I blacklist too early then the camera might jump in the current room
-            if (roomCamera.room == null || blacklistedRooms.Contains(roomCamera.room.abstractRoom.name))
+            string roomName = roomCamera.room.abstractRoom.name;
+            if (roomCamera.room == null || blacklistedRooms.Contains(roomName) || WorldLoader.FindRoomFile(roomName, false, "_0.png") == null && roomCamera.room.cameraPositions.Length > 1)
             {
-                Debug.Log("SBCameraScroll: The current room is blacklisted.");
+                Debug.Log("SBCameraScroll: The room " + roomName + " is blacklisted.");
                 roomCamera.GetAttachedFields().isRoomBlacklisted = true;
             }
             // blacklist instead of checking if you can scroll // they do the same thing anyways

@@ -14,7 +14,7 @@ namespace SBCameraScroll
 
         public static readonly int maximumTextureWidth = 16384;
         public static readonly int maximumTextureHeight = 16384;
-        public static bool CopyTextureSupport => SystemInfo.copyTextureSupport >= UnityEngine.Rendering.CopyTextureSupport.TextureToRT;
+        public static bool HasCopyTextureSupport => SystemInfo.copyTextureSupport >= UnityEngine.Rendering.CopyTextureSupport.TextureToRT;
 
         //
         // variables
@@ -25,7 +25,7 @@ namespace SBCameraScroll
 
         public static readonly Dictionary<string, Vector2> textureOffsetModifier = new();
 
-        public static RenderTexture mergedRenderTexture = new(1, 1, 24, RenderTextureFormat.ARGB32);
+        public static RenderTexture? mergedRenderTexture = null;
         public static readonly Texture2D mergedTexture = new(1, 1, TextureFormat.RGB24, false);
         public static readonly Texture2D cameraTexture = new(1, 1, TextureFormat.RGB24, false);
 
@@ -65,7 +65,7 @@ namespace SBCameraScroll
                 // how do I even do that?;
                 // Buffer.BlockCopy(bytes, 3 * ((cutoffX + 1) * (cutoffY + 1) - 1), mergedTexture.GetRawTextureData(), 3 * ((Mathf.Max(x, 0) + 1) * (Mathf.Max(y, 0) + 1) - 1), 3 * ((width - cutoffX) * (height - cutoffY) - 1));
 
-                if (CopyTextureSupport)
+                if (HasCopyTextureSupport && mergedRenderTexture != null)
                 {
                     Graphics.CopyTexture(cameraTexture, 0, 0, cutoffX, cutoffY, width, height, mergedRenderTexture, 0, 0, Mathf.Max(x, 0), Mathf.Max(y, 0));
                 }
@@ -109,10 +109,10 @@ namespace SBCameraScroll
             mergedTexture.Resize(1, 1);
             cameraTexture.Resize(1, 1);
 
-            if (CopyTextureSupport)
+            if (mergedRenderTexture != null)
             {
                 mergedRenderTexture.Release();
-                mergedRenderTexture = new(1, 1, 24, RenderTextureFormat.ARGB32);
+                mergedRenderTexture = null;
             }
 
             Resources.UnloadUnusedAssets();
@@ -260,7 +260,13 @@ namespace SBCameraScroll
                     return;
                 }
 
-                if (CopyTextureSupport)
+                if (mergedRenderTexture != null)
+                {
+                    mergedRenderTexture.Release();
+                    mergedRenderTexture = null;
+                }
+
+                if (HasCopyTextureSupport)
                 {
                     // uses GPU instead of CPU;
                     // I can't really tell the difference in speed;
@@ -305,7 +311,7 @@ namespace SBCameraScroll
                     }
                 }
 
-                if (CopyTextureSupport)
+                if (mergedRenderTexture != null)
                 {
                     mergedTexture.ReadPixels(new Rect(0.0f, 0.0f, mergedRenderTexture.width, mergedRenderTexture.height), 0, 0);
                 }

@@ -258,7 +258,7 @@ namespace SBCameraScroll
             // Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / (roomCamera.levelTexture.width + 200f));
             Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / (1600f * 0.5f * (roomCamera.levelTexture.width / 1400f + roomCamera.levelTexture.height / 800f)));
             // Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / (1400f + 200f * 0.5f * (roomCamera.levelTexture.width / 1400f + roomCamera.levelTexture.height / 800f)));
-            // Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / (1600f * snowSource.room.cameraPositions.Count()));
+            // Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / (1600f * snowSource.room.cameraPositions.Length));
 
             // Vector2 xRedGreen = Custom.EncodeFloatRG(snowSource.pos.x / 1400f * 0.3f + 0.3f);
             // Vector2 yRedGreen = Custom.EncodeFloatRG(snowSource.pos.y / 800f * 0.3f + 0.3f);
