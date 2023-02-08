@@ -759,23 +759,28 @@ namespace SBCameraScroll
                 roomCamera.backgroundGraphic.height = roomCamera.backgroundTexture.height;
             }
 
+            if (roomCamera.room == null)
+            {
+                Debug.Log("SBCameraScroll: The current room is blacklisted.");
+                roomCamera.GetAttachedFields().isRoomBlacklisted = true;
+                ResetCameraPosition(roomCamera); // uses currentCameraPosition and isRoomBlacklisted
+                return;
+            }
+
             // if I blacklist too early then the camera might jump in the current room
             string roomName = roomCamera.room.abstractRoom.name;
-            if (roomCamera.room == null || blacklistedRooms.Contains(roomName) || WorldLoader.FindRoomFile(roomName, false, "_0.png") == null && roomCamera.room.cameraPositions.Length > 1)
+            if (blacklistedRooms.Contains(roomName) || WorldLoader.FindRoomFile(roomName, false, "_0.png") == null && roomCamera.room.cameraPositions.Length > 1)
             {
                 Debug.Log("SBCameraScroll: The room " + roomName + " is blacklisted.");
                 roomCamera.GetAttachedFields().isRoomBlacklisted = true;
+                ResetCameraPosition(roomCamera);
+                return;
             }
-            // blacklist instead of checking if you can scroll // they do the same thing anyways
-            else if (!RoomMod.CanScrollCamera(roomCamera.room)) // roomCamera.game.IsArenaSession ||
-            {
-                roomCamera.GetAttachedFields().isRoomBlacklisted = true;
-            }
-            else
-            {
-                roomCamera.GetAttachedFields().isRoomBlacklisted = false;
-            }
-            ResetCameraPosition(roomCamera); // uses currentCameraPosition and isRoomBlacklisted
+
+            // blacklist instead of checking if you can scroll;
+            // they have the same purpose anyways;
+            roomCamera.GetAttachedFields().isRoomBlacklisted = !RoomMod.CanScrollCamera(roomCamera.room);
+            ResetCameraPosition(roomCamera);
         }
 
         private static void RoomCamera_ctor(On.RoomCamera.orig_ctor orig, RoomCamera roomCamera, RainWorldGame game, int cameraNumber)
