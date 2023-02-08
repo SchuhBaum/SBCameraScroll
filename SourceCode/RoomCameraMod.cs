@@ -273,7 +273,8 @@ namespace SBCameraScroll
 
             // reverse cameraOffset when at border;
             // make a little buffer such that innerCameraBoxX_ stays zero next frame;
-            if (atBorderDifferenceX != 0.0f)
+            // account for float unprecision;
+            if (atBorderDifferenceX > 0.1f)
             {
                 isAtBorderX = true;
                 if (atBorderDifferenceX > innerCameraBoxX + 10f)
@@ -286,7 +287,7 @@ namespace SBCameraScroll
                 }
             }
 
-            if (atBorderDifferenceY != 0.0f)
+            if (atBorderDifferenceY > 0.1f)
             {
                 isAtBorderY = true;
                 if (atBorderDifferenceY > innerCameraBoxY + 10f)

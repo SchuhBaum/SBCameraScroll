@@ -1,8 +1,12 @@
 SourceCode/bin
 SourceCode/obj
+
 SBCameraScroll/levels
+SBCameraScroll/shaders
 SBCameraScroll/world
+
 levels
+shaders
 world
 
 SBCameraScroll/plugins/SBCameraScroll.dll

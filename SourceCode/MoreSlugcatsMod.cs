@@ -71,7 +71,7 @@ namespace SBCameraScroll
             // if (cursor.TryGotoNext(instruction => instruction.MatchLdfld<RoomCamera>("currentCameraPosition")))
             // {
             //     Debug.Log("SBCameraScroll: IL_BlizzardGraphics_DrawSprites_1: Index " + cursor.Index); // 23
-            //                                                                                            // cursor.Remove(); // remove currentCameraPosition //TODO
+            //                                                                                            // cursor.Remove(); // remove currentCameraPosition
             //     cursor.Goto(cursor.Index - 4);
             //     cursor.RemoveRange(6); // remove room.cameraPositions[this.rCam.currentCameraPosition]
 
@@ -107,7 +107,7 @@ namespace SBCameraScroll
 
             //        // camera scroll case 
             //        // extend blizzard to the whole room
-            //        //    return new Vector2(roomCamera.room.PixelWidth, roomCamera.room.PixelHeight); //TODO
+            //        //    return new Vector2(roomCamera.room.PixelWidth, roomCamera.room.PixelHeight);
             //        return new Vector2(roomCamera.levelTexture.width, roomCamera.levelTexture.height);
             //    });
             // }
@@ -231,8 +231,6 @@ namespace SBCameraScroll
 
         private static Vector4[] SnowSource_PackSnowData(On.MoreSlugcats.SnowSource.orig_PackSnowData orig, MoreSlugcats.SnowSource snowSource)
         {
-            // maybe use fixed anchor instead of roomCamera.pos
-            // and use the whole room instead of 1400x800; TODO?
             if (snowSource.room == null) return orig(snowSource);
 
             RoomCamera roomCamera = snowSource.room.game.cameras[0];
@@ -275,11 +273,27 @@ namespace SBCameraScroll
 
         private static void SnowSource_Update(On.MoreSlugcats.SnowSource.orig_Update orig, MoreSlugcats.SnowSource snowSource, bool eu)
         {
-            orig(snowSource, eu);
-
             // snowChange updates the overlay texture for fallen snow;
-            if (snowSource.room?.game.cameras[0] is not RoomCamera roomCamera) return;
-            if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode) return;
+            if (snowSource.room?.game.cameras[0] is not RoomCamera roomCamera)
+            {
+                orig(snowSource, eu);
+                return;
+            }
+
+            if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode)
+            {
+                orig(snowSource, eu);
+                return;
+            }
+
+            // when entering the room;
+            if (roomCamera.snowChange)
+            {
+                snowSource.visibility = 1;
+                return;
+            }
+
+            orig(snowSource, eu);
 
             // visibility equal to one means that it is used when the snow light is updated in roomCamera;
             // there doesn't seem to be downside to always setting it to one;
@@ -290,6 +304,9 @@ namespace SBCameraScroll
             // this is too performance intensive;
             // changing visibility seems to be enough anyways;
             // roomCamera.snowChange = true;
+
+            // don't update again after the room is loaded;
+            roomCamera.snowChange = false;
         }
     }
 }

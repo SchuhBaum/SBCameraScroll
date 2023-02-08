@@ -43,7 +43,7 @@ namespace SBCameraScroll
             // at this point I think that these cloud background overlay(?) objects are too small;
             // scrolling them leads to problems one way or another;
             // I probably need to change the cloud shader instead?;
-            // spriteLeaser.sprites[1].x -= closeCloud.DrawPos(cameraPosition, roomCamera.hDisplace).x;
+            // spriteLeaser.sprites[1].x += closeCloud.DrawPos(cameraPosition, roomCamera.hDisplace).x;
         }
 
         private static void DistantCloud_DrawSprites(On.AboveCloudsView.DistantCloud.orig_DrawSprites orig, AboveCloudsView.DistantCloud distantCloud, RoomCamera.SpriteLeaser spriteLeaser, RoomCamera roomCamera, float timeStacker, Vector2 cameraPosition)

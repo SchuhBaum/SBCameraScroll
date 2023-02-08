@@ -14,6 +14,7 @@ namespace SBCameraScroll
 
         public static readonly int maximumTextureWidth = 16384;
         public static readonly int maximumTextureHeight = 16384;
+        public static bool CopyTextureSupport => SystemInfo.copyTextureSupport >= UnityEngine.Rendering.CopyTextureSupport.TextureToRT;
 
         //
         // variables
@@ -24,6 +25,7 @@ namespace SBCameraScroll
 
         public static readonly Dictionary<string, Vector2> textureOffsetModifier = new();
 
+        public static RenderTexture mergedRenderTexture = new(1, 1, 24, RenderTextureFormat.ARGB32);
         public static readonly Texture2D mergedTexture = new(1, 1, TextureFormat.RGB24, false);
         public static readonly Texture2D cameraTexture = new(1, 1, TextureFormat.RGB24, false);
 
@@ -41,10 +43,10 @@ namespace SBCameraScroll
         // public functions //
         // ---------------- //
 
-        public static void AddCameraTexture(int cameraIndex, string filePath, in Vector2[] cameraPositions, in Vector2 baseTextureOffset)
+        public static void AddCameraTexture(int cameraIndex, string roomFilePath, in Vector2[] cameraPositions, in Vector2 baseTextureOffset)
         {
             Vector2 _textureOffset = cameraPositions[cameraIndex] - baseTextureOffset; // already contains the offsetModifier
-            cameraTexture.LoadImage(File.ReadAllBytes(filePath)); // resizes if needed
+            cameraTexture.LoadImage(File.ReadAllBytes(roomFilePath)); // resizes if needed // calls Apply() as well
 
             int x = (int)_textureOffset.x;
             int y = (int)_textureOffset.y;
@@ -62,7 +64,15 @@ namespace SBCameraScroll
                 // I would need to de-compress the source first;
                 // how do I even do that?;
                 // Buffer.BlockCopy(bytes, 3 * ((cutoffX + 1) * (cutoffY + 1) - 1), mergedTexture.GetRawTextureData(), 3 * ((Mathf.Max(x, 0) + 1) * (Mathf.Max(y, 0) + 1) - 1), 3 * ((width - cutoffX) * (height - cutoffY) - 1));
-                mergedTexture.SetPixels(Mathf.Max(x, 0), Mathf.Max(y, 0), width, height, cameraTexture.GetPixels(cutoffX, cutoffY, width, height));
+
+                if (CopyTextureSupport)
+                {
+                    Graphics.CopyTexture(cameraTexture, 0, 0, cutoffX, cutoffY, width, height, mergedRenderTexture, 0, 0, Mathf.Max(x, 0), Mathf.Max(y, 0));
+                }
+                else
+                {
+                    mergedTexture.SetPixels(Mathf.Max(x, 0), Mathf.Max(y, 0), width, height, cameraTexture.GetPixels(cutoffX, cutoffY, width, height));
+                }
             }
         }
 
@@ -92,6 +102,23 @@ namespace SBCameraScroll
                 }
                 cameraPositions = cameraPositions_.ToArray();
             }
+        }
+
+        public static void CleanUp()
+        {
+            mergedTexture.Resize(1, 1);
+            cameraTexture.Resize(1, 1);
+
+            if (CopyTextureSupport)
+            {
+                mergedRenderTexture.Release();
+                mergedRenderTexture = new(1, 1, 24, RenderTextureFormat.ARGB32);
+            }
+
+            Resources.UnloadUnusedAssets();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
         }
 
         public static void DestroyWormGrassInAbstractRoom(AbstractRoom abstractRoom)
@@ -171,11 +198,11 @@ namespace SBCameraScroll
                 relativeRoomsPath = GetRelativeRoomsPath(regionName);
             }
 
-            string filePath = MainMod.modDirectoryPath + relativeRoomsPath + roomName.ToLower() + "_0.png";
+            string mergedRoomFilePath = MainMod.modDirectoryPath + relativeRoomsPath + roomName.ToLower() + "_0.png";
 
             // check if custom regions already contains the merged room texture // was this needed? // hm..., I think it was
             // ignore empty merged texture files that were created but not written to
-            if (File.Exists(filePath) && new FileInfo(filePath).Length > 0) return;
+            if (File.Exists(mergedRoomFilePath) && new FileInfo(mergedRoomFilePath).Length > 0) return;
 
             cameraPositions ??= LoadCameraPositions(roomName);
             if (cameraPositions == null)
@@ -229,45 +256,60 @@ namespace SBCameraScroll
                 {
                     Debug.Log("SBCameraScroll: Resize failed. Blacklist room " + roomName + ".");
                     RoomCameraMod.blacklistedRooms.Add(roomName);
-                    mergedTexture.Resize(1, 1);
-
-                    Resources.UnloadUnusedAssets();
-                    GC.Collect();
-                    GC.WaitForPendingFinalizers();
-                    GC.Collect();
+                    CleanUp();
                     return;
                 }
 
-                NativeArray<byte> colors = mergedTexture.GetRawTextureData<byte>();
-                for (int colorIndex = 0; colorIndex < colors.Length; ++colorIndex)
+                if (CopyTextureSupport)
                 {
-                    colors[colorIndex] = colorIndex % 3 == 0 ? (byte)1 : (byte)0; // non-transparent black (dark grey)
+                    // uses GPU instead of CPU;
+                    // I can't really tell the difference in speed;
+                    // but using this makes memory consumption during merging basically zero;
+                    mergedRenderTexture = new(maxWidth, maxHeight, 24, RenderTextureFormat.ARGB32);
+                    Graphics.SetRenderTarget(mergedRenderTexture); // sets RenderTexture.active
+
+                    if (mergedRenderTexture.width != maxWidth || mergedRenderTexture.height != maxHeight)
+                    {
+                        Debug.Log("SBCameraScroll: Resize failed. Blacklist room " + roomName + ".");
+                        RoomCameraMod.blacklistedRooms.Add(roomName);
+                        CleanUp();
+                        return;
+                    }
+
+                    // clears the active;
+                    // and fills it with non-transparent black (dark grey);
+                    GL.Clear(true, true, new Color(1f / 255f, 0.0f, 0.0f, 1f));
+                }
+                else
+                {
+                    NativeArray<byte> colors = mergedTexture.GetRawTextureData<byte>();
+                    for (int colorIndex = 0; colorIndex < colors.Length; ++colorIndex)
+                    {
+                        colors[colorIndex] = colorIndex % 3 == 0 ? (byte)1 : (byte)0; // non-transparent black (dark grey)
+                    }
                 }
 
                 for (int cameraIndex = 0; cameraIndex < cameraPositions.Length; ++cameraIndex)
                 {
-                    string filePath_ = WorldLoader.FindRoomFile(roomName, false, "_" + (cameraIndex + 1) + ".png");
-                    if (File.Exists(filePath_))
+                    string roomFilePath = WorldLoader.FindRoomFile(roomName, false, "_" + (cameraIndex + 1) + ".png");
+                    if (File.Exists(roomFilePath))
                     {
-                        AddCameraTexture(cameraIndex, filePath_, cameraPositions, baseTextureOffset); // changes cameraTexture and mergedTexture
+                        AddCameraTexture(cameraIndex, roomFilePath, cameraPositions, baseTextureOffset); // changes cameraTexture and mergedTexture
                     }
                     else
                     {
-                        Debug.Log("SBCameraScroll: Could not find or load texture with path " + filePath_ + ". Blacklist " + roomName + ".");
+                        Debug.Log("SBCameraScroll: Could not find or load texture with path " + roomFilePath + ". Blacklist " + roomName + ".");
                         RoomCameraMod.blacklistedRooms.Add(roomName);
-                        mergedTexture.Resize(1, 1);
-                        cameraTexture.Resize(1, 1);
-                        // cameraTexture.Apply();
-
-                        Resources.UnloadUnusedAssets();
-                        GC.Collect();
-                        GC.WaitForPendingFinalizers();
-                        GC.Collect();
+                        CleanUp();
                         return;
                     }
                 }
 
-                File.WriteAllBytes(filePath, mergedTexture.EncodeToPNG());
+                if (CopyTextureSupport)
+                {
+                    mergedTexture.ReadPixels(new Rect(0.0f, 0.0f, mergedRenderTexture.width, mergedRenderTexture.height), 0, 0);
+                }
+                File.WriteAllBytes(mergedRoomFilePath, mergedTexture.EncodeToPNG());
                 Debug.Log("SBCameraScroll: Merging complete.");
             }
             catch (Exception exception)
@@ -276,30 +318,31 @@ namespace SBCameraScroll
                 Debug.Log("SBCameraScroll: Encountered an exception. Blacklist " + roomName + ".");
                 RoomCameraMod.blacklistedRooms.Add(roomName);
             }
+            CleanUp();
 
-            mergedTexture.Resize(1, 1);
-            cameraTexture.Resize(1, 1);
+            // mergedTexture.Resize(1, 1);
+            // cameraTexture.Resize(1, 1);
 
-            // cameraTexture uses LoadImage() which calls Apply() to upload to the GPU;
-            // maybe this is better;
-            // doesn't seem to do much..; it's also the gpu not cpu;
-            // cameraTexture.Apply();
+            // // cameraTexture uses LoadImage() which calls Apply() to upload to the GPU;
+            // // maybe this is better;
+            // // doesn't seem to do much..; it's also the gpu not cpu;
+            // // cameraTexture.Apply();
 
-            // this seems to help sometimes; do the loaded images stay in memory otherwise?;
-            // there is still some sort of memory fragmentation(?) going on; maybe bc of the resizing;
-            // or maybe stuff just gets accumulated and you get an inital boost by releasing it;
-            Resources.UnloadUnusedAssets();
+            // // this seems to help sometimes; do the loaded images stay in memory otherwise?;
+            // // there is still some sort of memory fragmentation(?) going on; maybe bc of the resizing;
+            // // or maybe stuff just gets accumulated and you get an inital boost by releasing it;
+            // Resources.UnloadUnusedAssets();
 
-            // this seems to help more; this makes sense since you generate
-            // a lot of garbage;
-            // merging DW after starting rain world with GC cuts down memory by 500MB
-            // with GC: 1.5GB; without: ~2GB;
-            // 500MB are used by rain world when starting;
-            // (not counting stuff that get allocated when loading into the game);
-            // leaving <1.0GB or <1.5GB from merging 138 rooms, respectively;
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            GC.Collect();
+            // // this seems to help more; this makes sense since you generate
+            // // a lot of garbage;
+            // // merging DW after starting rain world with GC cuts down memory by 500MB
+            // // with GC: 1.5GB; without: ~2GB;
+            // // 500MB are used by rain world when starting;
+            // // (not counting stuff that get allocated when loading into the game);
+            // // leaving <1.0GB or <1.5GB from merging 138 rooms, respectively;
+            // GC.Collect();
+            // GC.WaitForPendingFinalizers();
+            // GC.Collect();
         }
 
         public static void UpdateTextureOffset(AbstractRoom abstractRoom, in Vector2[]? cameraPositions)
