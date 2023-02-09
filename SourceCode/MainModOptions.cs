@@ -176,7 +176,7 @@ namespace SBCameraScroll
             //-------------------//
 
             tabIndex++;
-            Tabs[tabIndex] = new OpTab(this, "Position 1");
+            Tabs[tabIndex] = new OpTab(this, "Position");
             InitializeMarginAndPos();
 
             // Title
@@ -205,51 +205,6 @@ namespace SBCameraScroll
             AddNewLine(2f);
 
             AddSlider(innerCameraBoxY_Position, (string)innerCameraBoxY_Position.info.Tags[0], "0 tiles", "35 tiles");
-            DrawSliders(ref Tabs[tabIndex]);
-
-            DrawBox(ref Tabs[tabIndex]);
-
-
-            tabIndex++;
-            Tabs[tabIndex] = new OpTab(this, "Position 2");
-            InitializeMarginAndPos();
-
-            // Title
-            AddNewLine();
-            AddTextLabel("SBCameraScroll Mod", bigText: true);
-            DrawTextLabels(ref Tabs[tabIndex]);
-
-            // Subtitle
-            AddNewLine(0.5f);
-            AddTextLabel("Version " + MainMod.version, FLabelAlignment.Left);
-            AddTextLabel("by " + MainMod.author, FLabelAlignment.Right);
-            DrawTextLabels(ref Tabs[tabIndex]);
-
-            // Content //
-            AddNewLine();
-            AddBox();
-
-            AddTextLabel("Position Type Camera (Experimental Features):", FLabelAlignment.Left);
-            DrawTextLabels(ref Tabs[tabIndex]);
-
-            AddNewLine();
-
-            AddCheckBox(zeroG_Position, (string)zeroG_Position.info.Tags[0]);
-            DrawCheckBoxes(ref Tabs[tabIndex]);
-
-            AddNewLine();
-
-            AddSlider(maximumCameraOffsetX_Position, (string)maximumCameraOffsetX_Position.info.Tags[0], "0 tiles", "35 tiles");
-            DrawSliders(ref Tabs[tabIndex]);
-
-            AddNewLine(2f);
-
-            AddSlider(maximumCameraOffsetY_Position, (string)maximumCameraOffsetY_Position.info.Tags[0], "0 tiles", "35 tiles");
-            DrawSliders(ref Tabs[tabIndex]);
-
-            AddNewLine(2f);
-
-            AddSlider(cameraOffsetSpeedMultiplier_Position, (string)cameraOffsetSpeedMultiplier_Position.info.Tags[0], "0.25", "5");
             DrawSliders(ref Tabs[tabIndex]);
 
             DrawBox(ref Tabs[tabIndex]);
@@ -288,6 +243,54 @@ namespace SBCameraScroll
             AddNewLine(2f);
 
             AddSlider(outerCameraBoxY_Vanilla, (string)outerCameraBoxY_Vanilla.info.Tags[0], "0 tiles", "35 tiles"); // default is 1 => 20f // I think 18f would be exactly vanilla
+            DrawSliders(ref Tabs[tabIndex]);
+
+            DrawBox(ref Tabs[tabIndex]);
+
+            //--------------//
+            // experimental //
+            //--------------//
+
+            tabIndex++;
+            Tabs[tabIndex] = new OpTab(this, "Experimental");
+            InitializeMarginAndPos();
+
+            // Title
+            AddNewLine();
+            AddTextLabel("SBCameraScroll Mod", bigText: true);
+            DrawTextLabels(ref Tabs[tabIndex]);
+
+            // Subtitle
+            AddNewLine(0.5f);
+            AddTextLabel("Version " + MainMod.version, FLabelAlignment.Left);
+            AddTextLabel("by " + MainMod.author, FLabelAlignment.Right);
+            DrawTextLabels(ref Tabs[tabIndex]);
+
+            // Content //
+            AddNewLine();
+            AddBox();
+
+            AddTextLabel("Position Type Camera:", FLabelAlignment.Left);
+            DrawTextLabels(ref Tabs[tabIndex]);
+
+            AddNewLine();
+
+            AddCheckBox(zeroG_Position, (string)zeroG_Position.info.Tags[0]);
+            DrawCheckBoxes(ref Tabs[tabIndex]);
+
+            AddNewLine();
+
+            AddSlider(maximumCameraOffsetX_Position, (string)maximumCameraOffsetX_Position.info.Tags[0], "0 tiles", "35 tiles");
+            DrawSliders(ref Tabs[tabIndex]);
+
+            AddNewLine(2f);
+
+            AddSlider(maximumCameraOffsetY_Position, (string)maximumCameraOffsetY_Position.info.Tags[0], "0 tiles", "35 tiles");
+            DrawSliders(ref Tabs[tabIndex]);
+
+            AddNewLine(2f);
+
+            AddSlider(cameraOffsetSpeedMultiplier_Position, (string)cameraOffsetSpeedMultiplier_Position.info.Tags[0], "0.25", "5");
             DrawSliders(ref Tabs[tabIndex]);
 
             DrawBox(ref Tabs[tabIndex]);

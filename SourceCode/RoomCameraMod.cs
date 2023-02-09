@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Expedition;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using RWCustom;
@@ -72,13 +73,21 @@ namespace SBCameraScroll
             On.RoomCamera.ScreenMovement += RoomCamera_ScreenMovement;
         }
 
-        // ---------------- //
-        // public functions //
-        // ---------------- //
+        //
+        // public
+        //
 
         public static void AddFadeTransition(RoomCamera roomCamera)
         {
-            if (roomCamera.room?.roomSettings.fadePalette == null) return;
+            if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode) return;
+
+            if (roomCamera.room is not Room room) return;
+            if (room.roomSettings.fadePalette == null) return;
+
+            // the day-night fade effect does not update paletteBlend in all cases;
+            // so this can otherwise reset it sometimes;
+            // priotize day-night over this;
+            if ((roomCamera.effect_dayNight > 0f && room.world.rainCycle.timer >= room.world.rainCycle.cycleLength) || (ModManager.Expedition && room.game.rainWorld.ExpeditionMode && ExpeditionGame.activeUnlocks.Contains("bur-blinded"))) return;
 
             // the fade is automatically applied in RoomCamera.Update();
             roomCamera.paletteBlend = Mathf.Lerp(roomCamera.paletteBlend, roomCamera.room.roomSettings.fadePalette.fades[roomCamera.currentCameraPosition], 0.01f);
@@ -499,9 +508,9 @@ namespace SBCameraScroll
             }
         }
 
-        // ---------------- //
-        // private function //
-        // ---------------- //
+        //
+        // private
+        //
 
         private static void IL_RoomCamera_DrawUpdate(ILContext context)
         {
@@ -664,7 +673,6 @@ namespace SBCameraScroll
                 Debug.Log("SBCameraScroll: IL_RoomCamera_Update_1: Index " + cursor.Index); // 400
                 cursor.EmitDelegate<Action<RoomCamera>>(roomCamera => // put before UpdateDayNightPalette()
                 {
-                    if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode) return;
                     AddFadeTransition(roomCamera);
                 });
                 cursor.Emit(OpCodes.Ldarg_0);

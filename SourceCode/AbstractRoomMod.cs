@@ -311,7 +311,7 @@ namespace SBCameraScroll
                     }
                 }
 
-                if (mergedRenderTexture != null)
+                if (HasCopyTextureSupport && mergedRenderTexture != null)
                 {
                     mergedTexture.ReadPixels(new Rect(0.0f, 0.0f, mergedRenderTexture.width, mergedRenderTexture.height), 0, 0);
                 }
