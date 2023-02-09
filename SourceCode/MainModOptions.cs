@@ -18,6 +18,7 @@ namespace SBCameraScroll
         public static Configurable<bool> fogFullScreenEffect = instance.config.Bind("fogFullScreenEffect", defaultValue: true, new ConfigurableInfo("When disabled, the full screen fog effect is removed. It depends on the camera position and can noticeably move with the screen.", null, "", "Fog Effect"));
         public static Configurable<bool> mergeWhileLoading = instance.config.Bind("mergeWhileLoading", defaultValue: true, new ConfigurableInfo("When enabled, the camera textures for each room are merged when the region gets loaded.\nWhen disabled, camera textures are merged for each room on demand. Merging happens only once and might take a while.", null, "", "Merge While Loading")); //Merging happens only once and the files are stored inside the folder \"Mods/SBCameraScroll/\".\nThis process can take a while. Merging all rooms in Deserted Wastelands took me around three minutes.
         public static Configurable<bool> otherFullScreenEffects = instance.config.Bind("otherFullScreenEffects", defaultValue: true, new ConfigurableInfo("When disabled, full screen effects (except fog) like bloom and melt are removed.", null, "", "Full Screen Effects"));
+        // public static Configurable<bool> addPaletteFade = instance.config.Bind("paletteFade", defaultValue: true, new ConfigurableInfo("When disabled, the (color) palette cannot change after entering a room. This does not disable the palette changes causes by the day-night cyle.", null, "", "Palette Fade"));
         public static Configurable<bool> scrollOneScreenRooms = instance.config.Bind("scrollOneScreenRooms", defaultValue: false, new ConfigurableInfo("When disabled, the camera does not scroll in rooms with only one screen.", null, "", "One Screen Rooms")); // Automatically enabled when using SplitScreenMod.
 
         public static Configurable<bool> zeroG_Position = instance.config.Bind("zeroG_Position", defaultValue: false, new ConfigurableInfo("When enabled, the camera centers on the player in zeroG ignoring other position type parameters.", null, "", "ZeroG"));
@@ -139,6 +140,7 @@ namespace SBCameraScroll
             AddCheckBox(otherFullScreenEffects, (string)otherFullScreenEffects.info.Tags[0]);
             AddCheckBox(mergeWhileLoading, (string)mergeWhileLoading.info.Tags[0]);
             AddCheckBox(scrollOneScreenRooms, (string)scrollOneScreenRooms.info.Tags[0]);
+            // AddCheckBox(addPaletteFade, (string)addPaletteFade.info.Tags[0]);
             DrawCheckBoxes(ref Tabs[tabIndex]);
 
             AddNewLine();

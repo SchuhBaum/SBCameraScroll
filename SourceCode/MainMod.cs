@@ -14,7 +14,7 @@ namespace SBCameraScroll
     // SplitScreenMod needs to be able to get the current cameraNumber for these methods
     // if I get access to that variable directly (static) I could do that too // but I don't want to carry an instance of SplitScreenMod around => dependency
     // You should be able to change load order now;
-    [BepInPlugin("SchuhBaum.SBCameraScroll", "SBCameraScroll", "2.3.1")]
+    [BepInPlugin("SchuhBaum.SBCameraScroll", "SBCameraScroll", "2.3.2")]
     public class MainMod : BaseUnityPlugin
     {
         //
@@ -24,7 +24,7 @@ namespace SBCameraScroll
         public static string modDirectoryPath = "";
         public static readonly string MOD_ID = "SchuhBaum.SBCameraScroll";
         public static readonly string author = "SchuhBaum";
-        public static readonly string version = "2.3.1";
+        public static readonly string version = "2.3.2";
 
         //
         // options
@@ -35,6 +35,7 @@ namespace SBCameraScroll
         public static bool Option_MergeWhileLoading => MainModOptions.mergeWhileLoading.Value;
         public static bool Option_ScrollOneScreenRooms => MainModOptions.scrollOneScreenRooms.Value || isSplitScreenModEnabled;
         public static bool Option_ZeroG => MainModOptions.zeroG_Position.Value;
+        // public static bool Option_PaletteFade => MainModOptions.addPaletteFade.Value;
 
         //
         // other mods
@@ -190,6 +191,7 @@ namespace SBCameraScroll
 
             WormGrassPatchMod.OnEnable();
             WormGrassMod.OnEnable();
+            WormMod.OnEnable();
         }
     }
 }

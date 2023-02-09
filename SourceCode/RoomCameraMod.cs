@@ -83,6 +83,7 @@ namespace SBCameraScroll
 
             if (roomCamera.room is not Room room) return;
             if (room.roomSettings.fadePalette == null) return;
+            // if (!MainMod.Option_PaletteFade) return;
 
             // the day-night fade effect does not update paletteBlend in all cases;
             // so this can otherwise reset it sometimes;
