@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using RWCustom;
 using Unity.Collections;
 using UnityEngine;
 
@@ -154,6 +155,31 @@ namespace SBCameraScroll
             return relativeRegionPath + Path.DirectorySeparatorChar;
         }
 
+        // copied from: https://stackoverflow.com/questions/60857830/finding-png-image-width-height-via-file-metadata-net-core-3-1-c-sharp
+        public static IntVector2 GetImageSize_PNG(string filePath)
+        {
+            // using disposes IDisposable after it leaves scope
+            using FileStream fileStream = File.OpenRead(filePath);
+            using BinaryReader binaryReader = new(fileStream);
+            binaryReader.BaseStream.Position = 16;
+
+            byte[] widthbytes = new byte[sizeof(int)];
+            for (int i = 0; i < sizeof(int); i++)
+            {
+                widthbytes[sizeof(int) - 1 - i] = binaryReader.ReadByte();
+            }
+            int width = BitConverter.ToInt32(widthbytes, 0);
+
+            byte[] heightbytes = new byte[sizeof(int)];
+            for (int i = 0; i < sizeof(int); i++)
+            {
+                heightbytes[sizeof(int) - 1 - i] = binaryReader.ReadByte();
+            }
+            int height = BitConverter.ToInt32(heightbytes, 0);
+
+            return new IntVector2(width, height);
+        }
+
         public static Vector2[]? LoadCameraPositions(string? roomName)
         {
             if (roomName == null) return null;
@@ -200,9 +226,21 @@ namespace SBCameraScroll
 
             string mergedRoomFilePath = MainMod.modDirectoryPath + relativeRoomsPath + roomName.ToLower() + "_0.png";
 
-            // check if custom regions already contains the merged room texture // was this needed? // hm..., I think it was
             // ignore empty merged texture files that were created but not written to
-            if (File.Exists(mergedRoomFilePath) && new FileInfo(mergedRoomFilePath).Length > 0) return;
+            if (File.Exists(mergedRoomFilePath) && new FileInfo(mergedRoomFilePath).Length > 0)
+            {
+                try
+                {
+                    IntVector2 imageSize = GetImageSize_PNG(mergedRoomFilePath);
+                    if (imageSize.x > SystemInfo.maxTextureSize || imageSize.y > SystemInfo.maxTextureSize)
+                    {
+                        Debug.Log("SBCameraScroll: This graphics card does not support large textures. Blacklist room " + roomName + ".");
+                        RoomCameraMod.blacklistedRooms.Add(roomName);
+                    }
+                }
+                catch { }
+                return;
+            }
 
             cameraPositions ??= LoadCameraPositions(roomName);
             if (cameraPositions == null)
@@ -236,9 +274,16 @@ namespace SBCameraScroll
             Debug.Log("SBCameraScroll: Merge camera textures for room " + roomName + " with " + cameraPositions.Length + " cameras.");
             if (maxWidth > maximumTextureWidth || maxHeight > maximumTextureHeight)
             {
-                Debug.Log("SBCameraScroll: Warning! Merged texture width or height is too large. Setting to 10000 and hoping for the best.");
-                maxWidth = Mathf.Min(maxWidth, maximumTextureWidth); // 10000 seems to be the limit in Unity v4.
+                Debug.Log("SBCameraScroll: Warning! Merged texture width or height is too large. Setting to the maximum and hoping for the best.");
+                maxWidth = Mathf.Min(maxWidth, maximumTextureWidth);
                 maxHeight = Mathf.Min(maxHeight, maximumTextureHeight);
+            }
+
+            if (maxWidth > SystemInfo.maxTextureSize || maxHeight > SystemInfo.maxTextureSize)
+            {
+                Debug.Log("SBCameraScroll: This graphics card does not support large textures. Blacklist room " + roomName + ".");
+                RoomCameraMod.blacklistedRooms.Add(roomName);
+                return;
             }
 
             if (textureOffsetModifier.ContainsKey(roomName))

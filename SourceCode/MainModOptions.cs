@@ -26,7 +26,7 @@ namespace SBCameraScroll
         public static Configurable<int> innerCameraBoxY_Position = instance.config.Bind("innerCameraBoxY_Position", defaultValue: 2, new ConfigurableInfo("The camera does not move when the player is closer than this.", new ConfigAcceptableRange<int>(0, 35), "", "Minimum Distance in Y (2)"));
         public static Configurable<int> maximumCameraOffsetX_Position = instance.config.Bind("maximumCameraOffsetX_Position", defaultValue: 0, new ConfigurableInfo("Determines how far the camera moves ahead of the player.", new ConfigAcceptableRange<int>(0, 35), "", "Maximum Camera Offset in X (0)"));
         public static Configurable<int> maximumCameraOffsetY_Position = instance.config.Bind("maximumCameraOffsetY_Position", defaultValue: 0, new ConfigurableInfo("Determines how far the camera moves ahead of the player.", new ConfigAcceptableRange<int>(0, 35), "", "Maximum Camera Offset in Y (0)"));
-        public static Configurable<int> cameraOffsetSpeedMultiplier_Position = instance.config.Bind("cameraOffsetSpeedMultiplier_Position", defaultValue: 4, new ConfigurableInfo("Determines how fast the camera pulls ahead. By default the offset changes as fast as the player moves.", new ConfigAcceptableRange<int>(1, 20), "", "Camera Offset Speed Multiplier (4)"));
+        public static Configurable<int> cameraOffsetSpeedMultiplier_Position = instance.config.Bind("cameraOffsetSpeedMultiplier_Position", defaultValue: 2, new ConfigurableInfo("Determines how fast the camera pulls ahead. By default the offset changes as fast as the player moves.", new ConfigAcceptableRange<int>(1, 50), "", "Camera Offset Speed Multiplier (2)"));
 
         public static Configurable<int> outerCameraBoxX_Vanilla = instance.config.Bind("outerCameraBoxX_Vanilla", defaultValue: 9, new ConfigurableInfo("The camera changes position if the player is closer to the edge of the screen than this value.", new ConfigAcceptableRange<int>(0, 35), "", "Distance from the Edge in X (9)"));
         public static Configurable<int> outerCameraBoxY_Vanilla = instance.config.Bind("outerCameraBoxY_Vanilla", defaultValue: 1, new ConfigurableInfo("The camera changes position if the player is closer to the edge of the screen than this value.", new ConfigAcceptableRange<int>(0, 35), "", "Distance to the Edge in Y (1)"));
@@ -155,8 +155,8 @@ namespace SBCameraScroll
 
             AddNewLine(3f);
 
-            //TODO
-            // clearCacheButton = new(new Vector2(pos.x + (marginX.y - marginX.x) / 2f - 55f, pos.y), new Vector2(110f, 30f), "CLEAR CACHE") // same size as apply / back button in ConfigMachine
+
+            // clearCacheButton = new(new Vector2(pos.x + (marginX.y - marginX.x) / 2f - 55f, pos.y), new Vector2(110f, 30f), "CLEAR CACHE") // same size as apply / back button in ConfigMachine //TODO
             // {
             //     colorEdge = new Color(1f, 1f, 1f, 1f),
             //     colorFill = new Color(1f, 0.0f, 0.0f, 0.5f),
@@ -292,7 +292,7 @@ namespace SBCameraScroll
 
             AddNewLine(2f);
 
-            AddSlider(cameraOffsetSpeedMultiplier_Position, (string)cameraOffsetSpeedMultiplier_Position.info.Tags[0], "0.25", "5");
+            AddSlider(cameraOffsetSpeedMultiplier_Position, (string)cameraOffsetSpeedMultiplier_Position.info.Tags[0], "0.1", "5.0");
             DrawSliders(ref Tabs[tabIndex]);
 
             DrawBox(ref Tabs[tabIndex]);
@@ -353,7 +353,7 @@ namespace SBCameraScroll
 
                     RoomCameraMod.maximumCameraOffsetX = 20f * maximumCameraOffsetX_Position.Value;
                     RoomCameraMod.maximumCameraOffsetY = 20f * maximumCameraOffsetY_Position.Value;
-                    RoomCameraMod.cameraOffsetSpeedMultiplier = 0.25f * cameraOffsetSpeedMultiplier_Position.Value;
+                    RoomCameraMod.cameraOffsetSpeedMultiplier = 0.1f * cameraOffsetSpeedMultiplier_Position.Value;
 
                     Debug.Log("SBCameraScroll: maximumCameraOffsetX " + RoomCameraMod.maximumCameraOffsetX);
                     Debug.Log("SBCameraScroll: maximumCameraOffsetY " + RoomCameraMod.maximumCameraOffsetY);

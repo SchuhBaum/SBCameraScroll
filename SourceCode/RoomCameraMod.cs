@@ -31,9 +31,9 @@ namespace SBCameraScroll
 
         public static float innerCameraBoxX = 40f; // don't move camera when player is too close
         public static float innerCameraBoxY = 40f;
-        public static float maximumCameraOffsetX = 40f;
-        public static float maximumCameraOffsetY = 40f;
-        public static float cameraOffsetSpeedMultiplier = 1f;
+        public static float maximumCameraOffsetX = 0.0f;
+        public static float maximumCameraOffsetY = 0.0f;
+        public static float cameraOffsetSpeedMultiplier = 0.2f;
 
         public static float outerCameraBoxX = 180f;
         public static float outerCameraBoxY = 20f;
@@ -284,7 +284,7 @@ namespace SBCameraScroll
             // reverse cameraOffset when at border;
             // make a little buffer such that innerCameraBoxX_ stays zero next frame;
             // account for float unprecision;
-            if (atBorderDifferenceX > 0.1f)
+            if (Mathf.Abs(atBorderDifferenceX) > 0.1f)
             {
                 isAtBorderX = true;
                 if (atBorderDifferenceX > innerCameraBoxX + 10f)
@@ -297,7 +297,7 @@ namespace SBCameraScroll
                 }
             }
 
-            if (atBorderDifferenceY > 0.1f)
+            if (Mathf.Abs(atBorderDifferenceY) > 0.1f)
             {
                 isAtBorderY = true;
                 if (atBorderDifferenceY > innerCameraBoxY + 10f)

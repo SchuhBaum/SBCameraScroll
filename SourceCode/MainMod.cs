@@ -14,7 +14,7 @@ namespace SBCameraScroll
     // SplitScreenMod needs to be able to get the current cameraNumber for these methods
     // if I get access to that variable directly (static) I could do that too // but I don't want to carry an instance of SplitScreenMod around => dependency
     // You should be able to change load order now;
-    [BepInPlugin("SchuhBaum.SBCameraScroll", "SBCameraScroll", "2.3.2")]
+    [BepInPlugin("SchuhBaum.SBCameraScroll", "SBCameraScroll", "2.3.3")]
     public class MainMod : BaseUnityPlugin
     {
         //
@@ -24,7 +24,7 @@ namespace SBCameraScroll
         public static string modDirectoryPath = "";
         public static readonly string MOD_ID = "SchuhBaum.SBCameraScroll";
         public static readonly string author = "SchuhBaum";
-        public static readonly string version = "2.3.2";
+        public static readonly string version = "2.3.3";
 
         //
         // options
@@ -77,7 +77,7 @@ namespace SBCameraScroll
             if (context == null) return;
 
             Debug.Log("-----------------------------------------------------------------");
-            Debug.Log("SBCameraScroll: Log all IL-instructions.");
+            Debug.Log("Log all IL-instructions.");
             Debug.Log("Index:" + new string(' ', indexStringLength - 6) + "OpCode:" + new string(' ', opCodeStringLength - 7) + "Operand:");
 
             ILCursor cursor = new(context);
@@ -153,6 +153,7 @@ namespace SBCameraScroll
             isInitialized = true;
 
             Debug.Log("SBCameraScroll: version " + version);
+            Debug.Log("SBCameraScroll: maxTextureSize " + SystemInfo.maxTextureSize);
             CreateModRootDirectory(); // uses root folder directory // needs to be initialized at this point
             Debug.Log("SBCameraScroll: modDirectoryPath " + modDirectoryPath);
 
