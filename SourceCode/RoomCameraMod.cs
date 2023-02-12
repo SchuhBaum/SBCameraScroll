@@ -498,6 +498,14 @@ namespace SBCameraScroll
                     // shortcuts get only updated every 3 frames => calculate exact position here // in JollyCoopFixesAndStuff it can also be 2 frames in order to remove slowdown, i.e. compensate for the mushroom effect
                     position += Vector2.Lerp(currentPosition, nextInShortcutPosition, roomCamera.game.updateShortCut / maxUpdateShortcut);
                 }
+                // otherwise when the overseer jumps back and forth the camera would move as well;
+                // I consider this a bug;
+                // the overseer should not jump around when focusing on a shortcut;
+                // because the audio stops playing as well;
+                else if (creature.abstractCreature.abstractAI is OverseerAbstractAI abstractAI && abstractAI.safariOwner && abstractAI.doorSelectionIndex != -1)
+                {
+                    position += abstractAI.parent.Room.realizedRoom.MiddleOfTile(abstractAI.parent.Room.realizedRoom.ShortcutLeadingToNode(abstractAI.doorSelectionIndex).startCoord);
+                }
                 else // use the center (of mass(?)) instead // makes rolls more predictable // use lower y such that crouching does not move camera
                 {
                     position += creature.mainBodyChunk.pos;
@@ -729,11 +737,17 @@ namespace SBCameraScroll
 
         private static void RoomCamera_ApplyPositionChange(On.RoomCamera.orig_ApplyPositionChange orig, RoomCamera roomCamera)
         {
+            // don't log on every screen change;
+            // only log when the room changes;
+            bool isLoggingEnabled = roomCamera.loadingRoom != null;
+
             // updates currentCameraPosition;
-            // updated roomCamera.room if needed;
+            // updates roomCamera.room if needed;
+            // updates roomCamera.loadingRoom;
+            //
             // resizes the levelTexture automatically (and the corresponding atlas texture);
             // constantly resizing might be a problem (memory fragmentation?)
-            // what is the purpose of an atlas?;
+            // what is the purpose of an atlas?; collecting sprites?;
             orig(roomCamera);
 
             // www has a texture too;
@@ -770,7 +784,11 @@ namespace SBCameraScroll
 
             if (roomCamera.room == null)
             {
-                Debug.Log("SBCameraScroll: The current room is blacklisted.");
+                if (isLoggingEnabled)
+                {
+                    Debug.Log("SBCameraScroll: The current room is blacklisted.");
+                }
+
                 roomCamera.GetAttachedFields().isRoomBlacklisted = true;
                 ResetCameraPosition(roomCamera); // uses currentCameraPosition and isRoomBlacklisted
                 return;
@@ -780,7 +798,11 @@ namespace SBCameraScroll
             string roomName = roomCamera.room.abstractRoom.name;
             if (blacklistedRooms.Contains(roomName) || WorldLoader.FindRoomFile(roomName, false, "_0.png") == null && roomCamera.room.cameraPositions.Length > 1)
             {
-                Debug.Log("SBCameraScroll: The room " + roomName + " is blacklisted.");
+                if (isLoggingEnabled)
+                {
+                    Debug.Log("SBCameraScroll: The room " + roomName + " is blacklisted.");
+                }
+
                 roomCamera.GetAttachedFields().isRoomBlacklisted = true;
                 ResetCameraPosition(roomCamera);
                 return;
