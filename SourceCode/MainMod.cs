@@ -14,17 +14,17 @@ namespace SBCameraScroll
     // SplitScreenMod needs to be able to get the current cameraNumber for these methods
     // if I get access to that variable directly (static) I could do that too // but I don't want to carry an instance of SplitScreenMod around => dependency
     // You should be able to change load order now;
-    [BepInPlugin("SchuhBaum.SBCameraScroll", "SBCameraScroll", "2.3.4")]
+    [BepInPlugin("SchuhBaum.SBCameraScroll", "SBCameraScroll", "2.3.5")]
     public class MainMod : BaseUnityPlugin
     {
         //
         // meta data
         //
 
-        public static string modDirectoryPath = "";
         public static readonly string MOD_ID = "SchuhBaum.SBCameraScroll";
         public static readonly string author = "SchuhBaum";
-        public static readonly string version = "2.3.4";
+        public static readonly string version = "2.3.5";
+        public static readonly string modDirectoryPath = Directory.GetParent(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)).FullName + Path.DirectorySeparatorChar;
 
         //
         // options
@@ -64,12 +64,6 @@ namespace SBCameraScroll
         {
             if (Directory.Exists(directoryPath)) return;
             Directory.CreateDirectory(directoryPath);
-        }
-
-        public static void CreateModRootDirectory()
-        {
-            modDirectoryPath = Directory.GetParent(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)).FullName + Path.DirectorySeparatorChar;
-            CreateDirectory(modDirectoryPath + "world");
         }
 
         public static void LogAllInstructions(ILContext? context, int indexStringLength = 9, int opCodeStringLength = 14)
@@ -154,8 +148,15 @@ namespace SBCameraScroll
 
             Debug.Log("SBCameraScroll: version " + version);
             Debug.Log("SBCameraScroll: maxTextureSize " + SystemInfo.maxTextureSize);
-            CreateModRootDirectory(); // uses root folder directory // needs to be initialized at this point
             Debug.Log("SBCameraScroll: modDirectoryPath " + modDirectoryPath);
+
+            CreateDirectory(modDirectoryPath + "levels");
+            CreateDirectory(modDirectoryPath + "world");
+
+            // somehow this is in front of creatures and hides them;
+            // besides that I need the current shader instead of the one from RW v1.5;
+            // it seems to have been modified to contain some changes for the Gutter area;
+            // rainWorld.ReplaceShader("DeepWater");
 
             foreach (ModManager.Mod mod in ModManager.ActiveMods)
             {

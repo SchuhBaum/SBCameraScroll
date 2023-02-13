@@ -652,13 +652,13 @@ namespace SBCameraScroll
                 {
                     if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode)
                     {
-                        Shader.SetGlobalVector("_spriteRect", new Vector4((0f - cameraPosition.x - 0.5f + roomCamera.CamPos(roomCamera.currentCameraPosition).x) / roomCamera.sSize.x, (0f - cameraPosition.y + 0.5f + roomCamera.CamPos(roomCamera.currentCameraPosition).y) / roomCamera.sSize.y, (0f - cameraPosition.x - 0.5f + roomCamera.levelGraphic.width + roomCamera.CamPos(roomCamera.currentCameraPosition).x) / roomCamera.sSize.x, (0f - cameraPosition.y + 0.5f + roomCamera.levelGraphic.height + roomCamera.CamPos(roomCamera.currentCameraPosition).y) / roomCamera.sSize.y));
+                        Shader.SetGlobalVector("_spriteRect", new Vector4((-cameraPosition.x - 0.5f + roomCamera.CamPos(roomCamera.currentCameraPosition).x) / roomCamera.sSize.x, (-cameraPosition.y + 0.5f + roomCamera.CamPos(roomCamera.currentCameraPosition).y) / roomCamera.sSize.y, (-cameraPosition.x - 0.5f + roomCamera.levelGraphic.width + roomCamera.CamPos(roomCamera.currentCameraPosition).x) / roomCamera.sSize.x, (-cameraPosition.y + 0.5f + roomCamera.levelGraphic.height + roomCamera.CamPos(roomCamera.currentCameraPosition).y) / roomCamera.sSize.y));
                         return;
                     }
 
-                    Vector2 startPosition = new(roomCamera.levelGraphic.x, roomCamera.levelGraphic.y);
-                    Vector2 endPosition = startPosition + new Vector2(roomCamera.levelGraphic.width, roomCamera.levelGraphic.height);
-                    Shader.SetGlobalVector("_spriteRect", new Vector4((0f + startPosition.x - 0.5f) / roomCamera.sSize.x, (0f + startPosition.y + 0.5f) / roomCamera.sSize.y, (0f + endPosition.x - 0.5f) / roomCamera.sSize.x, (0f + endPosition.y + 0.5f) / roomCamera.sSize.y)); // if the 0.5f is missing then you get black outlines
+                    // roomCamera.levelGraphic.x = textureOffset.x - cameraPosition.x
+                    // same for y
+                    Shader.SetGlobalVector("_spriteRect", new Vector4((roomCamera.levelGraphic.x - 0.5f) / roomCamera.sSize.x, (roomCamera.levelGraphic.y + 0.5f) / roomCamera.sSize.y, (roomCamera.levelGraphic.x + roomCamera.levelGraphic.width - 0.5f) / roomCamera.sSize.x, (roomCamera.levelGraphic.y + roomCamera.levelGraphic.height + 0.5f) / roomCamera.sSize.y)); // if the 0.5f is missing then you get black outlines
                 });
             }
             else

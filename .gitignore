@@ -1,12 +1,12 @@
 SourceCode/bin
 SourceCode/obj
 
+SBCameraScroll/AssetBundles
 SBCameraScroll/levels
-SBCameraScroll/shaders
 SBCameraScroll/world
 
+AssetBundles
 levels
-shaders
 world
 
 SBCameraScroll/plugins/SBCameraScroll.dll
