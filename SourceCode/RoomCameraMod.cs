@@ -770,17 +770,10 @@ namespace SBCameraScroll
 
             // resizes levelGraphic such that the levelTexture fits and is not squashed
             // holy moly don't use roomCamera.www.texture.width, etc. // "WWW.texture property allocates a new Texture2D every time"
-            if (roomCamera.levelGraphic.width != roomCamera.levelTexture.width || roomCamera.levelGraphic.height != roomCamera.levelTexture.height)
-            {
-                roomCamera.levelGraphic.width = roomCamera.levelTexture.width;
-                roomCamera.levelGraphic.height = roomCamera.levelTexture.height;
-            }
-
-            if (roomCamera.backgroundGraphic.width != roomCamera.backgroundTexture.width || roomCamera.backgroundGraphic.height != roomCamera.backgroundTexture.height)
-            {
-                roomCamera.backgroundGraphic.width = roomCamera.backgroundTexture.width;
-                roomCamera.backgroundGraphic.height = roomCamera.backgroundTexture.height;
-            }
+            roomCamera.levelGraphic.width = roomCamera.levelTexture.width;
+            roomCamera.levelGraphic.height = roomCamera.levelTexture.height;
+            roomCamera.backgroundGraphic.width = roomCamera.backgroundTexture.width;
+            roomCamera.backgroundGraphic.height = roomCamera.backgroundTexture.height;
 
             if (roomCamera.room == null)
             {
