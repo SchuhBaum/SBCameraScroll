@@ -523,9 +523,14 @@ namespace SBCameraScroll
 
         private static void IL_RoomCamera_DrawUpdate(ILContext context)
         {
-            ILCursor cursor = new(context);
             // MainMod.LogAllInstructions(context);
 
+            //
+            // the first four instance remove the clamping;
+            // otherwise you can't scroll past the current screen;
+            //
+
+            ILCursor cursor = new(context);
             if (cursor.TryGotoNext(instruction => instruction.MatchCall<RoomCamera>("CamPos")))
             {
                 Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate_1: Index " + cursor.Index); // before: 100 // after: 100
@@ -609,6 +614,10 @@ namespace SBCameraScroll
             {
                 Debug.LogException(new Exception("SBCameraScroll: IL_RoomCamera_DrawUpdate_4 failed."));
             }
+
+            //
+            //
+            //
 
             if (cursor.TryGotoNext(instruction => instruction.MatchCall<RoomCamera>("CamPos")))
             {
