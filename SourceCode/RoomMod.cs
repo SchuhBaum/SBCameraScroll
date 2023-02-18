@@ -16,7 +16,7 @@ namespace SBCameraScroll
         private static void Room_LoadFromDataString(On.Room.orig_LoadFromDataString orig, Room room, string[] lines)
         {
             orig(room, lines);
-            if (room?.game != null && room.abstractRoom is AbstractRoom abstractRoom && !RoomCameraMod.blacklistedRooms.Contains(abstractRoom.name))
+            if (room?.game != null && room.abstractRoom is AbstractRoom abstractRoom && !RoomCameraMod.blacklisted_rooms.Contains(abstractRoom.name))
             {
                 AbstractRoomMod.CheckCameraPositions(ref room.cameraPositions);
                 AbstractRoomMod.UpdateTextureOffset(abstractRoom, room.cameraPositions); // update for one-screen rooms as well

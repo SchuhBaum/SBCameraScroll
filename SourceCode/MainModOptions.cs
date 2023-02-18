@@ -21,18 +21,24 @@ namespace SBCameraScroll
         // public static Configurable<bool> addPaletteFade = instance.config.Bind("paletteFade", defaultValue: true, new ConfigurableInfo("When disabled, the (color) palette cannot change after entering a room. This does not disable the palette changes causes by the day-night cyle.", null, "", "Palette Fade"));
         public static Configurable<bool> scrollOneScreenRooms = instance.config.Bind("scrollOneScreenRooms", defaultValue: false, new ConfigurableInfo("When disabled, the camera does not scroll in rooms with only one screen.", null, "", "One Screen Rooms")); // Automatically enabled when using SplitScreenMod.
 
-        public static Configurable<bool> zeroG_Position = instance.config.Bind("zeroG_Position", defaultValue: false, new ConfigurableInfo("When enabled, the camera centers on the player in zeroG ignoring other position type parameters.", null, "", "ZeroG"));
+        public static Configurable<int> smoothingFactorX = instance.config.Bind("smoothingFactorX", defaultValue: 8, new ConfigurableInfo("Determines how much of the distance is covered per frame. This is used when switching cameras as well to ensure a smooth transition.", new ConfigAcceptableRange<int>(0, 35), "", "Smoothing Factor for X (8)"));
+        public static Configurable<int> smoothingFactorY = instance.config.Bind("smoothingFactorY", defaultValue: 8, new ConfigurableInfo("Determines how much of the distance is covered per frame. This is used when switching cameras as well to ensure a smooth transition.", new ConfigAcceptableRange<int>(0, 35), "", "Smoothing Factor for Y (8)"));
+
+        //
+        //
+        //
+
         public static Configurable<int> innerCameraBoxX_Position = instance.config.Bind("innerCameraBoxX_Position", defaultValue: 2, new ConfigurableInfo("The camera does not move when the player is closer than this.", new ConfigAcceptableRange<int>(0, 35), "", "Minimum Distance in X (2)"));
         public static Configurable<int> innerCameraBoxY_Position = instance.config.Bind("innerCameraBoxY_Position", defaultValue: 2, new ConfigurableInfo("The camera does not move when the player is closer than this.", new ConfigAcceptableRange<int>(0, 35), "", "Minimum Distance in Y (2)"));
-        public static Configurable<int> maximumCameraOffsetX_Position = instance.config.Bind("maximumCameraOffsetX_Position", defaultValue: 0, new ConfigurableInfo("Determines how far the camera moves ahead of the player.", new ConfigAcceptableRange<int>(0, 35), "", "Maximum Camera Offset in X (0)"));
-        public static Configurable<int> maximumCameraOffsetY_Position = instance.config.Bind("maximumCameraOffsetY_Position", defaultValue: 0, new ConfigurableInfo("Determines how far the camera moves ahead of the player.", new ConfigAcceptableRange<int>(0, 35), "", "Maximum Camera Offset in Y (0)"));
-        public static Configurable<int> cameraOffsetSpeedMultiplier_Position = instance.config.Bind("cameraOffsetSpeedMultiplier_Position", defaultValue: 2, new ConfigurableInfo("Determines how fast the camera pulls ahead. By default the offset changes as fast as the player moves.", new ConfigAcceptableRange<int>(1, 50), "", "Camera Offset Speed Multiplier (2)"));
+        public static Configurable<bool> cameraOffset_Position = instance.config.Bind("cameraOffset_Position", defaultValue: true, new ConfigurableInfo("When enabled, the camera can move ahead but still stays within the minimum distance.", null, "", "Camera Offset"));
+        public static Configurable<int> cameraOffsetSpeedMultiplier_Position = instance.config.Bind("cameraOffsetSpeedMultiplier_Position", defaultValue: 2, new ConfigurableInfo("Determines how fast the camera pulls ahead. When set to 1.0 then the offset changes as fast as the player moves.", new ConfigAcceptableRange<int>(1, 50), "", "Camera Offset Speed Multiplier (2)"));
+
+        //
+        //
+        //
 
         public static Configurable<int> outerCameraBoxX_Vanilla = instance.config.Bind("outerCameraBoxX_Vanilla", defaultValue: 9, new ConfigurableInfo("The camera changes position if the player is closer to the edge of the screen than this value.", new ConfigAcceptableRange<int>(0, 35), "", "Distance from the Edge in X (9)"));
         public static Configurable<int> outerCameraBoxY_Vanilla = instance.config.Bind("outerCameraBoxY_Vanilla", defaultValue: 1, new ConfigurableInfo("The camera changes position if the player is closer to the edge of the screen than this value.", new ConfigAcceptableRange<int>(0, 35), "", "Distance to the Edge in Y (1)"));
-
-        public static Configurable<int> smoothingFactorX = instance.config.Bind("smoothingFactorX", defaultValue: 8, new ConfigurableInfo("Determines how much of the distance is covered per frame. This is used when switching cameras as well to ensure a smooth transition.", new ConfigAcceptableRange<int>(0, 35), "", "Smoothing Factor for X (8)"));
-        public static Configurable<int> smoothingFactorY = instance.config.Bind("smoothingFactorY", defaultValue: 8, new ConfigurableInfo("Determines how much of the distance is covered per frame. This is used when switching cameras as well to ensure a smooth transition.", new ConfigAcceptableRange<int>(0, 35), "", "Smoothing Factor for Y (8)"));
 
         //
         // parameters
@@ -209,6 +215,16 @@ namespace SBCameraScroll
             AddSlider(innerCameraBoxY_Position, (string)innerCameraBoxY_Position.info.Tags[0], "0 tiles", "35 tiles");
             DrawSliders(ref Tabs[tabIndex]);
 
+            AddNewLine();
+
+            AddCheckBox(cameraOffset_Position, (string)cameraOffset_Position.info.Tags[0]);
+            DrawCheckBoxes(ref Tabs[tabIndex]);
+
+            AddNewLine();
+
+            AddSlider(cameraOffsetSpeedMultiplier_Position, (string)cameraOffsetSpeedMultiplier_Position.info.Tags[0], "0.1", "5.0");
+            DrawSliders(ref Tabs[tabIndex]);
+
             DrawBox(ref Tabs[tabIndex]);
 
             //------------------//
@@ -249,54 +265,6 @@ namespace SBCameraScroll
 
             DrawBox(ref Tabs[tabIndex]);
 
-            //--------------//
-            // experimental //
-            //--------------//
-
-            tabIndex++;
-            Tabs[tabIndex] = new OpTab(this, "Experimental");
-            InitializeMarginAndPos();
-
-            // Title
-            AddNewLine();
-            AddTextLabel("SBCameraScroll Mod", bigText: true);
-            DrawTextLabels(ref Tabs[tabIndex]);
-
-            // Subtitle
-            AddNewLine(0.5f);
-            AddTextLabel("Version " + MainMod.version, FLabelAlignment.Left);
-            AddTextLabel("by " + MainMod.author, FLabelAlignment.Right);
-            DrawTextLabels(ref Tabs[tabIndex]);
-
-            // Content //
-            AddNewLine();
-            AddBox();
-
-            AddTextLabel("Position Type Camera:", FLabelAlignment.Left);
-            DrawTextLabels(ref Tabs[tabIndex]);
-
-            AddNewLine();
-
-            AddCheckBox(zeroG_Position, (string)zeroG_Position.info.Tags[0]);
-            DrawCheckBoxes(ref Tabs[tabIndex]);
-
-            AddNewLine();
-
-            AddSlider(maximumCameraOffsetX_Position, (string)maximumCameraOffsetX_Position.info.Tags[0], "0 tiles", "35 tiles");
-            DrawSliders(ref Tabs[tabIndex]);
-
-            AddNewLine(2f);
-
-            AddSlider(maximumCameraOffsetY_Position, (string)maximumCameraOffsetY_Position.info.Tags[0], "0 tiles", "35 tiles");
-            DrawSliders(ref Tabs[tabIndex]);
-
-            AddNewLine(2f);
-
-            AddSlider(cameraOffsetSpeedMultiplier_Position, (string)cameraOffsetSpeedMultiplier_Position.info.Tags[0], "0.1", "5.0");
-            DrawSliders(ref Tabs[tabIndex]);
-
-            DrawBox(ref Tabs[tabIndex]);
-
             //
             //
             //
@@ -328,43 +296,41 @@ namespace SBCameraScroll
 
         public void MainModOptions_OnConfigChanged()
         {
-            RoomCameraMod.cameraType = (CameraType)Array.IndexOf(cameraTypeKeys, cameraType.Value); // 0: Position type, 1: Vanilla type
+            RoomCameraMod.camera_type = (CameraType)Array.IndexOf(cameraTypeKeys, cameraType.Value); // 0: Position type, 1: Vanilla type
 
-            Debug.Log("SBCameraScroll: cameraType " + RoomCameraMod.cameraType);
+            Debug.Log("SBCameraScroll: cameraType " + RoomCameraMod.camera_type);
             Debug.Log("SBCameraScroll: Option_FogFullScreenEffect " + MainMod.Option_FogFullScreenEffect);
             Debug.Log("SBCameraScroll: Option_OtherFullScreenEffects " + MainMod.Option_OtherFullScreenEffects);
             Debug.Log("SBCameraScroll: Option_MergeWhileLoading " + MainMod.Option_MergeWhileLoading);
             Debug.Log("SBCameraScroll: Option_ScrollOneScreenRooms " + MainMod.Option_ScrollOneScreenRooms);
 
-            RoomCameraMod.smoothingFactorX = smoothingFactorX.Value / 50f;
-            RoomCameraMod.smoothingFactorY = smoothingFactorY.Value / 50f;
+            RoomCameraMod.smoothing_factor_x = smoothingFactorX.Value / 50f;
+            RoomCameraMod.smoothing_factor_y = smoothingFactorY.Value / 50f;
 
-            Debug.Log("SBCameraScroll: smoothingFactorX " + RoomCameraMod.smoothingFactorX);
-            Debug.Log("SBCameraScroll: smoothingFactorY " + RoomCameraMod.smoothingFactorY);
+            Debug.Log("SBCameraScroll: smoothingFactorX " + RoomCameraMod.smoothing_factor_x);
+            Debug.Log("SBCameraScroll: smoothingFactorY " + RoomCameraMod.smoothing_factor_y);
 
-            switch (RoomCameraMod.cameraType)
+            switch (RoomCameraMod.camera_type)
             {
                 case CameraType.Position:
-                    RoomCameraMod.innerCameraBoxX = 20f * innerCameraBoxX_Position.Value;
-                    RoomCameraMod.innerCameraBoxY = 20f * innerCameraBoxY_Position.Value;
+                    PositionTypeCamera.camera_box_x = 20f * innerCameraBoxX_Position.Value;
+                    PositionTypeCamera.camera_box_y = 20f * innerCameraBoxY_Position.Value;
 
-                    Debug.Log("SBCameraScroll: innerCameraBoxX " + RoomCameraMod.innerCameraBoxX);
-                    Debug.Log("SBCameraScroll: innerCameraBoxY " + RoomCameraMod.innerCameraBoxY);
+                    Debug.Log("SBCameraScroll: camera_box_x " + PositionTypeCamera.camera_box_x);
+                    Debug.Log("SBCameraScroll: camera_box_y " + PositionTypeCamera.camera_box_y);
 
-                    RoomCameraMod.maximumCameraOffsetX = 20f * maximumCameraOffsetX_Position.Value;
-                    RoomCameraMod.maximumCameraOffsetY = 20f * maximumCameraOffsetY_Position.Value;
-                    RoomCameraMod.cameraOffsetSpeedMultiplier = 0.1f * cameraOffsetSpeedMultiplier_Position.Value;
+                    PositionTypeCamera.offset_speed_multiplier = 0.1f * cameraOffsetSpeedMultiplier_Position.Value;
 
-                    Debug.Log("SBCameraScroll: maximumCameraOffsetX " + RoomCameraMod.maximumCameraOffsetX);
-                    Debug.Log("SBCameraScroll: maximumCameraOffsetY " + RoomCameraMod.maximumCameraOffsetY);
-                    Debug.Log("SBCameraScroll: cameraOffsetSpeedMultiplier " + RoomCameraMod.cameraOffsetSpeedMultiplier);
+                    Debug.Log("SBCameraScroll: Option_CameraOffset " + MainMod.Option_CameraOffset);
+                    Debug.Log("SBCameraScroll: offset_speed_multiplier " + PositionTypeCamera.offset_speed_multiplier);
                     break;
                 case CameraType.Vanilla:
-                    RoomCameraMod.outerCameraBoxX = 20f * outerCameraBoxX_Vanilla.Value;
-                    RoomCameraMod.outerCameraBoxY = 20f * outerCameraBoxX_Vanilla.Value;
 
-                    Debug.Log("SBCameraScroll: outerCameraBoxX " + RoomCameraMod.outerCameraBoxX);
-                    Debug.Log("SBCameraScroll: outerCameraBoxY " + RoomCameraMod.outerCameraBoxY);
+                    VanillaTypeCamera.camera_box_from_border_x = 20f * outerCameraBoxX_Vanilla.Value;
+                    VanillaTypeCamera.camera_box_from_border_y = 20f * outerCameraBoxX_Vanilla.Value;
+
+                    Debug.Log("SBCameraScroll: camera_box_from_border_x " + VanillaTypeCamera.camera_box_from_border_x);
+                    Debug.Log("SBCameraScroll: camera_box_from_border_y " + VanillaTypeCamera.camera_box_from_border_y);
                     break;
             }
         }

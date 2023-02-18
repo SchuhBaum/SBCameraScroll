@@ -206,7 +206,7 @@ namespace SBCameraScroll
             if (abstractRoom.offScreenDen) return;
 
             string roomName = abstractRoom.name;
-            if (RoomCameraMod.blacklistedRooms.Contains(roomName)) return;
+            if (RoomCameraMod.blacklisted_rooms.Contains(roomName)) return;
 
             string relativeRoomsPath;
             if (regionName == null)
@@ -214,7 +214,7 @@ namespace SBCameraScroll
                 if (abstractRoom.world == null || !abstractRoom.world.game.IsArenaSession)
                 {
                     Debug.Log("SBCameraScroll: Region is null. Blacklist room " + roomName + ".");
-                    RoomCameraMod.blacklistedRooms.Add(roomName);
+                    RoomCameraMod.blacklisted_rooms.Add(roomName);
                     return;
                 }
                 relativeRoomsPath = GetRelativeRoomsPath_Arena();
@@ -235,7 +235,7 @@ namespace SBCameraScroll
                     if (imageSize.x > SystemInfo.maxTextureSize || imageSize.y > SystemInfo.maxTextureSize)
                     {
                         Debug.Log("SBCameraScroll: This graphics card does not support large textures. Blacklist room " + roomName + ".");
-                        RoomCameraMod.blacklistedRooms.Add(roomName);
+                        RoomCameraMod.blacklisted_rooms.Add(roomName);
                     }
                 }
                 catch { }
@@ -246,7 +246,7 @@ namespace SBCameraScroll
             if (cameraPositions == null)
             {
                 Debug.Log("SBCameraScroll: Camera positions could not be loaded. Blacklist room " + roomName + ".");
-                RoomCameraMod.blacklistedRooms.Add(roomName);
+                RoomCameraMod.blacklisted_rooms.Add(roomName);
                 return;
             }
             if (cameraPositions.Length <= 1) return; // skip one screen rooms
@@ -282,7 +282,7 @@ namespace SBCameraScroll
             if (maxWidth > SystemInfo.maxTextureSize || maxHeight > SystemInfo.maxTextureSize)
             {
                 Debug.Log("SBCameraScroll: This graphics card does not support large textures. Blacklist room " + roomName + ".");
-                RoomCameraMod.blacklistedRooms.Add(roomName);
+                RoomCameraMod.blacklisted_rooms.Add(roomName);
                 return;
             }
 
@@ -300,7 +300,7 @@ namespace SBCameraScroll
                 if (mergedTexture.width != maxWidth || mergedTexture.height != maxHeight)
                 {
                     Debug.Log("SBCameraScroll: Resize failed. Blacklist room " + roomName + ".");
-                    RoomCameraMod.blacklistedRooms.Add(roomName);
+                    RoomCameraMod.blacklisted_rooms.Add(roomName);
                     CleanUp();
                     return;
                 }
@@ -322,7 +322,7 @@ namespace SBCameraScroll
                     if (mergedRenderTexture.width != maxWidth || mergedRenderTexture.height != maxHeight)
                     {
                         Debug.Log("SBCameraScroll: Resize failed. Blacklist room " + roomName + ".");
-                        RoomCameraMod.blacklistedRooms.Add(roomName);
+                        RoomCameraMod.blacklisted_rooms.Add(roomName);
                         CleanUp();
                         return;
                     }
@@ -350,7 +350,7 @@ namespace SBCameraScroll
                     else
                     {
                         Debug.Log("SBCameraScroll: Could not find or load texture with path " + roomFilePath + ". Blacklist " + roomName + ".");
-                        RoomCameraMod.blacklistedRooms.Add(roomName);
+                        RoomCameraMod.blacklisted_rooms.Add(roomName);
                         CleanUp();
                         return;
                     }
@@ -367,7 +367,7 @@ namespace SBCameraScroll
             {
                 Debug.Log("SBCameraScroll: " + exception);
                 Debug.Log("SBCameraScroll: Encountered an exception. Blacklist " + roomName + ".");
-                RoomCameraMod.blacklistedRooms.Add(roomName);
+                RoomCameraMod.blacklisted_rooms.Add(roomName);
             }
             CleanUp();
 
