@@ -103,7 +103,7 @@ namespace SBCameraScroll
         public override void Initialize()
         {
             base.Initialize();
-            Tabs = new OpTab[4];
+            Tabs = new OpTab[3];
 
             //-------------//
             // general tab //
