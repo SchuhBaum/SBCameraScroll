@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace SBCameraScroll;
 
-public class VanillaTypeCamera
+public class VanillaTypeCamera : IAmATypeCamera
 {
     //
     // parameters

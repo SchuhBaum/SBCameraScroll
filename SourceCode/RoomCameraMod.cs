@@ -154,13 +154,7 @@ namespace SBCameraScroll
                 roomCamera.pos = roomCamera.seekPos;
                 return;
             }
-
-            if (camera_type == CameraType.Position)
-            {
-                attachedFields.positionTypeCamera.Reset();
-                return;
-            }
-            attachedFields.vanillaTypeCamera.Reset();
+            attachedFields.typeCamera.Reset();
         }
 
         public static Vector2 SplitScreenMod_GetScreenOffset(in Vector2 screenSize) => SplitScreenCoop.SplitScreenCoop.CurrentSplitMode switch
@@ -390,12 +384,7 @@ namespace SBCameraScroll
                 {
                     AttachedFields attachedFields = roomCamera.GetAttachedFields();
                     if (attachedFields.isRoomBlacklisted || roomCamera.voidSeaMode) return;
-                    if (camera_type == CameraType.Position)
-                    {
-                        attachedFields.positionTypeCamera.Update();
-                        return;
-                    }
-                    attachedFields.vanillaTypeCamera.Update();
+                    attachedFields.typeCamera.Update();
                 });
                 cursor.Emit(OpCodes.Ldarg_0);
             }
@@ -554,7 +543,7 @@ namespace SBCameraScroll
             }
 
             roomCamera.currentCameraPosition = camPos;
-            if (camera_type == CameraType.Vanilla && attachedFields.vanillaTypeCamera.use_vanilla_positions && attachedFields.vanillaTypeCamera.follow_abstract_creature_id == roomCamera.followAbstractCreature.ID) // camera moves otherwise after vanilla transition since variables are not reset // ignore reset during a smooth transition
+            if (attachedFields.typeCamera is VanillaTypeCamera vanillaTypeCamera && vanillaTypeCamera.use_vanilla_positions && vanillaTypeCamera.follow_abstract_creature_id == roomCamera.followAbstractCreature.ID) // camera moves otherwise after vanilla transition since variables are not reset // ignore reset during a smooth transition
             {
                 ResetCameraPosition(roomCamera);
             }
@@ -677,13 +666,16 @@ namespace SBCameraScroll
             public Vector2 lastOnScreenPosition = new();
             public Vector2 onScreenPosition = new();
 
-            public PositionTypeCamera positionTypeCamera;
-            public VanillaTypeCamera vanillaTypeCamera;
+            public IAmATypeCamera typeCamera;
 
             public AttachedFields(RoomCamera roomCamera)
             {
-                positionTypeCamera = new(roomCamera, this);
-                vanillaTypeCamera = new(roomCamera, this);
+                if (camera_type == CameraType.Position)
+                {
+                    typeCamera = new PositionTypeCamera(roomCamera, this);
+                    return;
+                }
+                typeCamera = new VanillaTypeCamera(roomCamera, this);
             }
         }
     }

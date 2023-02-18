@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace SBCameraScroll;
 
-public class PositionTypeCamera
+public class PositionTypeCamera : IAmATypeCamera
 {
     //
     // parameters
@@ -202,15 +202,21 @@ public class PositionTypeCamera
         bool is_at_border = Mathf.Abs(at_border_difference) > 0.1f;
         float buffer = 10f;
 
+        // if I clamp using 2f * camera_box then there are situations where
+        // the camera moves instantly when turning;
+        // this can be annoying sometimes when you for example trying to pipe juke;
+        float maximum_offset = 1.5f * camera_box;
+
         if (is_at_border)
         {
             if (at_border_difference > camera_box + buffer)
             {
-                camera_offset = Mathf.Clamp(camera_offset - at_border_difference + camera_box + buffer, -2f * camera_box, 2f * camera_box);
+
+                camera_offset = Mathf.Clamp(camera_offset - at_border_difference + camera_box + buffer, -maximum_offset, maximum_offset);
             }
             else if (at_border_difference < -camera_box - buffer)
             {
-                camera_offset = Mathf.Clamp(camera_offset - at_border_difference - camera_box - buffer, -2f * camera_box, 2f * camera_box);
+                camera_offset = Mathf.Clamp(camera_offset - at_border_difference - camera_box - buffer, -maximum_offset, maximum_offset);
             }
             return;
         }
@@ -222,6 +228,6 @@ public class PositionTypeCamera
         }
 
         if (!has_target_and_camera_moved) return;
-        camera_offset = Mathf.Clamp(camera_offset + offset_speed_multiplier * (attached_fields.onScreenPosition.x - attached_fields.lastOnScreenPosition.x), -2f * camera_box, 2f * camera_box);
+        camera_offset = Mathf.Clamp(camera_offset + offset_speed_multiplier * (attached_fields.onScreenPosition.x - attached_fields.lastOnScreenPosition.x), -maximum_offset, maximum_offset);
     }
 }
