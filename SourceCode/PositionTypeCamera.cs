@@ -168,8 +168,15 @@ public class PositionTypeCamera : IAmATypeCamera
 
     private void Update_Camera_Offset_Using_Player_Input(in Player player, Vector2 at_border_difference)
     {
-        bool has_target_turned_around_x = player.input[0].x != 0 && player.input[0].x == -Math.Sign(camera_offset.x);
-        bool has_target_turned_around_y = player.input[0].y != 0 && player.input[0].y == -Math.Sign(camera_offset.y);
+        // this translated to a speed of 4 tiles per second;
+        // this seems to work even when using Gourmand and being exhausted;
+        float buffer = 2f;
+
+        bool has_target_moved_x = Mathf.Abs(attached_fields.onScreenPosition.x - attached_fields.lastOnScreenPosition.x) > buffer;
+        bool has_target_moved_y = Mathf.Abs(attached_fields.onScreenPosition.y - attached_fields.lastOnScreenPosition.y) > buffer;
+
+        bool has_target_turned_around_x = has_target_moved_x && player.input[0].x != 0 && player.input[0].x == -Math.Sign(camera_offset.x) && player.input[0].x == Math.Sign(attached_fields.onScreenPosition.x - attached_fields.lastOnScreenPosition.x);
+        bool has_target_turned_around_y = has_target_moved_y && player.input[0].y != 0 && player.input[0].y == -Math.Sign(camera_offset.y) && player.input[0].y == Math.Sign(attached_fields.onScreenPosition.y - attached_fields.lastOnScreenPosition.y);
 
         bool has_target_and_camera_moved_x = player.input[0].x != 0 && room_camera.pos.x != room_camera.lastPos.x;
         bool has_target_and_camera_moved_y = player.input[0].y != 0 && room_camera.pos.y != room_camera.lastPos.y;
@@ -211,7 +218,6 @@ public class PositionTypeCamera : IAmATypeCamera
         {
             if (at_border_difference > camera_box + buffer)
             {
-
                 camera_offset = Mathf.Clamp(camera_offset - at_border_difference + camera_box + buffer, -maximum_offset, maximum_offset);
             }
             else if (at_border_difference < -camera_box - buffer)

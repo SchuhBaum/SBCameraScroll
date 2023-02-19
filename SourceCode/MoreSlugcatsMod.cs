@@ -103,6 +103,13 @@ namespace SBCameraScroll
             // what does this exactly do?
             // generating red green values out of one float?
             // simply a better storage thing?
+
+            // this generates too much snow as well as
+            // snow in areas where there shouldn't be;
+
+            // roomCamera.pos.x without scroll is in most cases just the texture offset for the current camera (bottom left position; not anchored;);
+            // for on-screen values this would lead to [0, 1] * 0.3f + 0.3f;
+
             // Vector2 xRedGreen = Custom.EncodeFloatRG((snowSource.pos.x - roomCamera.pos.x) / 1400f * 0.3f + 0.3f);
             // Vector2 yRedGreen = Custom.EncodeFloatRG((snowSource.pos.y - roomCamera.pos.y) / 800f * 0.3f + 0.3f);
             // Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / 1600f);
@@ -111,19 +118,26 @@ namespace SBCameraScroll
             // Vector2 yRedGreen = Custom.EncodeFloatRG((snowSource.pos.y - roomCamera.pos.y) / roomCamera.levelTexture.height * 0.3f + 0.3f);
             // Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / (2f * roomCamera.levelTexture.height));
 
+            // Vector2 xRedGreen = Custom.EncodeFloatRG((snowSource.pos.x - roomCamera.CamPos(roomCamera.currentCameraPosition).x) / 1400f * 0.3f + 0.3f);
+            // Vector2 yRedGreen = Custom.EncodeFloatRG((snowSource.pos.y - roomCamera.CamPos(roomCamera.currentCameraPosition).y) / 800f * 0.3f + 0.3f);
+
             // prevent the texture scrolling with the camera;
             // instead have fixed positions;
             // how does rad need to change?;
             // leaving it at snowSource.rad/1600f creates too much snow;
-            Vector2 xRedGreen = Custom.EncodeFloatRG(snowSource.pos.x / roomCamera.levelTexture.width * 0.3f + 0.3f);
-            Vector2 yRedGreen = Custom.EncodeFloatRG(snowSource.pos.y / roomCamera.levelTexture.height * 0.3f + 0.3f);
+            // Vector2 xRedGreen = Custom.EncodeFloatRG(snowSource.pos.x / roomCamera.levelTexture.width * 0.3f + 0.3f);
+            // Vector2 yRedGreen = Custom.EncodeFloatRG(snowSource.pos.y / roomCamera.levelTexture.height * 0.3f + 0.3f);
+            // Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / (1600f * 0.5f * (roomCamera.levelTexture.width / 1400f + roomCamera.levelTexture.height / 800f)));
+
+            Vector2 xRedGreen = Custom.EncodeFloatRG(snowSource.pos.x / snowSource.room.PixelWidth * 0.3f + 0.3f);
+            Vector2 yRedGreen = Custom.EncodeFloatRG(snowSource.pos.y / snowSource.room.PixelHeight * 0.3f + 0.3f);
+            Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / (1600f * Mathf.Max(roomCamera.levelTexture.width / 1400f, roomCamera.levelTexture.height / 800f)));
+
             // Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / 1600f);
             // Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / (2f * roomCamera.levelTexture.height));
             // Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / (roomCamera.levelTexture.width + 200f));
-            Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / (1600f * 0.5f * (roomCamera.levelTexture.width / 1400f + roomCamera.levelTexture.height / 800f)));
             // Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / (1400f + 200f * 0.5f * (roomCamera.levelTexture.width / 1400f + roomCamera.levelTexture.height / 800f)));
             // Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / (1600f * snowSource.room.cameraPositions.Length));
-
             // Vector2 xRedGreen = Custom.EncodeFloatRG(snowSource.pos.x / 1400f * 0.3f + 0.3f);
             // Vector2 yRedGreen = Custom.EncodeFloatRG(snowSource.pos.y / 800f * 0.3f + 0.3f);
             // Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / 1600f);
