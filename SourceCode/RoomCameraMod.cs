@@ -172,8 +172,12 @@ namespace SBCameraScroll
             if (roomCamera.followAbstractCreature.Room != roomCamera.room.abstractRoom) return;
             if (roomCamera.followAbstractCreature.realizedCreature is not Creature creature) return;
 
+            // not sure why I have to use the default screen size here instead of roomCamera.sSize();
+            // maybe it uses offsets from the default one at a later stage;
+            // if I don't then the camera will be off center horizontally;
+            // vertically it has 768f in all cases;
+            Vector2 position = -0.5f * new Vector2(1366f, 768f);
             AttachedFields attachedFields = roomCamera.GetAttachedFields();
-            Vector2 position = -roomCamera.sSize / 2f;
 
             if (creature.inShortcut && ShortcutHandlerMod.GetShortcutVessel(roomCamera.game.shortcuts, roomCamera.followAbstractCreature) is ShortcutHandler.ShortCutVessel shortcutVessel)
             {
@@ -201,7 +205,7 @@ namespace SBCameraScroll
             // MainMod.LogAllInstructions(context);
 
             //
-            // the first four instance remove the clamping;
+            // the first four instances remove the clamping;
             // otherwise you can't scroll past the current screen;
             //
 
