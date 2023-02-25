@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Menu.Remix.MixedUI;
 using UnityEngine;
 
@@ -18,7 +19,6 @@ namespace SBCameraScroll
         public static Configurable<bool> fogFullScreenEffect = instance.config.Bind("fogFullScreenEffect", defaultValue: true, new ConfigurableInfo("When disabled, the full screen fog effect is removed. It depends on the camera position and can noticeably move with the screen.", null, "", "Fog Effect"));
         public static Configurable<bool> mergeWhileLoading = instance.config.Bind("mergeWhileLoading", defaultValue: true, new ConfigurableInfo("When enabled, the camera textures for each room are merged when the region gets loaded.\nWhen disabled, camera textures are merged for each room on demand. Merging happens only once and might take a while.", null, "", "Merge While Loading")); //Merging happens only once and the files are stored inside the folder \"Mods/SBCameraScroll/\".\nThis process can take a while. Merging all rooms in Deserted Wastelands took me around three minutes.
         public static Configurable<bool> otherFullScreenEffects = instance.config.Bind("otherFullScreenEffects", defaultValue: true, new ConfigurableInfo("When disabled, full screen effects (except fog) like bloom and melt are removed.", null, "", "Full Screen Effects"));
-        // public static Configurable<bool> addPaletteFade = instance.config.Bind("paletteFade", defaultValue: true, new ConfigurableInfo("When disabled, the (color) palette cannot change after entering a room. This does not disable the palette changes causes by the day-night cyle.", null, "", "Palette Fade"));
         public static Configurable<bool> scrollOneScreenRooms = instance.config.Bind("scrollOneScreenRooms", defaultValue: false, new ConfigurableInfo("When disabled, the camera does not scroll in rooms with only one screen.", null, "", "One Screen Rooms")); // Automatically enabled when using SplitScreenMod.
 
         public static Configurable<int> smoothingFactorX = instance.config.Bind("smoothingFactorX", defaultValue: 8, new ConfigurableInfo("Determines how much of the distance is covered per frame. This is used when switching cameras as well to ensure a smooth transition.", new ConfigAcceptableRange<int>(0, 35), "", "Smoothing Factor for X (8)"));
@@ -72,7 +72,7 @@ namespace SBCameraScroll
         private OpComboBox? cameraTypeComboBox = null;
         private int lastCameraType = 0;
 
-        // private OpSimpleButton? clearCacheButton = null;
+        private OpSimpleButton? clearCacheButton = null;
 
         private readonly List<Configurable<string>> comboBoxConfigurables = new();
         private readonly List<List<ListItem>> comboBoxLists = new();
@@ -90,15 +90,46 @@ namespace SBCameraScroll
         // main
         //
 
-        public MainModOptions()
-        {
-            // ambiguity error // why? TODO
-            // OnConfigChanged += MainModOptions_OnConfigChanged;
-        }
+        public MainModOptions() => OnConfigChanged += MainModOptions_OnConfigChanged;
 
         //
         // public
         //
+
+        public void ClearCacheButton_OnClick(UIfocusable _)
+        {
+            FileInfo[] files = new DirectoryInfo(MainMod.modDirectoryPath + "world").GetFiles("*.*", SearchOption.AllDirectories);
+            for (int fileIndex = files.Length - 1; fileIndex >= 0; --fileIndex)
+            {
+                files[fileIndex].Delete();
+            }
+
+            files = new DirectoryInfo(MainMod.modDirectoryPath + "levels").GetFiles("*.*", SearchOption.AllDirectories);
+            for (int fileIndex = files.Length - 1; fileIndex >= 0; --fileIndex)
+            {
+                files[fileIndex].Delete();
+            }
+            ClearCacheButton_UpdateColor();
+        }
+
+        public void ClearCacheButton_UpdateColor()
+        {
+            if (clearCacheButton == null) return;
+
+            bool is_levels_empty = Directory.GetFiles(MainMod.modDirectoryPath + "levels", "*.*", SearchOption.AllDirectories).Length == 0;
+            bool is_world_empty = Directory.GetFiles(MainMod.modDirectoryPath + "world", "*.*", SearchOption.AllDirectories).Length == 0;
+            clearCacheButton.colorEdge = new Color(1f, 1f, 1f, 1f);
+
+            if (is_levels_empty && is_world_empty)
+            {
+                clearCacheButton.colorFill = new Color(0.0f, 0.0f, 0.0f, 0.0f);
+                clearCacheButton.greyedOut = true;
+                return;
+            }
+
+            clearCacheButton.colorFill = new Color(1f, 0.0f, 0.0f, 0.5f);
+            clearCacheButton.greyedOut = false;
+        }
 
         public override void Initialize()
         {
@@ -146,7 +177,6 @@ namespace SBCameraScroll
             AddCheckBox(otherFullScreenEffects, (string)otherFullScreenEffects.info.Tags[0]);
             AddCheckBox(mergeWhileLoading, (string)mergeWhileLoading.info.Tags[0]);
             AddCheckBox(scrollOneScreenRooms, (string)scrollOneScreenRooms.info.Tags[0]);
-            // AddCheckBox(addPaletteFade, (string)addPaletteFade.info.Tags[0]);
             DrawCheckBoxes(ref Tabs[tabIndex]);
 
             AddNewLine();
@@ -161,21 +191,14 @@ namespace SBCameraScroll
 
             AddNewLine(3f);
 
-
-            // clearCacheButton = new(new Vector2(pos.x + (marginX.y - marginX.x) / 2f - 55f, pos.y), new Vector2(110f, 30f), "CLEAR CACHE") // same size as apply / back button in ConfigMachine //TODO
-            // {
-            //     colorEdge = new Color(1f, 1f, 1f, 1f),
-            //     colorFill = new Color(1f, 0.0f, 0.0f, 0.5f),
-            //     description = "WARNING: Deletes all merged textures inside the folder \"Mods/SBCameraScroll/\".\nAdding custom regions might change existing room textures. These textures need to be merged again."
-            // };
-            // clearCacheButton.OnClick += ClearCacheButton_OnClick;
-            // Tabs[tabIndex].AddItems(clearCacheButton);
-
-            // if (clearCacheButton != null && Directory.GetFiles(MainMod.modDirectoryPath + Path.DirectorySeparatorChar + "world", "*.*", SearchOption.AllDirectories).Length == 0)
-            // {
-            //     clearCacheButton.colorEdge.a = 0.1f;
-            //     clearCacheButton.greyedOut = true;
-            // }
+            // same size as apply / back button in ConfigMachine 
+            clearCacheButton = new(new Vector2(pos.x + (marginX.y - marginX.x) / 2f - 55f, pos.y), new Vector2(110f, 30f), "CLEAR CACHE")
+            {
+                description = "WARNING: Deletes all merged textures inside the folders \"levels\" and \"world\". These folders can be found inside the folder \"mods/SBCameraScroll/\" or \"312520/2928752589\"."
+            };
+            ClearCacheButton_UpdateColor();
+            clearCacheButton.OnClick += ClearCacheButton_OnClick;
+            Tabs[tabIndex].AddItems(clearCacheButton);
 
             DrawBox(ref Tabs[tabIndex]);
 
@@ -279,24 +302,10 @@ namespace SBCameraScroll
             }
         }
 
-        public override void Update()
-        {
-            base.Update();
-            if (cameraTypeComboBox != null)
-            {
-                int _cameraType = Array.IndexOf(cameraTypeKeys, cameraTypeComboBox.value);
-                if (lastCameraType != _cameraType)
-                {
-                    lastCameraType = _cameraType;
-                    cameraTypeComboBox.description = cameraTypeDescriptions[_cameraType];
-                }
-            }
-        }
-
-
         public void MainModOptions_OnConfigChanged()
         {
-            RoomCameraMod.camera_type = (CameraType)Array.IndexOf(cameraTypeKeys, cameraType.Value); // 0: Position type, 1: Vanilla type
+            // 0: Position type, 1: Vanilla type
+            RoomCameraMod.camera_type = (CameraType)Array.IndexOf(cameraTypeKeys, cameraType.Value);
 
             Debug.Log("SBCameraScroll: cameraType " + RoomCameraMod.camera_type);
             Debug.Log("SBCameraScroll: Option_FogFullScreenEffect " + MainMod.Option_FogFullScreenEffect);
@@ -335,25 +344,19 @@ namespace SBCameraScroll
             }
         }
 
-        // public void ClearCacheButton_OnClick(UIfocusable _)
-        // {
-        //     // if (signal == "clearCache")
-        //     // {
-        //     FileInfo[] files = new DirectoryInfo(MainMod.modDirectoryPath).GetFiles("*.*", SearchOption.AllDirectories);
-        //     for (int fileIndex = files.Length - 1; fileIndex >= 0; --fileIndex)
-        //     {
-        //         files[fileIndex].Delete();
-        //     }
-        //     // }
-
-        //     if (clearCacheButton != null && Directory.GetFiles(MainMod.modDirectoryPath, "*.*", SearchOption.AllDirectories).Length == 0)
-        //     {
-        //         clearCacheButton.colorEdge.a = 0.1f;
-        //         clearCacheButton.colorFill = new Color(0.0f, 0.0f, 0.0f, 0.0f);
-        //         clearCacheButton.greyedOut = true;
-        //         clearCacheButton.OnChange();
-        //     }
-        // }
+        public override void Update()
+        {
+            base.Update();
+            if (cameraTypeComboBox != null)
+            {
+                int _cameraType = Array.IndexOf(cameraTypeKeys, cameraTypeComboBox.value);
+                if (lastCameraType != _cameraType)
+                {
+                    lastCameraType = _cameraType;
+                    cameraTypeComboBox.description = cameraTypeDescriptions[_cameraType];
+                }
+            }
+        }
 
         //
         // private

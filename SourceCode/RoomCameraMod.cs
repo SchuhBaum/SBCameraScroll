@@ -29,6 +29,10 @@ namespace SBCameraScroll
         public static float maxUpdateShortcut = 3f;
         public static List<string> blacklisted_rooms = new() { "RM_AI", "GW_ARTYSCENES", "GW_ARTYNIGHTMARE", "SB_E05SAINT" };
 
+        // 1360f seems to work better than 1366f; why?;
+        // this is noticable for the JollyPlayerArrow;
+        public static readonly float default_screen_size_x = 1360f;
+
         //
         // variables
         //
@@ -75,7 +79,6 @@ namespace SBCameraScroll
 
             if (roomCamera.room is not Room room) return;
             if (room.roomSettings.fadePalette == null) return;
-            // if (!MainMod.Option_PaletteFade) return;
 
             // the day-night fade effect does not update paletteBlend in all cases;
             // so this can otherwise reset it sometimes;
@@ -176,7 +179,7 @@ namespace SBCameraScroll
             // maybe it uses offsets from the default one at a later stage;
             // if I don't then the camera will be off center horizontally;
             // vertically it has 768f in all cases;
-            Vector2 position = -0.5f * new Vector2(1366f, 768f);
+            Vector2 position = -0.5f * new Vector2(default_screen_size_x, 768f);
             AttachedFields attachedFields = roomCamera.GetAttachedFields();
 
             if (creature.inShortcut && ShortcutHandlerMod.GetShortcutVessel(roomCamera.game.shortcuts, roomCamera.followAbstractCreature) is ShortcutHandler.ShortCutVessel shortcutVessel)

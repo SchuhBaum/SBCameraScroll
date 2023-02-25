@@ -26,7 +26,6 @@ public class PositionTypeCamera : IAmATypeCamera
     public EntityID? follow_abstract_creature_id = null;
     public Vector2 camera_offset = new();
 
-
     //
     //
     //

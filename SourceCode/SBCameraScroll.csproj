@@ -4,11 +4,12 @@
     <TargetFramework>net48</TargetFramework>
     <Nullable>enable</Nullable>
 	  <LangVersion>10.0</LangVersion>
-	  <Version>2.4.1</Version> 
+	  <Version>2.4.2</Version> 
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="..\..\references\PUBLIC-Assembly-CSharp.dll"/>
+    <!-- <Reference Include="..\..\references\PUBLIC-Assembly-CSharp.dll"/> -->
+    <Reference Include="..\..\references\STRIPPED-Assembly-CSharp.dll"/>
     <Reference Include="..\..\references\BepInEx.dll"/>
     <Reference Include="..\..\references\HOOKS-Assembly-CSharp.dll"/>
     <Reference Include="..\..\references\Mono.Cecil.dll"/>
