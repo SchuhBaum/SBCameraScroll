@@ -38,7 +38,7 @@ namespace SBCameraScroll
                 cursor.EmitDelegate<Func<MoreSlugcats.BlizzardGraphics, Vector2, Vector2>>((blizzardGraphics, cameraPosition) =>
                 {
                     RoomCamera roomCamera = blizzardGraphics.rCam;
-                    if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode)
+                    if (roomCamera.Is_Type_Camera_Not_Used())
                     {
                         return roomCamera.pos - blizzardGraphics.room.cameraPositions[roomCamera.currentCameraPosition];
                     }
@@ -69,7 +69,7 @@ namespace SBCameraScroll
                 return;
             }
 
-            if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode)
+            if (roomCamera.Is_Type_Camera_Not_Used())
             {
                 orig(blizzardGraphics, eu);
                 return;
@@ -98,7 +98,7 @@ namespace SBCameraScroll
             if (snowSource.room == null) return orig(snowSource);
 
             RoomCamera roomCamera = snowSource.room.game.cameras[0];
-            if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode) return orig(snowSource);
+            if (roomCamera.Is_Type_Camera_Not_Used()) return orig(snowSource);
 
             // what does this exactly do?
             // generating red green values out of one float?
@@ -158,7 +158,7 @@ namespace SBCameraScroll
                 return;
             }
 
-            if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode)
+            if (roomCamera.Is_Type_Camera_Not_Used())
             {
                 orig(snowSource, eu);
                 return;

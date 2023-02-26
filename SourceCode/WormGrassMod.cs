@@ -10,8 +10,8 @@ namespace SBCameraScroll
         // variables
         //
 
-        internal static readonly Dictionary<WormGrass, AttachedFields> allAttachedFields = new();
-        public static AttachedFields GetAttachedFields(this WormGrass wormGrass) => allAttachedFields[wormGrass];
+        internal static readonly Dictionary<WormGrass, AttachedFields> all_attached_fields = new();
+        public static AttachedFields GetAttachedFields(this WormGrass wormGrass) => all_attached_fields[wormGrass];
 
         //
         //
@@ -59,14 +59,14 @@ namespace SBCameraScroll
 
         private static void WormGrass_ctor(On.WormGrass.orig_ctor orig, WormGrass wormGrass, Room room, List<IntVector2> tiles)
         {
-            allAttachedFields.Add(wormGrass, new AttachedFields());
+            all_attached_fields.Add(wormGrass, new AttachedFields());
             orig(wormGrass, room, tiles); // needs attachedFields for wormGrass
 
             if (wormGrass.patches.Count == 0)
             {
                 Debug.Log("SBCameraScroll: This worm grass for room " + room.abstractRoom.name + " has no patches. Destroy.");
                 wormGrass.Destroy();
-                allAttachedFields.Remove(wormGrass);
+                all_attached_fields.Remove(wormGrass);
             }
             else
             {
@@ -75,7 +75,7 @@ namespace SBCameraScroll
                 {
                     Debug.Log("SBCameraScroll: There is already worm grass in " + room.abstractRoom.name + ". Destroy the old one.");
                     wormGrass_.Destroy();
-                    allAttachedFields.Remove(wormGrass_);
+                    all_attached_fields.Remove(wormGrass_);
                 }
                 abstractRoomAF.wormGrass = wormGrass;
             }

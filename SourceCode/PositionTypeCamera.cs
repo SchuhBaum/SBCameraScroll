@@ -1,6 +1,9 @@
 using System;
 using UnityEngine;
 
+using static SBCameraScroll.MainMod;
+using static SBCameraScroll.RoomCameraMod;
+
 namespace SBCameraScroll;
 
 public class PositionTypeCamera : IAmATypeCamera
@@ -13,11 +16,8 @@ public class PositionTypeCamera : IAmATypeCamera
     public static float camera_box_y = 40f;
     public static float offset_speed_multiplier = 0.2f;
 
-    public static float Smoothing_Factor_X => RoomCameraMod.smoothing_factor_x;
-    public static float Smoothing_Factor_Y => RoomCameraMod.smoothing_factor_y;
-
     private readonly RoomCamera room_camera;
-    private readonly RoomCameraMod.AttachedFields attached_fields;
+    private readonly AttachedFields attached_fields;
 
     //
     // variables
@@ -30,7 +30,7 @@ public class PositionTypeCamera : IAmATypeCamera
     //
     //
 
-    public PositionTypeCamera(RoomCamera roomCamera, RoomCameraMod.AttachedFields attachedFields)
+    public PositionTypeCamera(RoomCamera roomCamera, AttachedFields attachedFields)
     {
         room_camera = roomCamera;
         attached_fields = attachedFields;
@@ -40,24 +40,24 @@ public class PositionTypeCamera : IAmATypeCamera
     // public
     //
 
-    private void Move_Camera_Towards_Target(Vector2 targetPosition, Vector2 at_border_difference)
+    private void Move_Camera_Towards_Target(Vector2 target_position, Vector2 at_border_difference)
     {
         float camera_box_minus_border_x = Mathf.Max(0.0f, camera_box_x - Mathf.Abs(at_border_difference.x));
         float camera_box_minus_border_y = Mathf.Max(0.0f, camera_box_y - Mathf.Abs(at_border_difference.y));
 
-        float distance_x = Mathf.Abs(targetPosition.x - room_camera.lastPos.x);
-        float distance_y = Mathf.Abs(targetPosition.y - room_camera.lastPos.y);
+        float distance_x = Mathf.Abs(target_position.x - room_camera.lastPos.x);
+        float distance_y = Mathf.Abs(target_position.y - room_camera.lastPos.y);
 
         if (distance_x > camera_box_minus_border_x)
         {
-            // the goal is to reach innerCameraBoxX_minus_border-close to targetPosition.x
+            // the goal is to reach innerCameraBoxX_minus_border-close to target_position.x
             // the result is the same as:
-            // roomCamera.pos.x = Mathf.Lerp(roomCamera.lastPos.x, innerCameraBoxX_minus_border-close to targetPosition.x, t = smoothingFactorX);
-            room_camera.pos.x = Mathf.Lerp(room_camera.lastPos.x, targetPosition.x, Smoothing_Factor_X * (distance_x - camera_box_minus_border_x) / distance_x);
+            // roomCamera.pos.x = Mathf.Lerp(roomCamera.lastPos.x, innerCameraBoxX_minus_border-close to target_position.x, t = smoothingFactorX);
+            room_camera.pos.x = Mathf.Lerp(room_camera.lastPos.x, target_position.x, smoothing_factor_x * (distance_x - camera_box_minus_border_x) / distance_x);
 
             // stop when moving too slow;
             // downside is that the targetposition might not be reached exactly;
-            // depending on smoothingFactorX this can be a couple of pixels far away from targetPosition;
+            // depending on smoothingFactorX this can be a couple of pixels far away from target_position;
             if (Mathf.Abs(room_camera.pos.x - room_camera.lastPos.x) < 1f)
             {
                 room_camera.pos.x = room_camera.lastPos.x;
@@ -70,7 +70,7 @@ public class PositionTypeCamera : IAmATypeCamera
 
         if (distance_y > camera_box_minus_border_y)
         {
-            room_camera.pos.y = Mathf.Lerp(room_camera.lastPos.y, targetPosition.y, Smoothing_Factor_Y * (distance_y - camera_box_minus_border_y) / distance_y);
+            room_camera.pos.y = Mathf.Lerp(room_camera.lastPos.y, target_position.y, smoothing_factor_y * (distance_y - camera_box_minus_border_y) / distance_y);
             if (Mathf.Abs(room_camera.pos.y - room_camera.lastPos.y) < 1f)
             {
                 room_camera.pos.y = room_camera.lastPos.y;
@@ -84,41 +84,41 @@ public class PositionTypeCamera : IAmATypeCamera
 
     public void Move_Camera_Without_Offset()
     {
-        Vector2 targetPosition = attached_fields.onScreenPosition;
-        RoomCameraMod.CheckBorders(room_camera, ref targetPosition);
+        Vector2 target_position = attached_fields.on_screen_position;
+        CheckBorders(room_camera, ref target_position);
 
-        Vector2 at_border_difference = attached_fields.onScreenPosition - targetPosition;
-        Move_Camera_Towards_Target(targetPosition, at_border_difference);
+        Vector2 at_border_difference = attached_fields.on_screen_position - target_position;
+        Move_Camera_Towards_Target(target_position, at_border_difference);
     }
 
     public void Move_Camera_With_Offset_Using_Player_Input(in Player player)
     {
-        Vector2 targetPosition = attached_fields.onScreenPosition + camera_offset;
-        RoomCameraMod.CheckBorders(room_camera, ref targetPosition);
+        Vector2 target_position = attached_fields.on_screen_position + camera_offset;
+        CheckBorders(room_camera, ref target_position);
 
-        Vector2 at_border_difference = attached_fields.onScreenPosition + camera_offset - targetPosition;
-        Move_Camera_Towards_Target(targetPosition, at_border_difference);
+        Vector2 at_border_difference = attached_fields.on_screen_position + camera_offset - target_position;
+        Move_Camera_Towards_Target(target_position, at_border_difference);
         Update_Camera_Offset_Using_Player_Input(player, at_border_difference);
     }
 
     public void Move_Camera_With_Offset_Using_Position_Input()
     {
-        Vector2 targetPosition = attached_fields.onScreenPosition + camera_offset;
-        RoomCameraMod.CheckBorders(room_camera, ref targetPosition);
+        Vector2 target_position = attached_fields.on_screen_position + camera_offset;
+        CheckBorders(room_camera, ref target_position);
 
-        Vector2 at_border_difference = attached_fields.onScreenPosition + camera_offset - targetPosition;
-        Move_Camera_Towards_Target(targetPosition, at_border_difference);
+        Vector2 at_border_difference = attached_fields.on_screen_position + camera_offset - target_position;
+        Move_Camera_Towards_Target(target_position, at_border_difference);
         Update_Camera_Offset_Using_Position_Input(at_border_difference);
     }
 
     public void Reset()
     {
-        RoomCameraMod.UpdateOnScreenPosition(room_camera);
-        RoomCameraMod.CheckBorders(room_camera, ref attached_fields.onScreenPosition); // do not move past room boundaries
+        UpdateOnScreenPosition(room_camera);
+        CheckBorders(room_camera, ref attached_fields.on_screen_position); // do not move past room boundaries
 
         // center camera on player
-        room_camera.lastPos = attached_fields.onScreenPosition;
-        room_camera.pos = attached_fields.onScreenPosition;
+        room_camera.lastPos = attached_fields.on_screen_position;
+        room_camera.pos = attached_fields.on_screen_position;
         follow_abstract_creature_id = room_camera.followAbstractCreature?.ID;
         camera_offset = new();
     }
@@ -127,7 +127,7 @@ public class PositionTypeCamera : IAmATypeCamera
     {
         if (room_camera.followAbstractCreature == null) return;
         if (room_camera.room == null) return;
-        RoomCameraMod.UpdateOnScreenPosition(room_camera);
+        UpdateOnScreenPosition(room_camera);
 
         // is_in_transition
         if (follow_abstract_creature_id != room_camera.followAbstractCreature.ID && room_camera.followAbstractCreature?.realizedCreature is Creature creature)
@@ -145,7 +145,7 @@ public class PositionTypeCamera : IAmATypeCamera
             return;
         }
 
-        if (!MainMod.Option_CameraOffset)
+        if (!Option_CameraOffset)
         {
             Move_Camera_Without_Offset();
             return;
@@ -171,11 +171,11 @@ public class PositionTypeCamera : IAmATypeCamera
         // this seems to work even when using Gourmand and being exhausted;
         float buffer = 2f;
 
-        bool has_target_moved_x = Mathf.Abs(attached_fields.onScreenPosition.x - attached_fields.lastOnScreenPosition.x) > buffer;
-        bool has_target_moved_y = Mathf.Abs(attached_fields.onScreenPosition.y - attached_fields.lastOnScreenPosition.y) > buffer;
+        bool has_target_moved_x = Mathf.Abs(attached_fields.on_screen_position.x - attached_fields.last_on_screen_position.x) > buffer;
+        bool has_target_moved_y = Mathf.Abs(attached_fields.on_screen_position.y - attached_fields.last_on_screen_position.y) > buffer;
 
-        bool has_target_turned_around_x = has_target_moved_x && player.input[0].x != 0 && player.input[0].x == -Math.Sign(camera_offset.x) && player.input[0].x == Math.Sign(attached_fields.onScreenPosition.x - attached_fields.lastOnScreenPosition.x);
-        bool has_target_turned_around_y = has_target_moved_y && player.input[0].y != 0 && player.input[0].y == -Math.Sign(camera_offset.y) && player.input[0].y == Math.Sign(attached_fields.onScreenPosition.y - attached_fields.lastOnScreenPosition.y);
+        bool has_target_turned_around_x = has_target_moved_x && player.input[0].x != 0 && player.input[0].x == -Math.Sign(camera_offset.x) && player.input[0].x == Math.Sign(attached_fields.on_screen_position.x - attached_fields.last_on_screen_position.x);
+        bool has_target_turned_around_y = has_target_moved_y && player.input[0].y != 0 && player.input[0].y == -Math.Sign(camera_offset.y) && player.input[0].y == Math.Sign(attached_fields.on_screen_position.y - attached_fields.last_on_screen_position.y);
 
         bool has_target_and_camera_moved_x = player.input[0].x != 0 && room_camera.pos.x != room_camera.lastPos.x;
         bool has_target_and_camera_moved_y = player.input[0].y != 0 && room_camera.pos.y != room_camera.lastPos.y;
@@ -188,11 +188,11 @@ public class PositionTypeCamera : IAmATypeCamera
     {
         float buffer = 2f;
 
-        bool has_target_moved_x = Mathf.Abs(attached_fields.onScreenPosition.x - attached_fields.lastOnScreenPosition.x) > buffer;
-        bool has_target_moved_y = Mathf.Abs(attached_fields.onScreenPosition.y - attached_fields.lastOnScreenPosition.y) > buffer;
+        bool has_target_moved_x = Mathf.Abs(attached_fields.on_screen_position.x - attached_fields.last_on_screen_position.x) > buffer;
+        bool has_target_moved_y = Mathf.Abs(attached_fields.on_screen_position.y - attached_fields.last_on_screen_position.y) > buffer;
 
-        bool has_target_turned_around_x = has_target_moved_x && Math.Sign(attached_fields.onScreenPosition.x - attached_fields.lastOnScreenPosition.x) == -Math.Sign(camera_offset.x);
-        bool has_target_turned_around_y = has_target_moved_y && Math.Sign(attached_fields.onScreenPosition.y - attached_fields.lastOnScreenPosition.y) == -Math.Sign(camera_offset.y);
+        bool has_target_turned_around_x = has_target_moved_x && Math.Sign(attached_fields.on_screen_position.x - attached_fields.last_on_screen_position.x) == -Math.Sign(camera_offset.x);
+        bool has_target_turned_around_y = has_target_moved_y && Math.Sign(attached_fields.on_screen_position.y - attached_fields.last_on_screen_position.y) == -Math.Sign(camera_offset.y);
 
         bool has_target_and_camera_moved_x = has_target_moved_x && room_camera.pos.x != room_camera.lastPos.x;
         bool has_target_and_camera_moved_y = has_target_moved_y && room_camera.pos.y != room_camera.lastPos.y;
@@ -233,6 +233,6 @@ public class PositionTypeCamera : IAmATypeCamera
         }
 
         if (!has_target_and_camera_moved) return;
-        camera_offset = Mathf.Clamp(camera_offset + offset_speed_multiplier * (attached_fields.onScreenPosition.x - attached_fields.lastOnScreenPosition.x), -maximum_offset, maximum_offset);
+        camera_offset = Mathf.Clamp(camera_offset + offset_speed_multiplier * (attached_fields.on_screen_position.x - attached_fields.last_on_screen_position.x), -maximum_offset, maximum_offset);
     }
 }

@@ -21,8 +21,8 @@ namespace SBCameraScroll
         // variables
         //
 
-        internal static readonly Dictionary<AbstractRoom, AttachedFields> allAttachedFields = new();
-        public static AttachedFields GetAttachedFields(this AbstractRoom abstractRoom) => allAttachedFields[abstractRoom];
+        internal static readonly Dictionary<AbstractRoom, AttachedFields> all_attached_fields = new();
+        public static AttachedFields GetAttachedFields(this AbstractRoom abstractRoom) => all_attached_fields[abstractRoom];
 
         public static readonly Dictionary<string, Vector2> textureOffsetModifier = new();
 
@@ -133,7 +133,7 @@ namespace SBCameraScroll
                 // wormGrass can have multiple patches with multiple tiles each
 
                 wormGrass.Destroy();
-                WormGrassMod.allAttachedFields.Remove(wormGrass);
+                WormGrassMod.all_attached_fields.Remove(wormGrass);
             }
             attachedFields.wormGrass = null;
         }
@@ -433,7 +433,7 @@ namespace SBCameraScroll
         private static void AbstractRoom_ctor(On.AbstractRoom.orig_ctor orig, AbstractRoom abstractRoom, string name, int[] connections, int index, int swarmRoomIndex, int shelterIndex, int gateIndex)
         {
             orig(abstractRoom, name, connections, index, swarmRoomIndex, shelterIndex, gateIndex);
-            allAttachedFields.Add(abstractRoom, new AttachedFields());
+            all_attached_fields.Add(abstractRoom, new AttachedFields());
         }
 
         private static void AbstractRoom_Abstractize(On.AbstractRoom.orig_Abstractize orig, AbstractRoom abstractRoom)

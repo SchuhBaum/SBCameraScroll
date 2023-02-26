@@ -16,9 +16,9 @@ namespace SBCameraScroll
 
         private static void RainWorldGame_ctor(On.RainWorldGame.orig_ctor orig, RainWorldGame game, ProcessManager manager)
         {
-            AbstractRoomMod.allAttachedFields.Clear();
+            AbstractRoomMod.all_attached_fields.Clear();
             RoomCameraMod.all_attached_fields.Clear();
-            WormGrassMod.allAttachedFields.Clear();
+            WormGrassMod.all_attached_fields.Clear();
 
             Debug.Log("SBCameraScroll: Initialize variables.");
             orig(game, manager);
@@ -29,9 +29,9 @@ namespace SBCameraScroll
             Debug.Log("SBCameraScroll: Cleanup.");
             orig(game);
 
-            AbstractRoomMod.allAttachedFields.Clear();
+            AbstractRoomMod.all_attached_fields.Clear();
             RoomCameraMod.all_attached_fields.Clear();
-            WormGrassMod.allAttachedFields.Clear();
+            WormGrassMod.all_attached_fields.Clear();
         }
     }
 }

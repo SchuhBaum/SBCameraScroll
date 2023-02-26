@@ -25,7 +25,7 @@ namespace SBCameraScroll
                 return;
             }
 
-            if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode)
+            if (roomCamera.Is_Type_Camera_Not_Used())
             {
                 orig(closeCloud, spriteLeaser, roomCamera, timeStacker, cameraPosition);
                 return;
@@ -54,7 +54,7 @@ namespace SBCameraScroll
                 return;
             }
 
-            if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode)
+            if (roomCamera.Is_Type_Camera_Not_Used())
             {
                 orig(distantCloud, spriteLeaser, roomCamera, timeStacker, cameraPosition);
                 return;
@@ -76,7 +76,7 @@ namespace SBCameraScroll
                 return;
             }
 
-            if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode)
+            if (roomCamera.Is_Type_Camera_Not_Used())
             {
                 orig(distantLightning, spriteLeaser, roomCamera, timeStacker, cameraPosition);
                 return;
@@ -99,7 +99,7 @@ namespace SBCameraScroll
                 return;
             }
 
-            if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode)
+            if (roomCamera.Is_Type_Camera_Not_Used())
             {
                 orig(flyingCloud, spriteLeaser, roomCamera, timeStacker, cameraPosition);
                 return;

@@ -14,7 +14,7 @@ namespace SBCameraScroll
         private static void OverWorld_WorldLoaded(On.OverWorld.orig_WorldLoaded orig, OverWorld overWorld)
         {
             orig(overWorld);
-            foreach (AbstractRoom abstractRoom in AbstractRoomMod.allAttachedFields.Keys)
+            foreach (AbstractRoom abstractRoom in AbstractRoomMod.all_attached_fields.Keys)
             {
                 if (!overWorld.activeWorld.IsRoomInRegion(abstractRoom.index))
                 {
