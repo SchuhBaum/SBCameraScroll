@@ -31,8 +31,6 @@ public static class RoomCameraMod
     public static float maxUpdateShortcut = 3f;
     public static List<string> blacklisted_rooms = new() { "RM_AI", "GW_ARTYSCENES", "GW_ARTYNIGHTMARE", "SB_E05SAINT" };
 
-    public static readonly float default_screen_size_x = 1366f;
-
     //
     // variables
     //
