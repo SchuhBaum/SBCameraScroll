@@ -16,6 +16,11 @@ internal static class JollyCoopMod
         orig(playerArrow);
 
         if (playerArrow.jollyHud.Camera.GetAttachedFields().isRoomBlacklisted) return;
-        playerArrow.bodyPos.x += 0.5f * (playerArrow.jollyHud.hud.rainWorld.options.ScreenSize.x - RoomCameraMod.default_screen_size_x);
+
+        float screen_size_x = playerArrow.jollyHud.hud.rainWorld.options.ScreenSize.x;
+        if (screen_size_x == RoomCameraMod.default_screen_size_x) return;
+
+        // 1360f seems to work better than 1366f in most cases;
+        playerArrow.bodyPos.x += 0.5f * (screen_size_x - RoomCameraMod.default_screen_size_x + 6f);
     }
 }

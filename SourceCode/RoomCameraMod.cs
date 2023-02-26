@@ -29,9 +29,7 @@ namespace SBCameraScroll
         public static float maxUpdateShortcut = 3f;
         public static List<string> blacklisted_rooms = new() { "RM_AI", "GW_ARTYSCENES", "GW_ARTYNIGHTMARE", "SB_E05SAINT" };
 
-        // 1360f seems to work better than 1366f; why?;
-        // this is noticable for the JollyPlayerArrow;
-        public static readonly float default_screen_size_x = 1360f;
+        public static readonly float default_screen_size_x = 1366f;
 
         //
         // variables
@@ -48,7 +46,6 @@ namespace SBCameraScroll
         {
             IL.RoomCamera.DrawUpdate += IL_RoomCamera_DrawUpdate;
             IL.RoomCamera.Update += IL_RoomCamera_Update;
-            // On.RoomCamera.Update += RoomCamera_Update;
 
             On.RoomCamera.ApplyDepth += RoomCamera_ApplyDepth;
             On.RoomCamera.ApplyPalette += RoomCamera_ApplyPalette;
@@ -651,16 +648,6 @@ namespace SBCameraScroll
                 orig(roomCamera, sourcePos, bump, shake);
             }
         }
-
-        // updated physics related things like the camera position
-        // private static void RoomCamera_Update(On.RoomCamera.orig_Update orig, RoomCamera roomCamera)
-        // {
-        //     orig(roomCamera); // updates isRoomBlacklisted
-
-        //     if (roomCamera.GetAttachedFields().isRoomBlacklisted || roomCamera.voidSeaMode) return; // don't smooth the camera position in the void sea // treat void sea as being blacklisted 
-        //     UpdateCameraPosition(roomCamera);
-        //     AddFadeTransition(roomCamera);
-        // }
 
         //
         //
