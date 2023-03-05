@@ -1,33 +1,32 @@
-namespace SBCameraScroll
+namespace SBCameraScroll;
+
+public static class ShortcutHandlerMod
 {
-    public static class ShortcutHandlerMod
+    // ---------------- //
+    // public functions //
+    // ---------------- //
+
+    public static ShortcutHandler.ShortCutVessel? GetShortcutVessel(ShortcutHandler? shortcutHandler, AbstractCreature? abstractCreature)
     {
-        // ---------------- //
-        // public functions //
-        // ---------------- //
-
-        public static ShortcutHandler.ShortCutVessel? GetShortcutVessel(ShortcutHandler? shortcutHandler, AbstractCreature? abstractCreature)
+        if (shortcutHandler == null || abstractCreature == null || abstractCreature.realizedCreature?.inShortcut == false)
         {
-            if (shortcutHandler == null || abstractCreature == null || abstractCreature.realizedCreature?.inShortcut == false)
-            {
-                return null;
-            }
+            return null;
+        }
 
 
-            foreach (AbstractPhysicalObject abstractPhysicalObject in abstractCreature.GetAllConnectedObjects()) // needed when carried by other creatures
+        foreach (AbstractPhysicalObject abstractPhysicalObject in abstractCreature.GetAllConnectedObjects()) // needed when carried by other creatures
+        {
+            if (abstractPhysicalObject.realizedObject is Creature creature)
             {
-                if (abstractPhysicalObject.realizedObject is Creature creature)
+                foreach (ShortcutHandler.ShortCutVessel vessel in shortcutHandler.transportVessels)
                 {
-                    foreach (ShortcutHandler.ShortCutVessel vessel in shortcutHandler.transportVessels)
+                    if (vessel.creature == creature)
                     {
-                        if (vessel.creature == creature)
-                        {
-                            return vessel;
-                        }
+                        return vessel;
                     }
                 }
             }
-            return null;
         }
+        return null;
     }
 }

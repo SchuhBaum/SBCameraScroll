@@ -10,12 +10,6 @@ using static SBCameraScroll.MainMod;
 
 namespace SBCameraScroll;
 
-public enum CameraType
-{
-    Position,
-    Vanilla
-}
-
 public static class RoomCameraMod
 {
     //
@@ -704,5 +698,11 @@ public static class RoomCameraMod
             }
             type_camera = new VanillaTypeCamera(room_camera, this);
         }
+    }
+
+    public enum CameraType
+    {
+        Position,
+        Vanilla
     }
 }

@@ -1,23 +1,22 @@
-namespace SBCameraScroll
+namespace SBCameraScroll;
+
+internal static class RegionGateMod
 {
-    internal static class RegionGateMod
+    internal static void OnEnable()
     {
-        internal static void OnEnable()
-        {
-            On.RegionGate.Update += RegionGate_Update;
-        }
+        On.RegionGate.Update += RegionGate_Update;
+    }
 
-        //
-        // private
-        //
+    //
+    // private
+    //
 
-        private static void RegionGate_Update(On.RegionGate.orig_Update orig, RegionGate regionGate, bool eu)
+    private static void RegionGate_Update(On.RegionGate.orig_Update orig, RegionGate regionGate, bool eu)
+    {
+        if (!regionGate.room.abstractRoom.GetAttachedFields().isInitialized)
         {
-            if (!regionGate.room.abstractRoom.GetAttachedFields().isInitialized)
-            {
-                AbstractRoomMod.UpdateTextureOffset(regionGate.room.abstractRoom, regionGate.room.cameraPositions);
-            }
-            orig(regionGate, eu);
+            AbstractRoomMod.UpdateTextureOffset(regionGate.room.abstractRoom, regionGate.room.cameraPositions);
         }
+        orig(regionGate, eu);
     }
 }
