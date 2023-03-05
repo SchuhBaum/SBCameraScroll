@@ -4,6 +4,8 @@ using System.IO;
 using Menu.Remix.MixedUI;
 using UnityEngine;
 
+using static SBCameraScroll.MainMod;
+
 namespace SBCameraScroll
 {
     public class MainModOptions : OptionInterface
@@ -19,6 +21,7 @@ namespace SBCameraScroll
         public static Configurable<bool> fogFullScreenEffect = instance.config.Bind("fogFullScreenEffect", defaultValue: true, new ConfigurableInfo("When disabled, the full screen fog effect is removed. It depends on the camera position and can noticeably move with the screen.", null, "", "Fog Effect"));
         public static Configurable<bool> mergeWhileLoading = instance.config.Bind("mergeWhileLoading", defaultValue: true, new ConfigurableInfo("When enabled, the camera textures for each room are merged when the region gets loaded.\nWhen disabled, camera textures are merged for each room on demand. Merging happens only once and might take a while.", null, "", "Merge While Loading")); //Merging happens only once and the files are stored inside the folder \"Mods/SBCameraScroll/\".\nThis process can take a while. Merging all rooms in Deserted Wastelands took me around three minutes.
         public static Configurable<bool> otherFullScreenEffects = instance.config.Bind("otherFullScreenEffects", defaultValue: true, new ConfigurableInfo("When disabled, full screen effects (except fog) like bloom and melt are removed.", null, "", "Full Screen Effects"));
+        public static Configurable<bool> regionMods = instance.config.Bind("regionMods", defaultValue: true, new ConfigurableInfo("When region mods are enabled or disabled the corresponding cached room textures get cleared.", null, "", "Region Mods"));
         public static Configurable<bool> scrollOneScreenRooms = instance.config.Bind("scrollOneScreenRooms", defaultValue: false, new ConfigurableInfo("When disabled, the camera does not scroll in rooms with only one screen.", null, "", "One Screen Rooms")); // Automatically enabled when using SplitScreenMod.
 
         public static Configurable<int> smoothingFactorX = instance.config.Bind("smoothingFactorX", defaultValue: 8, new ConfigurableInfo("Determines how much of the distance is covered per frame. This is used when switching cameras as well to ensure a smooth transition.", new ConfigAcceptableRange<int>(0, 35), "", "Smoothing Factor for X (8)"));
@@ -98,13 +101,13 @@ namespace SBCameraScroll
 
         public void ClearCacheButton_OnClick(UIfocusable _)
         {
-            FileInfo[] files = new DirectoryInfo(MainMod.modDirectoryPath + "world").GetFiles("*.*", SearchOption.AllDirectories);
+            FileInfo[] files = new DirectoryInfo(modDirectoryPath + "world").GetFiles("*.*", SearchOption.AllDirectories);
             for (int fileIndex = files.Length - 1; fileIndex >= 0; --fileIndex)
             {
                 files[fileIndex].Delete();
             }
 
-            files = new DirectoryInfo(MainMod.modDirectoryPath + "levels").GetFiles("*.*", SearchOption.AllDirectories);
+            files = new DirectoryInfo(modDirectoryPath + "levels").GetFiles("*.*", SearchOption.AllDirectories);
             for (int fileIndex = files.Length - 1; fileIndex >= 0; --fileIndex)
             {
                 files[fileIndex].Delete();
@@ -116,8 +119,8 @@ namespace SBCameraScroll
         {
             if (clearCacheButton == null) return;
 
-            bool is_levels_empty = Directory.GetFiles(MainMod.modDirectoryPath + "levels", "*.*", SearchOption.AllDirectories).Length == 0;
-            bool is_world_empty = Directory.GetFiles(MainMod.modDirectoryPath + "world", "*.*", SearchOption.AllDirectories).Length == 0;
+            bool is_levels_empty = Directory.GetFiles(modDirectoryPath + "levels", "*.*", SearchOption.AllDirectories).Length == 0;
+            bool is_world_empty = Directory.GetFiles(modDirectoryPath + "world", "*.*", SearchOption.AllDirectories).Length == 0;
             clearCacheButton.colorEdge = new Color(1f, 1f, 1f, 1f);
 
             if (is_levels_empty && is_world_empty)
@@ -151,8 +154,8 @@ namespace SBCameraScroll
 
             // Subtitle
             AddNewLine(0.5f);
-            AddTextLabel("Version " + MainMod.version, FLabelAlignment.Left);
-            AddTextLabel("by " + MainMod.author, FLabelAlignment.Right);
+            AddTextLabel("Version " + version, FLabelAlignment.Left);
+            AddTextLabel("by " + author, FLabelAlignment.Right);
             DrawTextLabels(ref Tabs[tabIndex]);
 
             // Content //
@@ -176,6 +179,7 @@ namespace SBCameraScroll
             AddCheckBox(fogFullScreenEffect, (string)fogFullScreenEffect.info.Tags[0]);
             AddCheckBox(otherFullScreenEffects, (string)otherFullScreenEffects.info.Tags[0]);
             AddCheckBox(mergeWhileLoading, (string)mergeWhileLoading.info.Tags[0]);
+            AddCheckBox(regionMods, (string)regionMods.info.Tags[0]);
             AddCheckBox(scrollOneScreenRooms, (string)scrollOneScreenRooms.info.Tags[0]);
             DrawCheckBoxes(ref Tabs[tabIndex]);
 
@@ -217,8 +221,8 @@ namespace SBCameraScroll
 
             // Subtitle
             AddNewLine(0.5f);
-            AddTextLabel("Version " + MainMod.version, FLabelAlignment.Left);
-            AddTextLabel("by " + MainMod.author, FLabelAlignment.Right);
+            AddTextLabel("Version " + version, FLabelAlignment.Left);
+            AddTextLabel("by " + author, FLabelAlignment.Right);
             DrawTextLabels(ref Tabs[tabIndex]);
 
             // Content //
@@ -265,8 +269,8 @@ namespace SBCameraScroll
 
             // Subtitle
             AddNewLine(0.5f);
-            AddTextLabel("Version " + MainMod.version, FLabelAlignment.Left);
-            AddTextLabel("by " + MainMod.author, FLabelAlignment.Right);
+            AddTextLabel("Version " + version, FLabelAlignment.Left);
+            AddTextLabel("by " + author, FLabelAlignment.Right);
             DrawTextLabels(ref Tabs[tabIndex]);
 
             // Content //
@@ -308,10 +312,11 @@ namespace SBCameraScroll
             RoomCameraMod.camera_type = (CameraType)Array.IndexOf(cameraTypeKeys, cameraType.Value);
 
             Debug.Log("SBCameraScroll: cameraType " + RoomCameraMod.camera_type);
-            Debug.Log("SBCameraScroll: Option_FogFullScreenEffect " + MainMod.Option_FogFullScreenEffect);
-            Debug.Log("SBCameraScroll: Option_OtherFullScreenEffects " + MainMod.Option_OtherFullScreenEffects);
-            Debug.Log("SBCameraScroll: Option_MergeWhileLoading " + MainMod.Option_MergeWhileLoading);
-            Debug.Log("SBCameraScroll: Option_ScrollOneScreenRooms " + MainMod.Option_ScrollOneScreenRooms);
+            Debug.Log("SBCameraScroll: Option_FogFullScreenEffect " + Option_FogFullScreenEffect);
+            Debug.Log("SBCameraScroll: Option_OtherFullScreenEffects " + Option_OtherFullScreenEffects);
+            Debug.Log("SBCameraScroll: Option_MergeWhileLoading " + Option_MergeWhileLoading);
+            Debug.Log("SBCameraScroll: Option_RegionMods " + Option_RegionMods);
+            Debug.Log("SBCameraScroll: Option_ScrollOneScreenRooms " + Option_ScrollOneScreenRooms);
 
             RoomCameraMod.smoothing_factor_x = smoothingFactorX.Value / 50f;
             RoomCameraMod.smoothing_factor_y = smoothingFactorY.Value / 50f;
@@ -330,7 +335,7 @@ namespace SBCameraScroll
 
                     PositionTypeCamera.offset_speed_multiplier = 0.1f * cameraOffsetSpeedMultiplier_Position.Value;
 
-                    Debug.Log("SBCameraScroll: Option_CameraOffset " + MainMod.Option_CameraOffset);
+                    Debug.Log("SBCameraScroll: Option_CameraOffset " + Option_CameraOffset);
                     Debug.Log("SBCameraScroll: offset_speed_multiplier " + PositionTypeCamera.offset_speed_multiplier);
                     break;
                 case CameraType.Vanilla:

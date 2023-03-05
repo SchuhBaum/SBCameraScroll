@@ -1,15 +1,17 @@
 using System.IO;
 using UnityEngine;
 
+using static SBCameraScroll.MainMod;
+
 namespace SBCameraScroll
 {
-    internal static class RainWorldMod
+    public static class RainWorldMod
     {
         //
         // parameters
         //
 
-        public static readonly AssetBundle? assetBundle = AssetBundle.LoadFromFile(MainMod.modDirectoryPath + "AssetBundles" + Path.DirectorySeparatorChar + "shaders");
+        public static readonly AssetBundle? assetBundle = AssetBundle.LoadFromFile(modDirectoryPath + "AssetBundles" + Path.DirectorySeparatorChar + "shaders");
 
         //
         // public

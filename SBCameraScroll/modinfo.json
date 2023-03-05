@@ -1,10 +1,14 @@
 {
   "id": "SchuhBaum.SBCameraScroll",
   "name": "SBCameraScroll",
-  "version": "2.4.3",
+  "version": "2.4.4",
   "authors": "SchuhBaum",
   "description": "Creates a smooth, scrolling camera that moves with the slugcat. Based on pipi toki's CameraScroll mod.<LINE><LINE>INCOMPATIBILITIES:<LINE>- The zoom camera option in the Slugcat Eyebrow Raise mod.",
   "requirements": [],
   "requirements_names": [],
+  "tags": [
+    "Accessibility",
+    "Game Mechanics"
+  ],
   "checksum_override_version": true
 }
