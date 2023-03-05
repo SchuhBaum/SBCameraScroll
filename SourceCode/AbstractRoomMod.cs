@@ -5,6 +5,8 @@ using RWCustom;
 using Unity.Collections;
 using UnityEngine;
 
+using static SBCameraScroll.MainMod;
+
 namespace SBCameraScroll;
 
 public static class AbstractRoomMod
@@ -144,14 +146,14 @@ public static class AbstractRoomMod
         if (regionName == null) return "";
 
         string relativeRegionPath = "world" + Path.DirectorySeparatorChar + regionName.ToLower() + "-rooms";
-        MainMod.CreateDirectory(MainMod.modDirectoryPath + relativeRegionPath);
+        CreateDirectory(modDirectoryPath + relativeRegionPath);
         return relativeRegionPath + Path.DirectorySeparatorChar;
     }
 
     public static string GetRelativeRoomsPath_Arena()
     {
         string relativeRegionPath = "levels";
-        MainMod.CreateDirectory(MainMod.modDirectoryPath + relativeRegionPath);
+        CreateDirectory(modDirectoryPath + relativeRegionPath);
         return relativeRegionPath + Path.DirectorySeparatorChar;
     }
 
@@ -224,23 +226,7 @@ public static class AbstractRoomMod
             relativeRoomsPath = GetRelativeRoomsPath(regionName);
         }
 
-        string mergedRoomFilePath = MainMod.modDirectoryPath + relativeRoomsPath + roomName.ToLower() + "_0.png";
-
-        // ignore empty merged texture files that were created but not written to
-        if (File.Exists(mergedRoomFilePath) && new FileInfo(mergedRoomFilePath).Length > 0)
-        {
-            try
-            {
-                IntVector2 imageSize = GetImageSize_PNG(mergedRoomFilePath);
-                if (imageSize.x > SystemInfo.maxTextureSize || imageSize.y > SystemInfo.maxTextureSize)
-                {
-                    Debug.Log("SBCameraScroll: This graphics card does not support large textures. Blacklist room " + roomName + ".");
-                    RoomCameraMod.blacklisted_rooms.Add(roomName);
-                }
-            }
-            catch { }
-            return;
-        }
+        string mergedRoomFilePath = modDirectoryPath + relativeRoomsPath + roomName.ToLower() + "_0.png";
 
         cameraPositions ??= LoadCameraPositions(roomName);
         if (cameraPositions == null)
@@ -271,7 +257,6 @@ public static class AbstractRoomMod
             maxHeight = Mathf.Max(maxHeight, (int)_textureOffset.y + 800);
         }
 
-        Debug.Log("SBCameraScroll: Merge camera textures for room " + roomName + " with " + cameraPositions.Length + " cameras.");
         if (maxWidth > maximumTextureWidth || maxHeight > maximumTextureHeight)
         {
             Debug.Log("SBCameraScroll: Warning! Merged texture width or height is too large. Setting to the maximum and hoping for the best.");
@@ -286,11 +271,43 @@ public static class AbstractRoomMod
             return;
         }
 
+        // ignore empty merged texture files that were created but not written to
+        if (File.Exists(mergedRoomFilePath) && new FileInfo(mergedRoomFilePath).Length > 0)
+        {
+            try
+            {
+                IntVector2 image_size = GetImageSize_PNG(mergedRoomFilePath);
+
+                // this needs to be first since it blacklists room that were merged but are too large;
+                if (image_size.x > SystemInfo.maxTextureSize || image_size.y > SystemInfo.maxTextureSize)
+                {
+                    Debug.Log("SBCameraScroll: This graphics card does not support large textures. Blacklist room " + roomName + ".");
+                    RoomCameraMod.blacklisted_rooms.Add(roomName);
+                    return;
+                }
+
+                // does not need to get updated;
+                // using region mods maxWidth and maxHeight might change;
+                if (image_size.x == maxWidth && image_size.y == maxHeight) return;
+                if (!Option_RegionMods) return;
+
+                Debug.Log("SBCameraScroll: The dimensions for the merged texture has changed. Update merged texture.");
+            }
+            catch
+            {
+                // the chance that they have the same dimensions is high;
+                // don't update when the size could not be determined;
+                return;
+            }
+        }
+
         if (textureOffsetModifier.ContainsKey(roomName))
         {
             Debug.Log("SBCameraScroll: Cutting edges by modifying the texture offset.");
             Debug.Log("SBCameraScroll: offsetModifier " + offsetModifier);
         }
+
+        Debug.Log("SBCameraScroll: Merge camera textures for room " + roomName + " with " + cameraPositions.Length + " cameras.");
 
         // not sure if this helps;
         // someone ran into an out of memory exception for this function;

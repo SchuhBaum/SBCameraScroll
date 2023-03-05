@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Security.Permissions;
 using BepInEx;
 using MonoMod.Cil;
+using RWCustom;
 using UnityEngine;
 
 // temporary fix // should be added automatically //TODO
@@ -15,7 +16,7 @@ namespace SBCameraScroll;
 // SplitScreenMod needs to be able to get the current cameraNumber for these methods
 // if I get access to that variable directly (static) I could do that too // but I don't want to carry an instance of SplitScreenMod around => dependency
 // You should be able to change load order now;
-[BepInPlugin("SchuhBaum.SBCameraScroll", "SBCameraScroll", "2.4.5")]
+[BepInPlugin("SchuhBaum.SBCameraScroll", "SBCameraScroll", "2.4.6")]
 public class MainMod : BaseUnityPlugin
 {
     //
@@ -24,7 +25,7 @@ public class MainMod : BaseUnityPlugin
 
     public static readonly string MOD_ID = "SchuhBaum.SBCameraScroll";
     public static readonly string author = "SchuhBaum";
-    public static readonly string version = "2.4.5";
+    public static readonly string version = "2.4.6";
     public static readonly string modDirectoryPath = Directory.GetParent(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)).FullName + Path.DirectorySeparatorChar;
 
     //
@@ -104,6 +105,9 @@ public class MainMod : BaseUnityPlugin
         // check if mods have modified camera textures and delete the corresponding room textures;
         if (!Option_RegionMods) return;
 
+        // there is also the folder modify/world and modify/levels but so far it seems that only
+        // setting files are changed there;
+
         // arena
         foreach (ModManager.Mod region_mod in potential_region_mods)
         {
@@ -130,9 +134,12 @@ public class MainMod : BaseUnityPlugin
                 }
 
                 string file_path = modDirectoryPath + "levels" + Path.DirectorySeparatorChar + room_name + "_0.png";
-                if (!File.Exists(file_path)) continue;
+                string region_mod_relative_file_path = "levels" + Path.DirectorySeparatorChar + file_info.Name;
 
-                Debug.Log("SBCameraScroll: The mod " + region_mod.id + " has changed the room " + room_name.ToUpper() + ". Clear the corresponding cached room texture.");
+                if (!File.Exists(file_path)) continue;
+                if (Is_File_Exclusive(region_mod_relative_file_path)) continue;
+
+                Debug.Log("SBCameraScroll: The mod " + region_mod.id + " has changed one or more camera textures in the room " + room_name.ToUpper() + ". Clear the corresponding cached room texture.");
                 File.Delete(file_path);
             }
         }
@@ -164,12 +171,35 @@ public class MainMod : BaseUnityPlugin
                 }
 
                 string file_path = modDirectoryPath + "world" + Path.DirectorySeparatorChar + region_name + Path.DirectorySeparatorChar + room_name + "_0.png";
-                if (!File.Exists(file_path)) continue;
+                string region_mod_relative_file_path = "world" + Path.DirectorySeparatorChar + region_name + Path.DirectorySeparatorChar + file_info.Name;
 
-                Debug.Log("SBCameraScroll: The mod " + region_mod.id + " has changed the room " + room_name.ToUpper() + ". Clear the corresponding cached room texture.");
+                if (!File.Exists(file_path)) continue;
+                if (Is_File_Exclusive(region_mod_relative_file_path)) continue;
+
+                Debug.Log("SBCameraScroll: The mod " + region_mod.id + " has changed one or more camera textures in the room " + room_name.ToUpper() + ". Clear the corresponding cached room texture.");
                 File.Delete(file_path);
             }
         }
+    }
+
+    public static bool Is_File_Exclusive(string relative_file_path)
+    {
+        // the merged texture dimensions might stay the same but some cameras might get re-rendered by mods;
+        // check for duplicates in order to detect that case; 
+
+        int count = 0;
+        if (File.Exists(Custom.RootFolderDirectory() + Path.DirectorySeparatorChar + relative_file_path))
+        {
+            ++count;
+        }
+
+        foreach (ModManager.Mod mod in ModManager.InstalledMods)
+        {
+            if (!File.Exists(mod.path + Path.DirectorySeparatorChar + relative_file_path)) continue;
+            ++count;
+            if (count > 1) return false;
+        }
+        return true;
     }
 
     public static List<string> Read_Previously_Active_Mods()
