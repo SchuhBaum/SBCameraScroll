@@ -16,7 +16,7 @@ namespace SBCameraScroll;
 // SplitScreenMod needs to be able to get the current cameraNumber for these methods
 // if I get access to that variable directly (static) I could do that too // but I don't want to carry an instance of SplitScreenMod around => dependency
 // You should be able to change load order now;
-[BepInPlugin("SchuhBaum.SBCameraScroll", "SBCameraScroll", "2.4.6")]
+[BepInPlugin("SchuhBaum.SBCameraScroll", "SBCameraScroll", "2.4.7")]
 public class MainMod : BaseUnityPlugin
 {
     //
@@ -25,7 +25,7 @@ public class MainMod : BaseUnityPlugin
 
     public static readonly string MOD_ID = "SchuhBaum.SBCameraScroll";
     public static readonly string author = "SchuhBaum";
-    public static readonly string version = "2.4.6";
+    public static readonly string version = "2.4.7";
     public static readonly string modDirectoryPath = Directory.GetParent(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)).FullName + Path.DirectorySeparatorChar;
 
     //
@@ -71,9 +71,13 @@ public class MainMod : BaseUnityPlugin
 
     public static void Check_For_Newly_Activated_Or_Deactivated_Region_Mods()
     {
-        List<string> previously_active_mods = Read_Previously_Active_Mods();
-        List<ModManager.Mod> newly_activated_or_deactivated_mods = new();
+        List<string>? previously_active_mods = Read_Previously_Active_Mods();
 
+        // skip if you can't read the file;
+        // otherwise this would be executed always with only SBCameraScroll detected;
+        if (previously_active_mods == null) return;
+
+        List<ModManager.Mod> newly_activated_or_deactivated_mods = new();
         foreach (ModManager.Mod mod in ModManager.ActiveMods)
         {
             if (previously_active_mods.Contains(mod.id)) continue;
@@ -202,10 +206,14 @@ public class MainMod : BaseUnityPlugin
         return true;
     }
 
-    public static List<string> Read_Previously_Active_Mods()
+    public static List<string>? Read_Previously_Active_Mods()
     {
         string file_path = modDirectoryPath + "previously_active_mods.json";
-        if (!File.Exists(file_path)) return new() { MOD_ID };
+        // if (!File.Exists(file_path)) return new() { MOD_ID };
+        if (!File.Exists(file_path))
+        {
+            Write_Previously_Active_Mods(ModManager.ActiveMods.ConvertAll(mod => mod.id));
+        }
 
         try
         {
@@ -219,7 +227,7 @@ public class MainMod : BaseUnityPlugin
             return previously_active_mods;
         }
         catch { }
-        return new() { MOD_ID };
+        return null;
     }
 
     public static void Write_Previously_Active_Mods(List<string> active_mods)

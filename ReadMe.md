@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 2.4.6
+###### Version: 2.4.7
 This is a mod for Rain World v1.9.
 
 ### Description
@@ -18,7 +18,7 @@ If rooms textures are changed then you need to generate these files again. This 
 
 ### Installation
 0. Update Rain World to version 1.9 if needed.
-1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.4.6).
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.4.7).
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
@@ -107,7 +107,7 @@ v2.4.0:
 - Some small tweaks to how snow is displayed.
 - (camera offset) Added some conditions besides player inputs to make resetting the camera offset less unintentional.
 
-v2.4.6:
+v2.4.7:
 - Fixed a bug where the JollyCoop's player arrows would be misaligned when using non-default screen resolutions.
 - Added a "Clear Cache" button to the options menu.
 - (vanilla type camera) Added some changes to improve compatibility with SplitScreen Co-op.
@@ -116,6 +116,7 @@ v2.4.6:
 - (region mods) Added this option (enabled by default). Clears the corresponding cached room textures when region mods get enabled or disabled. This is meant to make it easier when region mods change existing rooms.
 - Restructured code.
 - (region mods) Updates merged textures when the dimension of the room texture changes. Clears only room textures when at least one camera texture is shared with other mods or vanilla (more conservative).
+- (region mods) Updated description. Some small changes to make it more conservative.
 
 #### (Rain World v1.5)
 v0.3:

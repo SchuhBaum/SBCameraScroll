@@ -291,7 +291,9 @@ public static class AbstractRoomMod
                 if (image_size.x == maxWidth && image_size.y == maxHeight) return;
                 if (!Option_RegionMods) return;
 
-                Debug.Log("SBCameraScroll: The dimensions for the merged texture has changed. Update merged texture.");
+                // the load order matters here;
+                // ONH (SB_F03 with 8 cameras) needs to be higher than MSC (SB_F03 with 6 cameras) for example;
+                Debug.Log("SBCameraScroll: The dimensions for the merged texture have changed. Merge again");
             }
             catch
             {
