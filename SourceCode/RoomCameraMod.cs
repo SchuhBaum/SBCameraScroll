@@ -503,6 +503,12 @@ public static class RoomCameraMod
                 Debug.Log("SBCameraScroll: The current room is blacklisted.");
             }
 
+            // this case should never happen since ApplyPositionChange() calls ChangeRoom() 
+            // and should always update room_camera.room;
+            // if it would happen then I am blind to how many cameraPositions this room has;
+            // I would also not be able to check blacklisted_rooms;
+            // blacklisting the room is just a guess at this point;
+
             room_camera.GetAttachedFields().is_room_blacklisted = true;
             ResetCameraPosition(room_camera); // uses currentCameraPosition and isRoomBlacklisted
             return;
@@ -587,11 +593,28 @@ public static class RoomCameraMod
     // preloads textures // RoomCamera.ApplyPositionChange() is called when they are ready
     private static void RoomCamera_MoveCamera2(On.RoomCamera.orig_MoveCamera2 orig, RoomCamera room_camera, string room_name, int camera_position_index)
     {
-        // isRoomBlacklisted is not updated yet;
+        // // room is not updated yet;
+        // // gets updated in ApplyPositionChange();
+        // // although ChangeRoom() has a non-null check;
+        // // it would still update the room;
+        // // not sure what would happen if the room would be null;
+        // // don't do this:
+        // if (room_camera.room == null)
+        // {
+        //     if (!blacklisted_rooms.Contains(room_name))
+        //     {
+        //         blacklisted_rooms.Add(room_name);
+        //     }
+
+        //     orig(room_camera, room_name, camera_position_index);
+        //     return;
+        // }
+
+        // is_room_blacklisted is not updated yet;
         // needs to be updated in ApplyPositionChange();
         // I need to check for blacklisted room anyway 
         // since for example "RM_AI" can be merged but is incompatible;
-        if (blacklisted_rooms.Contains(room_name) || WorldLoader.FindRoomFile(room_name, false, "_0.png") == null) // room_camera.game.IsArenaSession ||
+        if (blacklisted_rooms.Contains(room_name) || WorldLoader.FindRoomFile(room_name, false, "_0.png") == null)
         {
             orig(room_camera, room_name, camera_position_index);
             return;
