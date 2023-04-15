@@ -16,7 +16,7 @@ namespace SBCameraScroll;
 // SplitScreenMod needs to be able to get the current cameraNumber for these methods
 // if I get access to that variable directly (static) I could do that too // but I don't want to carry an instance of SplitScreenMod around => dependency
 // You should be able to change load order now;
-[BepInPlugin("SchuhBaum.SBCameraScroll", "SBCameraScroll", "2.4.8")]
+[BepInPlugin("SchuhBaum.SBCameraScroll", "SBCameraScroll", "2.4.9")]
 public class MainMod : BaseUnityPlugin
 {
     //
@@ -25,8 +25,8 @@ public class MainMod : BaseUnityPlugin
 
     public static readonly string MOD_ID = "SchuhBaum.SBCameraScroll";
     public static readonly string author = "SchuhBaum";
-    public static readonly string version = "2.4.8";
-    public static readonly string modDirectoryPath = Directory.GetParent(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)).FullName + Path.DirectorySeparatorChar;
+    public static readonly string version = "2.4.9";
+    public static readonly string mod_directory_path = Directory.GetParent(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)).FullName + Path.DirectorySeparatorChar;
 
     //
     // options
@@ -137,7 +137,7 @@ public class MainMod : BaseUnityPlugin
                     room_name = file_info.Name.Replace("_" + splitted_room_name[splitted_room_name.Length - 1], "");
                 }
 
-                string file_path = modDirectoryPath + "levels" + Path.DirectorySeparatorChar + room_name + "_0.png";
+                string file_path = mod_directory_path + "levels" + Path.DirectorySeparatorChar + room_name + "_0.png";
                 string region_mod_relative_file_path = "levels" + Path.DirectorySeparatorChar + file_info.Name;
 
                 if (!File.Exists(file_path)) continue;
@@ -174,7 +174,7 @@ public class MainMod : BaseUnityPlugin
                     room_name = file_info.Name.Replace("_" + splitted_room_name[splitted_room_name.Length - 1], "");
                 }
 
-                string file_path = modDirectoryPath + "world" + Path.DirectorySeparatorChar + region_name + Path.DirectorySeparatorChar + room_name + "_0.png";
+                string file_path = mod_directory_path + "world" + Path.DirectorySeparatorChar + region_name + Path.DirectorySeparatorChar + room_name + "_0.png";
                 string region_mod_relative_file_path = "world" + Path.DirectorySeparatorChar + region_name + Path.DirectorySeparatorChar + file_info.Name;
 
                 if (!File.Exists(file_path)) continue;
@@ -208,7 +208,7 @@ public class MainMod : BaseUnityPlugin
 
     public static List<string>? Read_Previously_Active_Mods()
     {
-        string file_path = modDirectoryPath + "previously_active_mods.json";
+        string file_path = mod_directory_path + "previously_active_mods.json";
         // if (!File.Exists(file_path)) return new() { MOD_ID };
         if (!File.Exists(file_path))
         {
@@ -234,7 +234,7 @@ public class MainMod : BaseUnityPlugin
     {
         try
         {
-            string file_path = modDirectoryPath + "previously_active_mods.json";
+            string file_path = mod_directory_path + "previously_active_mods.json";
             File.WriteAllText(file_path, Json.Serialize(active_mods));
         }
         catch { }
@@ -332,11 +332,11 @@ public class MainMod : BaseUnityPlugin
         isInitialized = true;
 
         Debug.Log("SBCameraScroll: version " + version);
-        Debug.Log("SBCameraScroll: maxTextureSize " + SystemInfo.maxTextureSize);
-        Debug.Log("SBCameraScroll: modDirectoryPath " + modDirectoryPath);
+        Debug.Log("SBCameraScroll: max_texture_size " + SystemInfo.maxTextureSize);
+        Debug.Log("SBCameraScroll: mod_directory_path " + mod_directory_path);
 
-        CreateDirectory(modDirectoryPath + "levels");
-        CreateDirectory(modDirectoryPath + "world");
+        CreateDirectory(mod_directory_path + "levels");
+        CreateDirectory(mod_directory_path + "world");
 
         // somehow this is in front of creatures and hides them;
         // besides that I need the current shader instead of the one from RW v1.5;

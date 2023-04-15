@@ -7,6 +7,7 @@ using RWCustom;
 using UnityEngine;
 
 using static SBCameraScroll.MainMod;
+using static SBCameraScroll.ShortcutHandlerMod;
 
 namespace SBCameraScroll;
 
@@ -89,7 +90,7 @@ public static class RoomCameraMod
         if (room_camera.room == null) return;
 
         Vector2 screen_size = room_camera.sSize;
-        Vector2 texture_offset = room_camera.room.abstractRoom.GetAttachedFields().textureOffset; // regionGate's texture offset might be unitialized => RegionGateMod
+        Vector2 texture_offset = room_camera.room.abstractRoom.Get_Attached_Fields().texture_offset; // regionGate's texture offset might be unitialized => RegionGateMod
 
         if (is_split_screen_coop_enabled)
         {
@@ -166,7 +167,7 @@ public static class RoomCameraMod
         if (room_camera.followAbstractCreature.realizedCreature is not Creature creature) return;
 
         Vector2 position = -0.5f * room_camera.sSize;
-        if (creature.inShortcut && ShortcutHandlerMod.GetShortcutVessel(room_camera.game.shortcuts, room_camera.followAbstractCreature) is ShortcutHandler.ShortCutVessel shortcutVessel)
+        if (creature.inShortcut && GetShortcutVessel(room_camera.game.shortcuts, room_camera.followAbstractCreature) is ShortcutHandler.ShortCutVessel shortcutVessel)
         {
             Vector2 current_position = room_camera.room.MiddleOfTile(shortcutVessel.pos);
             Vector2 next_in_shortcut_position = room_camera.room.MiddleOfTile(ShortcutHandler.NextShortcutPosition(shortcutVessel.pos, shortcutVessel.lastPos, room_camera.room));
@@ -350,7 +351,7 @@ public static class RoomCameraMod
 
                 // not sure what this does // seems to visually darken stuff (apply shader or something) when offscreen
                 // I think that textureOffset is only needed(?) for compatibility reasons with room.cameraPositions
-                Vector2 texture_offset = room_camera.room.abstractRoom.GetAttachedFields().textureOffset;
+                Vector2 texture_offset = room_camera.room.abstractRoom.Get_Attached_Fields().texture_offset;
                 room_camera.levelGraphic.SetPosition(texture_offset - camera_position);
                 room_camera.backgroundGraphic.SetPosition(texture_offset - camera_position);
             });
@@ -530,7 +531,7 @@ public static class RoomCameraMod
 
         // blacklist instead of checking if you can scroll;
         // they have the same purpose anyways;
-        room_camera.GetAttachedFields().is_room_blacklisted = !RoomMod.CanScrollCamera(room_camera.room);
+        room_camera.GetAttachedFields().is_room_blacklisted = !room_camera.room.CanScrollCamera();
         ResetCameraPosition(room_camera);
     }
 

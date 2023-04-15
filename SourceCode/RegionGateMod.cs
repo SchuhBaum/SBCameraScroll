@@ -1,3 +1,5 @@
+using static SBCameraScroll.AbstractRoomMod;
+
 namespace SBCameraScroll;
 
 internal static class RegionGateMod
@@ -11,12 +13,12 @@ internal static class RegionGateMod
     // private
     //
 
-    private static void RegionGate_Update(On.RegionGate.orig_Update orig, RegionGate regionGate, bool eu)
+    private static void RegionGate_Update(On.RegionGate.orig_Update orig, RegionGate region_gate, bool eu)
     {
-        if (!regionGate.room.abstractRoom.GetAttachedFields().isInitialized)
+        if (!region_gate.room.abstractRoom.Get_Attached_Fields().is_initialized)
         {
-            AbstractRoomMod.UpdateTextureOffset(regionGate.room.abstractRoom, regionGate.room.cameraPositions);
+            UpdateTextureOffset(region_gate.room.abstractRoom, region_gate.room.cameraPositions);
         }
-        orig(regionGate, eu);
+        orig(region_gate, eu);
     }
 }

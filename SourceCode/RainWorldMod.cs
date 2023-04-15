@@ -11,7 +11,7 @@ public static class RainWorldMod
     // parameters
     //
 
-    public static readonly AssetBundle? assetBundle = AssetBundle.LoadFromFile(modDirectoryPath + "AssetBundles" + Path.DirectorySeparatorChar + "shaders");
+    public static readonly AssetBundle? assetBundle = AssetBundle.LoadFromFile(mod_directory_path + "AssetBundles" + Path.DirectorySeparatorChar + "shaders");
 
     //
     // public

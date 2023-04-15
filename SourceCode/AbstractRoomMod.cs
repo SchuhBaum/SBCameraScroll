@@ -6,6 +6,7 @@ using Unity.Collections;
 using UnityEngine;
 
 using static SBCameraScroll.MainMod;
+using static SBCameraScroll.RoomCameraMod;
 
 namespace SBCameraScroll;
 
@@ -23,13 +24,13 @@ public static class AbstractRoomMod
     // variables
     //
 
-    internal static readonly Dictionary<AbstractRoom, AttachedFields> all_attached_fields = new();
-    public static AttachedFields GetAttachedFields(this AbstractRoom abstractRoom) => all_attached_fields[abstractRoom];
+    internal static readonly Dictionary<AbstractRoom, Attached_Fields> all_attached_fields = new();
+    public static Attached_Fields Get_Attached_Fields(this AbstractRoom abstractRoom) => all_attached_fields[abstractRoom];
 
     public static readonly Dictionary<string, Vector2> textureOffsetModifier = new();
 
-    public static RenderTexture? mergedRenderTexture = null;
-    public static readonly Texture2D mergedTexture = new(1, 1, TextureFormat.RGB24, false);
+    public static RenderTexture? merged_render_texture = null;
+    public static readonly Texture2D merged_texture = new(1, 1, TextureFormat.RGB24, false);
     public static readonly Texture2D cameraTexture = new(1, 1, TextureFormat.RGB24, false);
 
     //
@@ -68,13 +69,13 @@ public static class AbstractRoomMod
             // how do I even do that?;
             // Buffer.BlockCopy(bytes, 3 * ((cutoffX + 1) * (cutoffY + 1) - 1), mergedTexture.GetRawTextureData(), 3 * ((Mathf.Max(x, 0) + 1) * (Mathf.Max(y, 0) + 1) - 1), 3 * ((width - cutoffX) * (height - cutoffY) - 1));
 
-            if (HasCopyTextureSupport && mergedRenderTexture != null)
+            if (HasCopyTextureSupport && merged_render_texture != null)
             {
-                Graphics.CopyTexture(cameraTexture, 0, 0, cutoffX, cutoffY, width, height, mergedRenderTexture, 0, 0, Mathf.Max(x, 0), Mathf.Max(y, 0));
+                Graphics.CopyTexture(cameraTexture, 0, 0, cutoffX, cutoffY, width, height, merged_render_texture, 0, 0, Mathf.Max(x, 0), Mathf.Max(y, 0));
             }
             else
             {
-                mergedTexture.SetPixels(Mathf.Max(x, 0), Mathf.Max(y, 0), width, height, cameraTexture.GetPixels(cutoffX, cutoffY, width, height));
+                merged_texture.SetPixels(Mathf.Max(x, 0), Mathf.Max(y, 0), width, height, cameraTexture.GetPixels(cutoffX, cutoffY, width, height));
             }
         }
     }
@@ -107,15 +108,15 @@ public static class AbstractRoomMod
         }
     }
 
-    public static void CleanUp()
+    public static void Clean_Up()
     {
-        mergedTexture.Resize(1, 1);
+        merged_texture.Resize(1, 1);
         cameraTexture.Resize(1, 1);
 
-        if (mergedRenderTexture != null)
+        if (merged_render_texture != null)
         {
-            mergedRenderTexture.Release();
-            mergedRenderTexture = null;
+            merged_render_texture.Release();
+            merged_render_texture = null;
         }
 
         Resources.UnloadUnusedAssets();
@@ -124,12 +125,12 @@ public static class AbstractRoomMod
         GC.Collect();
     }
 
-    public static void DestroyWormGrassInAbstractRoom(AbstractRoom abstractRoom)
+    public static void DestroyWormGrassInAbstractRoom(AbstractRoom abstract_room)
     {
-        AttachedFields attachedFields = abstractRoom.GetAttachedFields();
-        if (attachedFields.wormGrass is WormGrass wormGrass)
+        Attached_Fields attached_fields = abstract_room.Get_Attached_Fields();
+        if (attached_fields.worm_grass is WormGrass wormGrass)
         {
-            Debug.Log("SBCameraScroll: Remove worm grass from " + abstractRoom.name + ".");
+            Debug.Log("SBCameraScroll: Remove worm grass from " + abstract_room.name + ".");
 
             // I expect only one wormGrass per room
             // wormGrass can have multiple patches with multiple tiles each
@@ -137,7 +138,7 @@ public static class AbstractRoomMod
             wormGrass.Destroy();
             WormGrassMod.all_attached_fields.Remove(wormGrass);
         }
-        attachedFields.wormGrass = null;
+        attached_fields.worm_grass = null;
     }
 
     // creates directories if they don't exist
@@ -146,14 +147,14 @@ public static class AbstractRoomMod
         if (regionName == null) return "";
 
         string relativeRegionPath = "world" + Path.DirectorySeparatorChar + regionName.ToLower() + "-rooms";
-        CreateDirectory(modDirectoryPath + relativeRegionPath);
+        CreateDirectory(mod_directory_path + relativeRegionPath);
         return relativeRegionPath + Path.DirectorySeparatorChar;
     }
 
     public static string GetRelativeRoomsPath_Arena()
     {
         string relativeRegionPath = "levels";
-        CreateDirectory(modDirectoryPath + relativeRegionPath);
+        CreateDirectory(mod_directory_path + relativeRegionPath);
         return relativeRegionPath + Path.DirectorySeparatorChar;
     }
 
@@ -202,93 +203,93 @@ public static class AbstractRoomMod
         return cameraPositions;
     }
 
-    public static void MergeCameraTextures(AbstractRoom? abstractRoom, string? regionName, Vector2[]? cameraPositions = null)
+    public static void MergeCameraTextures(AbstractRoom? abstract_room, string? region_name, Vector2[]? camera_positions = null)
     {
-        if (abstractRoom == null) return;
-        if (abstractRoom.offScreenDen) return;
+        if (abstract_room == null) return;
+        if (abstract_room.offScreenDen) return;
 
-        string roomName = abstractRoom.name;
-        if (RoomCameraMod.blacklisted_rooms.Contains(roomName)) return;
+        string room_name = abstract_room.name;
+        if (blacklisted_rooms.Contains(room_name)) return;
 
-        string relativeRoomsPath;
-        if (regionName == null)
+        string relative_rooms_path;
+        if (region_name == null)
         {
-            if (abstractRoom.world == null || !abstractRoom.world.game.IsArenaSession)
+            if (abstract_room.world == null || !abstract_room.world.game.IsArenaSession)
             {
-                Debug.Log("SBCameraScroll: Region is null. Blacklist room " + roomName + ".");
-                RoomCameraMod.blacklisted_rooms.Add(roomName);
+                Debug.Log("SBCameraScroll: Region is null. Blacklist room " + room_name + ".");
+                blacklisted_rooms.Add(room_name);
                 return;
             }
-            relativeRoomsPath = GetRelativeRoomsPath_Arena();
+            relative_rooms_path = GetRelativeRoomsPath_Arena();
         }
         else
         {
-            relativeRoomsPath = GetRelativeRoomsPath(regionName);
+            relative_rooms_path = GetRelativeRoomsPath(region_name);
         }
 
-        string mergedRoomFilePath = modDirectoryPath + relativeRoomsPath + roomName.ToLower() + "_0.png";
+        string merged_room_file_path = mod_directory_path + relative_rooms_path + room_name.ToLower() + "_0.png";
 
-        cameraPositions ??= LoadCameraPositions(roomName);
-        if (cameraPositions == null)
+        camera_positions ??= LoadCameraPositions(room_name);
+        if (camera_positions == null)
         {
-            Debug.Log("SBCameraScroll: Camera positions could not be loaded. Blacklist room " + roomName + ".");
-            RoomCameraMod.blacklisted_rooms.Add(roomName);
+            Debug.Log("SBCameraScroll: Camera positions could not be loaded. Blacklist room " + room_name + ".");
+            blacklisted_rooms.Add(room_name);
             return;
         }
-        if (cameraPositions.Length <= 1) return; // skip one screen rooms
+        if (camera_positions.Length <= 1) return; // skip one screen rooms
 
-        CheckCameraPositions(ref cameraPositions);
-        UpdateTextureOffset(abstractRoom, cameraPositions);
+        CheckCameraPositions(ref camera_positions);
+        UpdateTextureOffset(abstract_room, camera_positions);
 
-        Vector2 baseTextureOffset = abstractRoom.GetAttachedFields().textureOffset;
-        int maxWidth = 0;
-        int maxHeight = 0;
+        Vector2 base_texture_offset = abstract_room.Get_Attached_Fields().texture_offset;
+        int max_width = 0;
+        int max_height = 0;
 
-        Vector2 offsetModifier = new();
-        if (textureOffsetModifier.ContainsKey(roomName))
+        Vector2 offset_modifier = new();
+        if (textureOffsetModifier.ContainsKey(room_name))
         {
-            offsetModifier = textureOffsetModifier[roomName];
+            offset_modifier = textureOffsetModifier[room_name];
         }
 
-        foreach (Vector2 cameraPosition in cameraPositions)
+        foreach (Vector2 camera_position in camera_positions)
         {
-            Vector2 _textureOffset = offsetModifier + cameraPosition - baseTextureOffset; // remove the effect of offsetModifier // baseTextureOffset already contains the offsetModifier
-            maxWidth = Mathf.Max(maxWidth, (int)_textureOffset.x + 1400);
-            maxHeight = Mathf.Max(maxHeight, (int)_textureOffset.y + 800);
+            Vector2 texture_offset = offset_modifier + camera_position - base_texture_offset; // remove the effect of offsetModifier // baseTextureOffset already contains the offsetModifier
+            max_width = Mathf.Max(max_width, (int)texture_offset.x + 1400);
+            max_height = Mathf.Max(max_height, (int)texture_offset.y + 800);
         }
 
-        if (maxWidth > maximumTextureWidth || maxHeight > maximumTextureHeight)
+        if (max_width > maximumTextureWidth || max_height > maximumTextureHeight)
         {
             Debug.Log("SBCameraScroll: Warning! Merged texture width or height is too large. Setting to the maximum and hoping for the best.");
-            maxWidth = Mathf.Min(maxWidth, maximumTextureWidth);
-            maxHeight = Mathf.Min(maxHeight, maximumTextureHeight);
+            max_width = Mathf.Min(max_width, maximumTextureWidth);
+            max_height = Mathf.Min(max_height, maximumTextureHeight);
         }
 
-        if (maxWidth > SystemInfo.maxTextureSize || maxHeight > SystemInfo.maxTextureSize)
+        if (max_width > SystemInfo.maxTextureSize || max_height > SystemInfo.maxTextureSize)
         {
-            Debug.Log("SBCameraScroll: This graphics card does not support large textures. Blacklist room " + roomName + ".");
-            RoomCameraMod.blacklisted_rooms.Add(roomName);
+            Debug.Log("SBCameraScroll: This graphics card does not support large textures. Blacklist room " + room_name + ".");
+            blacklisted_rooms.Add(room_name);
             return;
         }
 
         // ignore empty merged texture files that were created but not written to
-        if (File.Exists(mergedRoomFilePath) && new FileInfo(mergedRoomFilePath).Length > 0)
+        if (File.Exists(merged_room_file_path) && new FileInfo(merged_room_file_path).Length > 0)
         {
             try
             {
-                IntVector2 image_size = GetImageSize_PNG(mergedRoomFilePath);
+                IntVector2 image_size = GetImageSize_PNG(merged_room_file_path);
 
                 // this needs to be first since it blacklists room that were merged but are too large;
                 if (image_size.x > SystemInfo.maxTextureSize || image_size.y > SystemInfo.maxTextureSize)
                 {
-                    Debug.Log("SBCameraScroll: This graphics card does not support large textures. Blacklist room " + roomName + ".");
-                    RoomCameraMod.blacklisted_rooms.Add(roomName);
+                    Debug.Log("SBCameraScroll: This graphics card does not support large textures. Blacklist room " + room_name + ".");
+                    blacklisted_rooms.Add(room_name);
                     return;
                 }
 
                 // does not need to get updated;
                 // using region mods maxWidth and maxHeight might change;
-                if (image_size.x == maxWidth && image_size.y == maxHeight) return;
+                if (image_size.x == max_width && image_size.y == max_height) return;
                 if (!Option_RegionMods) return;
 
                 // the load order matters here;
@@ -303,31 +304,31 @@ public static class AbstractRoomMod
             }
         }
 
-        if (textureOffsetModifier.ContainsKey(roomName))
+        if (textureOffsetModifier.ContainsKey(room_name))
         {
             Debug.Log("SBCameraScroll: Cutting edges by modifying the texture offset.");
-            Debug.Log("SBCameraScroll: offsetModifier " + offsetModifier);
+            Debug.Log("SBCameraScroll: offsetModifier " + offset_modifier);
         }
 
-        Debug.Log("SBCameraScroll: Merge camera textures for room " + roomName + " with " + cameraPositions.Length + " cameras.");
+        Debug.Log("SBCameraScroll: Merge camera textures for room " + room_name + " with " + camera_positions.Length + " cameras.");
 
         // not sure if this helps;
         // someone ran into an out of memory exception for this function;
         try
         {
-            mergedTexture.Resize(maxWidth, maxHeight); // don't create new Texture2D objects => high memory usage
-            if (mergedTexture.width != maxWidth || mergedTexture.height != maxHeight)
+            merged_texture.Resize(max_width, max_height); // don't create new Texture2D objects => high memory usage
+            if (merged_texture.width != max_width || merged_texture.height != max_height)
             {
-                Debug.Log("SBCameraScroll: Resize failed. Blacklist room " + roomName + ".");
-                RoomCameraMod.blacklisted_rooms.Add(roomName);
-                CleanUp();
+                Debug.Log("SBCameraScroll: Resize failed. Blacklist room " + room_name + ".");
+                blacklisted_rooms.Add(room_name);
+                Clean_Up();
                 return;
             }
 
-            if (mergedRenderTexture != null)
+            if (merged_render_texture != null)
             {
-                mergedRenderTexture.Release();
-                mergedRenderTexture = null;
+                merged_render_texture.Release();
+                merged_render_texture = null;
             }
 
             if (HasCopyTextureSupport)
@@ -335,14 +336,14 @@ public static class AbstractRoomMod
                 // uses GPU instead of CPU;
                 // I can't really tell the difference in speed;
                 // but using this makes memory consumption during merging basically zero;
-                mergedRenderTexture = new(maxWidth, maxHeight, 24, RenderTextureFormat.ARGB32);
-                Graphics.SetRenderTarget(mergedRenderTexture); // sets RenderTexture.active
+                merged_render_texture = new(max_width, max_height, 24, RenderTextureFormat.ARGB32);
+                Graphics.SetRenderTarget(merged_render_texture); // sets RenderTexture.active
 
-                if (mergedRenderTexture.width != maxWidth || mergedRenderTexture.height != maxHeight)
+                if (merged_render_texture.width != max_width || merged_render_texture.height != max_height)
                 {
-                    Debug.Log("SBCameraScroll: Resize failed. Blacklist room " + roomName + ".");
-                    RoomCameraMod.blacklisted_rooms.Add(roomName);
-                    CleanUp();
+                    Debug.Log("SBCameraScroll: Resize failed. Blacklist room " + room_name + ".");
+                    blacklisted_rooms.Add(room_name);
+                    Clean_Up();
                     return;
                 }
 
@@ -352,43 +353,43 @@ public static class AbstractRoomMod
             }
             else
             {
-                NativeArray<byte> colors = mergedTexture.GetRawTextureData<byte>();
+                NativeArray<byte> colors = merged_texture.GetRawTextureData<byte>();
                 for (int colorIndex = 0; colorIndex < colors.Length; ++colorIndex)
                 {
                     colors[colorIndex] = colorIndex % 3 == 0 ? (byte)1 : (byte)0; // non-transparent black (dark grey)
                 }
             }
 
-            for (int cameraIndex = 0; cameraIndex < cameraPositions.Length; ++cameraIndex)
+            for (int cameraIndex = 0; cameraIndex < camera_positions.Length; ++cameraIndex)
             {
-                string roomFilePath = WorldLoader.FindRoomFile(roomName, false, "_" + (cameraIndex + 1) + ".png");
+                string roomFilePath = WorldLoader.FindRoomFile(room_name, false, "_" + (cameraIndex + 1) + ".png");
                 if (File.Exists(roomFilePath))
                 {
-                    AddCameraTexture(cameraIndex, roomFilePath, cameraPositions, baseTextureOffset); // changes cameraTexture and mergedTexture
+                    AddCameraTexture(cameraIndex, roomFilePath, camera_positions, base_texture_offset); // changes cameraTexture and mergedTexture
                 }
                 else
                 {
-                    Debug.Log("SBCameraScroll: Could not find or load texture with path " + roomFilePath + ". Blacklist " + roomName + ".");
-                    RoomCameraMod.blacklisted_rooms.Add(roomName);
-                    CleanUp();
+                    Debug.Log("SBCameraScroll: Could not find or load texture with path " + roomFilePath + ". Blacklist " + room_name + ".");
+                    blacklisted_rooms.Add(room_name);
+                    Clean_Up();
                     return;
                 }
             }
 
-            if (HasCopyTextureSupport && mergedRenderTexture != null)
+            if (HasCopyTextureSupport && merged_render_texture != null)
             {
-                mergedTexture.ReadPixels(new Rect(0.0f, 0.0f, mergedRenderTexture.width, mergedRenderTexture.height), 0, 0);
+                merged_texture.ReadPixels(new Rect(0.0f, 0.0f, merged_render_texture.width, merged_render_texture.height), 0, 0);
             }
-            File.WriteAllBytes(mergedRoomFilePath, mergedTexture.EncodeToPNG());
+            File.WriteAllBytes(merged_room_file_path, merged_texture.EncodeToPNG());
             Debug.Log("SBCameraScroll: Merging complete.");
         }
         catch (Exception exception)
         {
             Debug.Log("SBCameraScroll: " + exception);
-            Debug.Log("SBCameraScroll: Encountered an exception. Blacklist " + roomName + ".");
-            RoomCameraMod.blacklisted_rooms.Add(roomName);
+            Debug.Log("SBCameraScroll: Encountered an exception. Blacklist " + room_name + ".");
+            blacklisted_rooms.Add(room_name);
         }
-        CleanUp();
+        Clean_Up();
 
         // mergedTexture.Resize(1, 1);
         // cameraTexture.Resize(1, 1);
@@ -415,60 +416,57 @@ public static class AbstractRoomMod
         // GC.Collect();
     }
 
-    public static void UpdateTextureOffset(AbstractRoom abstractRoom, in Vector2[]? cameraPositions)
+    public static void UpdateTextureOffset(AbstractRoom abstract_room, in Vector2[]? cameraPositions)
     {
-        AttachedFields attachedFields = abstractRoom.GetAttachedFields();
-        if (attachedFields.isInitialized)
-        {
-            return;
-        }
+        Attached_Fields attached_fields = abstract_room.Get_Attached_Fields();
+        if (attached_fields.is_initialized) return;
 
         if (cameraPositions == null || cameraPositions.Length == 0)
         {
             Debug.Log("SBCameraScroll: Failed to initiate textureOffset properly. Setting as new Vector2()."); // automatically set
-            attachedFields.isInitialized = true;
+            attached_fields.is_initialized = true;
             return;
         }
 
-        attachedFields.textureOffset = cameraPositions[0];
+        attached_fields.texture_offset = cameraPositions[0];
         foreach (Vector2 cameraPosition in cameraPositions)
         {
-            attachedFields.textureOffset.x = Mathf.Min(attachedFields.textureOffset.x, cameraPosition.x);
-            attachedFields.textureOffset.y = Mathf.Min(attachedFields.textureOffset.y, cameraPosition.y);
+            attached_fields.texture_offset.x = Mathf.Min(attached_fields.texture_offset.x, cameraPosition.x);
+            attached_fields.texture_offset.y = Mathf.Min(attached_fields.texture_offset.y, cameraPosition.y);
         }
 
-        string roomName = abstractRoom.name;
+        string roomName = abstract_room.name;
         if (textureOffsetModifier.ContainsKey(roomName))
         {
-            attachedFields.textureOffset += textureOffsetModifier[roomName];
+            attached_fields.texture_offset += textureOffsetModifier[roomName];
         }
-        attachedFields.isInitialized = true;
+        attached_fields.is_initialized = true;
     }
 
     //
     // private
     //
 
-    private static void AbstractRoom_ctor(On.AbstractRoom.orig_ctor orig, AbstractRoom abstractRoom, string name, int[] connections, int index, int swarmRoomIndex, int shelterIndex, int gateIndex)
+    private static void AbstractRoom_ctor(On.AbstractRoom.orig_ctor orig, AbstractRoom abstract_room, string name, int[] connections, int index, int swarm_room_index, int shelter_index, int gate_index)
     {
-        orig(abstractRoom, name, connections, index, swarmRoomIndex, shelterIndex, gateIndex);
-        all_attached_fields.Add(abstractRoom, new AttachedFields());
+        orig(abstract_room, name, connections, index, swarm_room_index, shelter_index, gate_index);
+        all_attached_fields.Add(abstract_room, new Attached_Fields());
     }
 
-    private static void AbstractRoom_Abstractize(On.AbstractRoom.orig_Abstractize orig, AbstractRoom abstractRoom)
+    private static void AbstractRoom_Abstractize(On.AbstractRoom.orig_Abstractize orig, AbstractRoom abstract_room)
     {
-        DestroyWormGrassInAbstractRoom(abstractRoom);
-        orig(abstractRoom);
+        DestroyWormGrassInAbstractRoom(abstract_room);
+        orig(abstract_room);
     }
 
     //
     //
     //
 
-    public sealed class AttachedFields
+    public sealed class Attached_Fields
     {
-        public bool isInitialized = false;
-        public Vector2 textureOffset = new();
-        public WormGrass? wormGrass = null;
+        public bool is_initialized = false;
+        public Vector2 texture_offset = new();
+        public WormGrass? worm_grass = null;
     }
 }

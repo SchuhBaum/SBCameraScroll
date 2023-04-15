@@ -70,14 +70,14 @@ internal static class WormGrassMod
         }
         else
         {
-            AbstractRoomMod.AttachedFields abstractRoomAF = room.abstractRoom.GetAttachedFields();
-            if (abstractRoomAF.wormGrass is WormGrass wormGrass_)
+            AbstractRoomMod.Attached_Fields abstractRoomAF = room.abstractRoom.Get_Attached_Fields();
+            if (abstractRoomAF.worm_grass is WormGrass wormGrass_)
             {
                 Debug.Log("SBCameraScroll: There is already worm grass in " + room.abstractRoom.name + ". Destroy the old one.");
                 wormGrass_.Destroy();
                 all_attached_fields.Remove(wormGrass_);
             }
-            abstractRoomAF.wormGrass = wormGrass;
+            abstractRoomAF.worm_grass = wormGrass;
         }
     }
 

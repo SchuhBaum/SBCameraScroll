@@ -104,13 +104,13 @@ public class MainModOptions : OptionInterface
 
     public void ClearCacheButton_OnClick(UIfocusable _)
     {
-        FileInfo[] files = new DirectoryInfo(modDirectoryPath + "world").GetFiles("*.*", SearchOption.AllDirectories);
+        FileInfo[] files = new DirectoryInfo(mod_directory_path + "world").GetFiles("*.*", SearchOption.AllDirectories);
         for (int fileIndex = files.Length - 1; fileIndex >= 0; --fileIndex)
         {
             files[fileIndex].Delete();
         }
 
-        files = new DirectoryInfo(modDirectoryPath + "levels").GetFiles("*.*", SearchOption.AllDirectories);
+        files = new DirectoryInfo(mod_directory_path + "levels").GetFiles("*.*", SearchOption.AllDirectories);
         for (int fileIndex = files.Length - 1; fileIndex >= 0; --fileIndex)
         {
             files[fileIndex].Delete();
@@ -122,8 +122,8 @@ public class MainModOptions : OptionInterface
     {
         if (clearCacheButton == null) return;
 
-        bool is_levels_empty = Directory.GetFiles(modDirectoryPath + "levels", "*.*", SearchOption.AllDirectories).Length == 0;
-        bool is_world_empty = Directory.GetFiles(modDirectoryPath + "world", "*.*", SearchOption.AllDirectories).Length == 0;
+        bool is_levels_empty = Directory.GetFiles(mod_directory_path + "levels", "*.*", SearchOption.AllDirectories).Length == 0;
+        bool is_world_empty = Directory.GetFiles(mod_directory_path + "world", "*.*", SearchOption.AllDirectories).Length == 0;
         clearCacheButton.colorEdge = new Color(1f, 1f, 1f, 1f);
 
         if (is_levels_empty && is_world_empty)

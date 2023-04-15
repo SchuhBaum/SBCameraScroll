@@ -1,3 +1,5 @@
+using static SBCameraScroll.AbstractRoomMod;
+
 namespace SBCameraScroll;
 
 internal static class OverWorldMod
@@ -11,15 +13,13 @@ internal static class OverWorldMod
     // private
     //
 
-    private static void OverWorld_WorldLoaded(On.OverWorld.orig_WorldLoaded orig, OverWorld overWorld)
+    private static void OverWorld_WorldLoaded(On.OverWorld.orig_WorldLoaded orig, OverWorld over_world)
     {
-        orig(overWorld);
-        foreach (AbstractRoom abstractRoom in AbstractRoomMod.all_attached_fields.Keys)
+        orig(over_world);
+        foreach (AbstractRoom abstractRoom in all_attached_fields.Keys)
         {
-            if (!overWorld.activeWorld.IsRoomInRegion(abstractRoom.index))
-            {
-                AbstractRoomMod.DestroyWormGrassInAbstractRoom(abstractRoom);
-            }
+            if (over_world.activeWorld.IsRoomInRegion(abstractRoom.index)) continue;
+            DestroyWormGrassInAbstractRoom(abstractRoom);
         }
     }
 }
