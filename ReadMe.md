@@ -23,12 +23,25 @@ If rooms textures are changed then you need to generate these files again. This 
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
 ### Bug reports
-Please post bugs on the Rain World Discord server in the channel #modding-support:  
-https://discord.gg/rainworld
+Please post bugs on the Rain World Discord server (https://discord.gg/rainworld) in the channel #modding-support. If possible provide (drag & drop) the files consoleLog.txt and exceptionLog.txt (if it exists) from your Rain World folder. Both logs get cleared when you launch the game. Send them after you encounter the problem.
 
 ### FAQ
 Q: The mod doesn't work. I can't open the mod's option menu. How to fix this?  
-A: One thing that helped multiple people is to delete the 'Rain World\BepInEx' folder and then verifying the integrity of the game files in steam.  
+A: One thing that helped multiple people is to delete the 'Rain World\BepInEx' folder and then verifying the integrity of the game files in steam.
+
+Q: The mod still doesn't work. I still can't open the mod's option menu. How to fix this?  
+A: Maybe this more extensive strategy works for you:
+- Delete RW completely.
+- Then deactivate downpour on steam client so it won't download.
+- Install RW again.
+- Apply all mods that you want in remix and test them
+- Continue if they work now
+- Activate downpour on steam so it would download
+- Activate downpour mods in remix
+- Reboot the game
+
+Q: The mod doesn't seem to work on SteamDeck. What can I do?  
+A: You can try to add 'WINEDLLOVERRIDES="winhttp=n,b" %command%' to the launch options (in Steam: right click >> Properties >> General). If that doesn't work there are other threads about Linux and SteamDeck on the Rain World Discord server (https://discord.gg/rainworld).
 
 Q: The game freezes when entering a region. How to fix this?  
 A: The game might actually not be frozen. The mod needs to generate files for each region. This can take time (>1 minute). Wait a bit. If the game actually crashed then you have an exceptionLog.txt in your Rain World folder. If that is the case then proceed with the section `Bug reports`.
