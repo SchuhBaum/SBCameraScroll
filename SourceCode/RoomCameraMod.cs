@@ -24,7 +24,7 @@ public static class RoomCameraMod
 
     // used in CoopTweaks; don't rename;
     public static float maxUpdateShortcut = 3f;
-    public static List<string> blacklisted_rooms = new() { "RM_AI", "GW_ARTYSCENES", "GW_ARTYNIGHTMARE", "SB_E05SAINT" };
+    public static List<string> blacklisted_rooms = new() { "RM_AI", "GW_ARTYSCENES", "GW_ARTYNIGHTMARE", "SB_E05SAINT", "SL_AI" };
 
     //
     // variables

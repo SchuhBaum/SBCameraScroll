@@ -96,7 +96,7 @@ public class MainModOptions : OptionInterface
     // main
     //
 
-    public MainModOptions() => OnConfigChanged += MainModOptions_OnConfigChanged;
+    public MainModOptions() { }
 
     //
     // public
@@ -309,7 +309,7 @@ public class MainModOptions : OptionInterface
         }
     }
 
-    public void MainModOptions_OnConfigChanged()
+    public void Log_All_Options()
     {
         // 0: Position type, 1: Vanilla type
         camera_type = (RoomCameraMod.CameraType)Array.IndexOf(cameraTypeKeys, cameraType.Value);

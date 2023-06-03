@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 2.4.9
+###### Version: 2.5.0
 This is a mod for Rain World v1.9.
 
 ### Description
@@ -18,45 +18,12 @@ If rooms textures are changed then you need to generate these files again. This 
 
 ### Installation
 0. Update Rain World to version 1.9 if needed.
-1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.4.9).
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.5.0).
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
-### Bug reports
-Please post bugs on the [Rain World Discord](https://discord.gg/rainworld) server in the channel #modding-support. If possible provide (drag & drop) the files consoleLog.txt and exceptionLog.txt (if it exists) from your Rain World folder. Both logs get cleared when you launch the game. Send them after you encounter the problem.
-
-### FAQ
-Q: The mod doesn't work. I can't open the mod's option menu. How to fix this?  
-A: One thing that helped multiple people is to delete the 'Rain World\BepInEx' folder and then verifying the integrity of the game files in steam.
-
-Q: The mod still doesn't work. I still can't open the mod's option menu. How to fix this?  
-A: Maybe this more extensive strategy works for you:
-- Delete RW completely.
-- Then deactivate downpour on steam client so it won't download.
-- Install RW again.
-- Apply all mods that you want in remix and test them
-- Continue if they work now
-- Activate downpour on steam so it would download
-- Activate downpour mods in remix
-- Reboot the game
-
-Q: The mod doesn't seem to work on SteamDeck. What can I do?  
-A: You can try to add 'WINEDLLOVERRIDES="winhttp=n,b" %command%' to the launch options (in Steam: right click >> Properties >> General). If that doesn't work there are other threads about Linux and SteamDeck on the [Rain World Discord](https://discord.gg/rainworld) server.
-
-Q: The game freezes when entering a region. How to fix this?  
-A: The game might actually not be frozen. The mod needs to generate files for each region. This can take time (>1 minute). Wait a bit. If the game actually crashed then you have an exceptionLog.txt in your Rain World folder. If that is the case then proceed with the section `Bug reports`.
-
-Q: My game actually crashed. What happened?  
-A: Your game might have run out of memory. So far I haven't found a solution to this. As a workaround, I recommend that you restart your game from time to time (see `Known issues`).  
-
-### Known issues
-- Snow shaders don't work correctly. Snow on objects is more pixelated and in some places displays more snow than vanilla and in other places less. Falling snow can "jump" when you would have changed screens.
-- There are blue outlines in certain rooms (shader issues?).
-- This mod increases memory consumption. When the game runs low on memory the performance will decline and the game might crash. This might take a while (90+ minutes). Merging room texture accelerates this. This needs to happen once for every room with multiple screens. The textures are saved to disk (cached) and reused. It is recommended to restart the game every now and then.  
- CONTEXT: There might be memory leaks or memory fragmentation. A memory leak would mean that memory is not released when it is not used anymore. Fragmentation might happen because most roomCamera textures are now fairly large and change in size often. This means that they need to be re-allocated in memory often and they require a chunk of memory without "holes".
-- The underwater shaders do not work correctly. In large rooms they can smear sprites.
-- Shadows at the edge of the screen seem to flicker or stretch in some rooms. I can see the same thing without camera scroll. Maybe a vanilla bug.
-- Motion sickness might be a problem. I wonder how much is due to noise (details) in the textures. You can play around with the parameters and see what works for you.
+### Bug reports, FAQ & Known Issues
+See the corresponding sections on the [Steam Workshop page](https://steamcommunity.com/sharedfiles/filedetails/?id=2928752589) for this mod.
 
 ### Contact
 If you have feedback, you can message me on Discord `@SchuhBaum#7246` or write an email to SchuhBaum71@gmail.com.
@@ -120,7 +87,7 @@ v2.4.0:
 - Some small tweaks to how snow is displayed.
 - (camera offset) Added some conditions besides player inputs to make resetting the camera offset less unintentional.
 
-v2.4.9:
+v2.5.0:
 - Fixed a bug where the JollyCoop's player arrows would be misaligned when using non-default screen resolutions.
 - Added a "Clear Cache" button to the options menu.
 - (vanilla type camera) Added some changes to improve compatibility with SplitScreen Co-op.
@@ -132,6 +99,9 @@ v2.4.9:
 - (region mods) Some small changes to make it more conservative.
 - (region mods) Updated description to make clear that textures are also updated during gameplay and not just when region mods are enabled/disabled.
 - Removed (or rather ignore) DeathFallFocus objects in rooms. These objects are used to change the height of pit fall indicators. I tried making it a full screen effect instead that moves with the camera. Even then the indicator pops in and out. This way the indicator is stuck at the bottom of the room.
+- Blacklisted Moon's room SL_AI as a workaround.  
+Context: There is an issue with the shader MoonProjection. It seems that it is set to the middle of the current room texture. Since the merged textures are larger it is misaligned and the projections are not placed correctly. I can move the projections but the shader stays in place. This cuts off part of the projected image.
+- Changed implementation for logging the mod options. I saw some logs that didn't contain these for some reason. Should be more reliable now.
 
 #### (Rain World v1.5)
 v0.3:

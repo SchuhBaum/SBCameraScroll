@@ -16,7 +16,7 @@ namespace SBCameraScroll;
 // SplitScreenMod needs to be able to get the current cameraNumber for these methods
 // if I get access to that variable directly (static) I could do that too // but I don't want to carry an instance of SplitScreenMod around => dependency
 // You should be able to change load order now;
-[BepInPlugin("SchuhBaum.SBCameraScroll", "SBCameraScroll", "2.4.9")]
+[BepInPlugin("SchuhBaum.SBCameraScroll", "SBCameraScroll", "2.5.0")]
 public class MainMod : BaseUnityPlugin
 {
     //
@@ -25,7 +25,7 @@ public class MainMod : BaseUnityPlugin
 
     public static readonly string MOD_ID = "SchuhBaum.SBCameraScroll";
     public static readonly string author = "SchuhBaum";
-    public static readonly string version = "2.4.9";
+    public static readonly string version = "2.5.0";
     public static readonly string mod_directory_path = Directory.GetParent(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)).FullName + Path.DirectorySeparatorChar;
 
     //
@@ -368,14 +368,15 @@ public class MainMod : BaseUnityPlugin
 
         MoreSlugcatsMod.OnEnable();
         OverWorldMod.OnEnable();
+        ProcessManagerMod.OnEnable();
         RainWorldGameMod.OnEnable();
-        RegionGateMod.OnEnable();
 
+        RegionGateMod.OnEnable();
         RoomCameraMod.OnEnable();
         RoomMod.OnEnable();
         SuperStructureProjectorMod.OnEnable();
-        WorldMod.OnEnable();
 
+        WorldMod.OnEnable();
         WormGrassPatchMod.OnEnable();
         WormGrassMod.OnEnable();
     }
