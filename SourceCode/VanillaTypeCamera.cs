@@ -31,10 +31,8 @@ public class VanillaTypeCamera : IAmATypeCamera
     public bool is_centered = false;
     public bool use_vanilla_positions = false;
 
-    public static bool Is_Map_Pressed(Player player) => player.input[0].mp && !player.input[1].mp;
-
     //
-    //
+    // main
     //
 
     public VanillaTypeCamera(RoomCamera roomCamera, AttachedFields attachedFields)
@@ -44,8 +42,14 @@ public class VanillaTypeCamera : IAmATypeCamera
     }
 
     //
+    // public
     //
-    //
+
+    public bool Is_Map_Pressed(Player player)
+    {
+        if (!is_improved_input_enabled) return player.input[0].mp && !player.input[1].mp;
+        return player.Wants_To_Center_Camera();
+    }
 
     public void Move_Camera()
     {

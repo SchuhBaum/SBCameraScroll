@@ -21,13 +21,13 @@ internal static class ProcessManagerMod
 
         if (current_process_id == ProcessID.Initialization)
         {
-            instance.Log_All_Options();
+            main_mod_options.Log_All_Options();
             return;
         }
 
         if (current_process_id == ProcessID.ModdingMenu && next_process_id == ProcessID.MainMenu)
         {
-            instance.Log_All_Options();
+            main_mod_options.Log_All_Options();
             return;
         }
     }

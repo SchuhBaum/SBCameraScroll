@@ -7,16 +7,16 @@ using MonoMod.Cil;
 using RWCustom;
 using UnityEngine;
 
-// temporary fix // should be added automatically //TODO
+using static SBCameraScroll.MainModOptions;
+
+// allows access to private members;
 #pragma warning disable CS0618
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
+#pragma warning restore CS0618
+
 namespace SBCameraScroll;
 
-// this plugin needs to be loaded before SplitScreenMod because some methods don't always call orig()
-// SplitScreenMod needs to be able to get the current cameraNumber for these methods
-// if I get access to that variable directly (static) I could do that too // but I don't want to carry an instance of SplitScreenMod around => dependency
-// You should be able to change load order now;
-[BepInPlugin("SchuhBaum.SBCameraScroll", "SBCameraScroll", "2.5.0")]
+[BepInPlugin("SchuhBaum.SBCameraScroll", "SBCameraScroll", "2.5.1")]
 public class MainMod : BaseUnityPlugin
 {
     //
@@ -25,25 +25,26 @@ public class MainMod : BaseUnityPlugin
 
     public static readonly string MOD_ID = "SchuhBaum.SBCameraScroll";
     public static readonly string author = "SchuhBaum";
-    public static readonly string version = "2.5.0";
+    public static readonly string version = "2.5.1";
     public static readonly string mod_directory_path = Directory.GetParent(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)).FullName + Path.DirectorySeparatorChar;
 
     //
     // options
     //
 
-    public static bool Option_FogFullScreenEffect => MainModOptions.fogFullScreenEffect.Value;
-    public static bool Option_OtherFullScreenEffects => MainModOptions.otherFullScreenEffects.Value;
-    public static bool Option_MergeWhileLoading => MainModOptions.mergeWhileLoading.Value;
-    public static bool Option_RegionMods => MainModOptions.regionMods.Value;
-    public static bool Option_ScrollOneScreenRooms => MainModOptions.scrollOneScreenRooms.Value || is_split_screen_coop_enabled;
+    public static bool Option_FogFullScreenEffect => fogFullScreenEffect.Value;
+    public static bool Option_OtherFullScreenEffects => otherFullScreenEffects.Value;
+    public static bool Option_MergeWhileLoading => mergeWhileLoading.Value;
+    public static bool Option_RegionMods => regionMods.Value;
 
-    public static bool Option_CameraOffset => MainModOptions.cameraOffset_Position.Value;
+    public static bool Option_ScrollOneScreenRooms => scrollOneScreenRooms.Value || is_split_screen_coop_enabled;
+    public static bool Option_CameraOffset => cameraOffset_Position.Value;
 
     //
     // other mods
     //
 
+    public static bool is_improved_input_enabled = false;
     public static bool is_split_screen_coop_enabled = false;
 
     //
@@ -186,6 +187,13 @@ public class MainMod : BaseUnityPlugin
         }
     }
 
+    public static void Initialize_Custom_Inputs()
+    {
+        // wrap it in order to make it a soft dependency only;
+        RWInputMod.Initialize_Custom_Keybindings();
+        PlayerMod.OnEnable();
+    }
+
     public static bool Is_File_Exclusive(string relative_file_path)
     {
         // the merged texture dimensions might stay the same but some cameras might get re-rendered by mods;
@@ -326,7 +334,7 @@ public class MainMod : BaseUnityPlugin
 
         // if used after isInitialized then disabling and enabling the mod
         // without applying removes access to the options menu;
-        MachineConnector.SetRegisteredOI(MOD_ID, MainModOptions.instance);
+        MachineConnector.SetRegisteredOI(MOD_ID, main_mod_options);
 
         if (isInitialized) return;
         isInitialized = true;
@@ -345,20 +353,35 @@ public class MainMod : BaseUnityPlugin
 
         foreach (ModManager.Mod mod in ModManager.ActiveMods)
         {
+            if (mod.id == "improved-input-config")
+            {
+                is_improved_input_enabled = true;
+                continue;
+            }
+
             if (mod.id == "henpemaz_splitscreencoop")
             {
                 is_split_screen_coop_enabled = true;
-                break;
+                continue;
             }
         }
 
-        if (!is_split_screen_coop_enabled)
+        if (is_improved_input_enabled)
         {
-            Debug.Log("SBCameraScroll: SplitScreen Co-op not found.");
+            Debug.Log("SBCameraScroll: Improved Input Config found. Use custom keybinding for vanilla type camera.");
         }
         else
         {
+            Debug.Log("SBCameraScroll: Improved Input Config not found.");
+        }
+
+        if (is_split_screen_coop_enabled)
+        {
             Debug.Log("SBCameraScroll: SplitScreen Co-op found. Enable scrolling one-screen rooms.");
+        }
+        else
+        {
+            Debug.Log("SBCameraScroll: SplitScreen Co-op not found.");
         }
 
         AboveCloudsViewMod.OnEnable();
@@ -385,5 +408,7 @@ public class MainMod : BaseUnityPlugin
     {
         orig(rain_world); // loads options;
         Check_For_Newly_Activated_Or_Deactivated_Region_Mods();
+        if (!is_improved_input_enabled) return;
+        Initialize_Custom_Inputs();
     }
 }

@@ -3,8 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net48</TargetFramework>
     <Nullable>enable</Nullable>
-	  <LangVersion>10.0</LangVersion>
-	  <Version>2.5.0</Version> 
+    <LangVersion>10.0</LangVersion>
+	<Version>2.5.1</Version> 
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,9 +12,12 @@
     <Reference Include="..\..\references\STRIPPED-Assembly-CSharp.dll"/>
     <Reference Include="..\..\references\BepInEx.dll"/>
     <Reference Include="..\..\references\HOOKS-Assembly-CSharp.dll"/>
+
+    <Reference Include="..\..\references\ImprovedInput.dll"/>
     <Reference Include="..\..\references\Mono.Cecil.dll"/>
     <Reference Include="..\..\references\MonoMod.Utils.dll"/>
     <Reference Include="..\..\references\SplitScreen Co-op.dll"/>
+
     <Reference Include="..\..\references\UnityEngine.dll"/> 
     <Reference Include="..\..\references\UnityEngine.AssetBundleModule.dll"/>
     <Reference Include="..\..\references\UnityEngine.CoreModule.dll"/>

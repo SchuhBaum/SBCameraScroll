@@ -13,38 +13,38 @@ namespace SBCameraScroll;
 
 public class MainModOptions : OptionInterface
 {
-    public static MainModOptions instance = new();
+    public static MainModOptions main_mod_options = new();
 
     //
     // options
     //
 
-    public static Configurable<string> cameraType = instance.config.Bind("cameraType", "position", new ConfigurableInfo("This type tries to stay close to the player. A larger distance means a faster camera.\nThe smoothing factor determines how much of the distance is covered per frame.", null, "", "Camera Type"));
+    public static Configurable<string> cameraType = main_mod_options.config.Bind("cameraType", "position", new ConfigurableInfo("This type tries to stay close to the player. A larger distance means a faster camera.\nThe smoothing factor determines how much of the distance is covered per frame.", null, "", "Camera Type"));
 
-    public static Configurable<bool> fogFullScreenEffect = instance.config.Bind("fogFullScreenEffect", defaultValue: true, new ConfigurableInfo("When disabled, the full screen fog effect is removed. It depends on the camera position and can noticeably move with the screen.", null, "", "Fog Effect"));
-    public static Configurable<bool> mergeWhileLoading = instance.config.Bind("mergeWhileLoading", defaultValue: true, new ConfigurableInfo("When enabled, the camera textures for each room are merged when the region gets loaded.\nWhen disabled, camera textures are merged for each room on demand. Merging happens only once and might take a while.", null, "", "Merge While Loading")); //Merging happens only once and the files are stored inside the folder \"Mods/SBCameraScroll/\".\nThis process can take a while. Merging all rooms in Deserted Wastelands took me around three minutes.
-    public static Configurable<bool> otherFullScreenEffects = instance.config.Bind("otherFullScreenEffects", defaultValue: true, new ConfigurableInfo("When disabled, full screen effects (except fog) like bloom and melt are removed.", null, "", "Full Screen Effects"));
-    public static Configurable<bool> regionMods = instance.config.Bind("regionMods", defaultValue: true, new ConfigurableInfo("When enabled, the corresponding cached room textures get cleared when new region mods are detected or updated directly during gameplay when the room size changed. The load order matters if multiple mods change the same room.", null, "", "Region Mods"));
-    public static Configurable<bool> scrollOneScreenRooms = instance.config.Bind("scrollOneScreenRooms", defaultValue: false, new ConfigurableInfo("When disabled, the camera does not scroll in rooms with only one screen.", null, "", "One Screen Rooms")); // Automatically enabled when using SplitScreenMod.
+    public static Configurable<bool> fogFullScreenEffect = main_mod_options.config.Bind("fogFullScreenEffect", defaultValue: true, new ConfigurableInfo("When disabled, the full screen fog effect is removed. It depends on the camera position and can noticeably move with the screen.", null, "", "Fog Effect"));
+    public static Configurable<bool> mergeWhileLoading = main_mod_options.config.Bind("mergeWhileLoading", defaultValue: true, new ConfigurableInfo("When enabled, the camera textures for each room are merged when the region gets loaded.\nWhen disabled, camera textures are merged for each room on demand. Merging happens only once and might take a while.", null, "", "Merge While Loading")); //Merging happens only once and the files are stored inside the folder \"Mods/SBCameraScroll/\".\nThis process can take a while. Merging all rooms in Deserted Wastelands took me around three minutes.
+    public static Configurable<bool> otherFullScreenEffects = main_mod_options.config.Bind("otherFullScreenEffects", defaultValue: true, new ConfigurableInfo("When disabled, full screen effects (except fog) like bloom and melt are removed.", null, "", "Full Screen Effects"));
+    public static Configurable<bool> regionMods = main_mod_options.config.Bind("regionMods", defaultValue: true, new ConfigurableInfo("When enabled, the corresponding cached room textures get cleared when new region mods are detected or updated directly during gameplay when the room size changed. The load order matters if multiple mods change the same room.", null, "", "Region Mods"));
+    public static Configurable<bool> scrollOneScreenRooms = main_mod_options.config.Bind("scrollOneScreenRooms", defaultValue: false, new ConfigurableInfo("When disabled, the camera does not scroll in rooms with only one screen.", null, "", "One Screen Rooms")); // Automatically enabled when using SplitScreenMod.
 
-    public static Configurable<int> smoothingFactorX = instance.config.Bind("smoothingFactorX", defaultValue: 8, new ConfigurableInfo("Determines how much of the distance is covered per frame. This is used when switching cameras as well to ensure a smooth transition.", new ConfigAcceptableRange<int>(0, 35), "", "Smoothing Factor for X (8)"));
-    public static Configurable<int> smoothingFactorY = instance.config.Bind("smoothingFactorY", defaultValue: 8, new ConfigurableInfo("Determines how much of the distance is covered per frame. This is used when switching cameras as well to ensure a smooth transition.", new ConfigAcceptableRange<int>(0, 35), "", "Smoothing Factor for Y (8)"));
-
-    //
-    //
-    //
-
-    public static Configurable<int> innerCameraBoxX_Position = instance.config.Bind("innerCameraBoxX_Position", defaultValue: 2, new ConfigurableInfo("The camera does not move when the player is closer than this.", new ConfigAcceptableRange<int>(0, 35), "", "Minimum Distance in X (2)"));
-    public static Configurable<int> innerCameraBoxY_Position = instance.config.Bind("innerCameraBoxY_Position", defaultValue: 2, new ConfigurableInfo("The camera does not move when the player is closer than this.", new ConfigAcceptableRange<int>(0, 35), "", "Minimum Distance in Y (2)"));
-    public static Configurable<bool> cameraOffset_Position = instance.config.Bind("cameraOffset_Position", defaultValue: false, new ConfigurableInfo("When enabled, the camera can move ahead but still stays within the minimum distance.", null, "", "Camera Offset"));
-    public static Configurable<int> cameraOffsetSpeedMultiplier_Position = instance.config.Bind("cameraOffsetSpeedMultiplier_Position", defaultValue: 2, new ConfigurableInfo("Determines how fast the camera pulls ahead. When set to 1.0 then the offset changes as fast as the player moves.", new ConfigAcceptableRange<int>(1, 50), "", "Camera Offset Speed Multiplier (2)"));
+    public static Configurable<int> smoothingFactorX = main_mod_options.config.Bind("smoothingFactorX", defaultValue: 8, new ConfigurableInfo("Determines how much of the distance is covered per frame. This is used when switching cameras as well to ensure a smooth transition.", new ConfigAcceptableRange<int>(0, 35), "", "Smoothing Factor for X (8)"));
+    public static Configurable<int> smoothingFactorY = main_mod_options.config.Bind("smoothingFactorY", defaultValue: 8, new ConfigurableInfo("Determines how much of the distance is covered per frame. This is used when switching cameras as well to ensure a smooth transition.", new ConfigAcceptableRange<int>(0, 35), "", "Smoothing Factor for Y (8)"));
 
     //
     //
     //
 
-    public static Configurable<int> outerCameraBoxX_Vanilla = instance.config.Bind("outerCameraBoxX_Vanilla", defaultValue: 9, new ConfigurableInfo("The camera changes position if the player is closer to the edge of the screen than this value.", new ConfigAcceptableRange<int>(0, 35), "", "Distance from the Edge in X (9)"));
-    public static Configurable<int> outerCameraBoxY_Vanilla = instance.config.Bind("outerCameraBoxY_Vanilla", defaultValue: 1, new ConfigurableInfo("The camera changes position if the player is closer to the edge of the screen than this value.", new ConfigAcceptableRange<int>(0, 35), "", "Distance to the Edge in Y (1)"));
+    public static Configurable<int> innerCameraBoxX_Position = main_mod_options.config.Bind("innerCameraBoxX_Position", defaultValue: 2, new ConfigurableInfo("The camera does not move when the player is closer than this.", new ConfigAcceptableRange<int>(0, 35), "", "Minimum Distance in X (2)"));
+    public static Configurable<int> innerCameraBoxY_Position = main_mod_options.config.Bind("innerCameraBoxY_Position", defaultValue: 2, new ConfigurableInfo("The camera does not move when the player is closer than this.", new ConfigAcceptableRange<int>(0, 35), "", "Minimum Distance in Y (2)"));
+    public static Configurable<bool> cameraOffset_Position = main_mod_options.config.Bind("cameraOffset_Position", defaultValue: false, new ConfigurableInfo("When enabled, the camera can move ahead but still stays within the minimum distance.", null, "", "Camera Offset"));
+    public static Configurable<int> cameraOffsetSpeedMultiplier_Position = main_mod_options.config.Bind("cameraOffsetSpeedMultiplier_Position", defaultValue: 2, new ConfigurableInfo("Determines how fast the camera pulls ahead. When set to 1.0 then the offset changes as fast as the player moves.", new ConfigAcceptableRange<int>(1, 50), "", "Camera Offset Speed Multiplier (2)"));
+
+    //
+    //
+    //
+
+    public static Configurable<int> outerCameraBoxX_Vanilla = main_mod_options.config.Bind("outerCameraBoxX_Vanilla", defaultValue: 9, new ConfigurableInfo("The camera changes position if the player is closer to the edge of the screen than this value.", new ConfigAcceptableRange<int>(0, 35), "", "Distance from the Edge in X (9)"));
+    public static Configurable<int> outerCameraBoxY_Vanilla = main_mod_options.config.Bind("outerCameraBoxY_Vanilla", defaultValue: 1, new ConfigurableInfo("The camera changes position if the player is closer to the edge of the screen than this value.", new ConfigAcceptableRange<int>(0, 35), "", "Distance to the Edge in Y (1)"));
 
     //
     // parameters
