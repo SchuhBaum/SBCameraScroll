@@ -16,16 +16,16 @@ using static SBCameraScroll.MainModOptions;
 
 namespace SBCameraScroll;
 
-[BepInPlugin("SchuhBaum.SBCameraScroll", "SBCameraScroll", "2.5.1")]
+[BepInPlugin("SBCameraScroll", "SBCameraScroll", "2.5.2")]
 public class MainMod : BaseUnityPlugin
 {
     //
     // meta data
     //
 
-    public static readonly string MOD_ID = "SchuhBaum.SBCameraScroll";
+    public static readonly string MOD_ID = "SBCameraScroll";
     public static readonly string author = "SchuhBaum";
-    public static readonly string version = "2.5.1";
+    public static readonly string version = "2.5.2";
     public static readonly string mod_directory_path = Directory.GetParent(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)).FullName + Path.DirectorySeparatorChar;
 
     //
@@ -51,13 +51,15 @@ public class MainMod : BaseUnityPlugin
     // variables
     //
 
-    public static bool isInitialized = false;
+    public static bool is_initialized = false;
+    public static bool can_log_il_hooks = false;
 
     // 
     // main
     // 
 
     public MainMod() { }
+
     public void OnEnable()
     {
         On.RainWorld.OnModsDisabled += RainWorld_OnModsDisabled;
@@ -336,8 +338,8 @@ public class MainMod : BaseUnityPlugin
         // without applying removes access to the options menu;
         MachineConnector.SetRegisteredOI(MOD_ID, main_mod_options);
 
-        if (isInitialized) return;
-        isInitialized = true;
+        if (is_initialized) return;
+        is_initialized = true;
 
         Debug.Log("SBCameraScroll: version " + version);
         Debug.Log("SBCameraScroll: max_texture_size " + SystemInfo.maxTextureSize);
@@ -384,24 +386,27 @@ public class MainMod : BaseUnityPlugin
             Debug.Log("SBCameraScroll: SplitScreen Co-op not found.");
         }
 
+        can_log_il_hooks = true;
         AboveCloudsViewMod.OnEnable();
         AbstractRoomMod.OnEnable();
         GhostWorldPresenceMod.OnEnable();
-        GoldFlakesMod.OnEnable();
 
+        GoldFlakesMod.OnEnable();
         MoreSlugcatsMod.OnEnable();
         OverWorldMod.OnEnable();
         ProcessManagerMod.OnEnable();
-        RainWorldGameMod.OnEnable();
 
+        RainWorldGameMod.OnEnable();
         RegionGateMod.OnEnable();
         RoomCameraMod.OnEnable();
         RoomMod.OnEnable();
-        SuperStructureProjectorMod.OnEnable();
 
+        SuperStructureProjectorMod.OnEnable();
         WorldMod.OnEnable();
         WormGrassPatchMod.OnEnable();
+
         WormGrassMod.OnEnable();
+        can_log_il_hooks = false;
     }
 
     private void RainWorld_PostModsInit(On.RainWorld.orig_PostModsInit orig, RainWorld rain_world)

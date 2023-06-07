@@ -192,53 +192,15 @@ public static class RoomCameraMod
     private static void IL_RoomCamera_DrawUpdate(ILContext context)
     {
         // LogAllInstructions(context);
-
-        // if (cursor.TryGotoNext(instruction => instruction.MatchStloc(1)))
-        // {
-        //     Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate_1: Index " + cursor.Index); // 70
-        //     cursor.Goto(cursor.Index - 5);
-        //     cursor.RemoveRange(5);
-
-        //     cursor.Emit(OpCodes.Ldarg_1);
-        //     cursor.EmitDelegate<Func<RoomCamera, float, Vector2>>((room_camera, time_stacker) =>
-        //     {
-        //         Vector2 camera_position = Vector2.Lerp(room_camera.lastPos, room_camera.pos, time_stacker);
-
-        //         if (room_camera.Is_Type_Camera_Not_Used())
-        //         {
-        //             return camera_position;
-        //         }
-
-        //         if (is_split_screen_coop_enabled && Is_Split_Vertically)
-        //         {
-        //             return camera_position;
-        //         }
-
-        // remove clamping instead; hDisplace is at fault;
-
-        //         // there are cases where this is necessary;
-        //         // otherwise when using non-default screen_sizes you might run into issues;
-        //         // for example: when using vanilla positions for the vanilla type camera 
-        //         // the screens are aligned to the right instead of being centered;
-        //         // this means that you can be off-screen on the left side after screen transitions;
-        //         camera_position.x -= Custom.GetScreenOffsets()[0];
-        //         return camera_position;
-        //     });
-        // }
-        // else
-        // {
-        //     Debug.LogException(new Exception("SBCameraScroll: IL_RoomCamera_DrawUpdate_1 failed."));
-        // }
-
-        //
-        // the first four instances remove the clamping;
-        // otherwise you can't scroll past the current screen;
-        //
-
         ILCursor cursor = new(context);
+
         if (cursor.TryGotoNext(instruction => instruction.MatchCall<RoomCamera>("CamPos")))
         {
-            Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate_2: Index " + cursor.Index); // 100 
+            if (can_log_il_hooks)
+            {
+                Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate: Index " + cursor.Index); // 100 
+            }
+
             cursor.Goto(cursor.Index - 2);
             cursor.RemoveRange(3); // remove CamPos(currentCameraPosition)
 
@@ -259,12 +221,20 @@ public static class RoomCameraMod
         }
         else
         {
-            Debug.LogException(new Exception("SBCameraScroll: IL_RoomCamera_DrawUpdate_2 failed."));
+            if (can_log_il_hooks)
+            {
+                Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate failed.");
+            }
+            return;
         }
 
         if (cursor.TryGotoNext(instruction => instruction.MatchCall<RoomCamera>("CamPos")))
         {
-            Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate_3: Index " + cursor.Index); // 112 
+            if (can_log_il_hooks)
+            {
+                Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate: Index " + cursor.Index); // 112 
+            }
+
             cursor.Goto(cursor.Index - 2);
             cursor.RemoveRange(3);
 
@@ -282,12 +252,20 @@ public static class RoomCameraMod
         }
         else
         {
-            Debug.LogException(new Exception("SBCameraScroll: IL_RoomCamera_DrawUpdate_3 failed."));
+            if (can_log_il_hooks)
+            {
+                Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate failed.");
+            }
+            return;
         }
 
         if (cursor.TryGotoNext(instruction => instruction.MatchCall<RoomCamera>("CamPos")))
         {
-            Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate_4: Index " + cursor.Index); // 129 
+            if (can_log_il_hooks)
+            {
+                Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate: Index " + cursor.Index); // 129 
+            }
+
             cursor.Goto(cursor.Index - 2);
             cursor.RemoveRange(3);
 
@@ -303,12 +281,20 @@ public static class RoomCameraMod
         }
         else
         {
-            Debug.LogException(new Exception("SBCameraScroll: IL_RoomCamera_DrawUpdate_4 failed."));
+            if (can_log_il_hooks)
+            {
+                Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate failed.");
+            }
+            return;
         }
 
         if (cursor.TryGotoNext(instruction => instruction.MatchCall<RoomCamera>("CamPos")))
         {
-            Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate_5: Index " + cursor.Index); // 145 
+            if (can_log_il_hooks)
+            {
+                Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate: Index " + cursor.Index); // 145 
+            }
+
             cursor.Goto(cursor.Index - 2);
             cursor.RemoveRange(3);
 
@@ -324,7 +310,11 @@ public static class RoomCameraMod
         }
         else
         {
-            Debug.LogException(new Exception("SBCameraScroll: IL_RoomCamera_DrawUpdate_5 failed."));
+            if (can_log_il_hooks)
+            {
+                Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate failed.");
+            }
+            return;
         }
 
         //
@@ -333,7 +323,11 @@ public static class RoomCameraMod
 
         if (cursor.TryGotoNext(instruction => instruction.MatchCall<RoomCamera>("CamPos")))
         {
-            Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate_6: Index " + cursor.Index); // 321
+            if (can_log_il_hooks)
+            {
+                Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate: Index " + cursor.Index); // 321
+            }
+
             cursor.Goto(cursor.Index - 4);
             cursor.RemoveRange(43); // 317-359
 
@@ -358,12 +352,20 @@ public static class RoomCameraMod
         }
         else
         {
-            Debug.LogException(new Exception("SBCameraScroll: IL_RoomCamera_DrawUpdate_6 failed."));
+            if (can_log_il_hooks)
+            {
+                Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate failed.");
+            }
+            return;
         }
 
         if (cursor.TryGotoNext(instruction => instruction.MatchCall<RoomCamera>("CamPos")))
         {
-            Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate_7: Index " + cursor.Index); // 425
+            if (can_log_il_hooks)
+            {
+                Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate: Index " + cursor.Index); // 425
+            }
+
             cursor.Goto(cursor.Index - 9);
             cursor.RemoveRange(71); // 416-486
 
@@ -384,7 +386,11 @@ public static class RoomCameraMod
         }
         else
         {
-            Debug.LogException(new Exception("SBCameraScroll: IL_RoomCamera_DrawUpdate_7 failed."));
+            if (can_log_il_hooks)
+            {
+                Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate failed.");
+            }
+            return;
         }
         // LogAllInstructions(context);
     }
@@ -400,7 +406,11 @@ public static class RoomCameraMod
 
         if (cursor.TryGotoNext(instruction => instruction.MatchCall<RoomCamera>("UpdateDayNightPalette")))
         {
-            Debug.Log("SBCameraScroll: IL_RoomCamera_Update_1: Index " + cursor.Index); // 400
+            if (can_log_il_hooks)
+            {
+                Debug.Log("SBCameraScroll: IL_RoomCamera_Update: Index " + cursor.Index); // 400
+            }
+
             cursor.EmitDelegate<Action<RoomCamera>>(room_camera => // put before UpdateDayNightPalette()
             {
                 if (room_camera.Is_Type_Camera_Not_Used()) return;
@@ -410,14 +420,22 @@ public static class RoomCameraMod
         }
         else
         {
-            Debug.LogException(new Exception("SBCameraScroll: IL_RoomCamera_Update_1 failed."));
+            if (can_log_il_hooks)
+            {
+                Debug.Log("SBCameraScroll: IL_RoomCamera_Update failed.");
+            }
+            return;
         }
 
         // putting it after normal pos updates but before the screen shake effect;
         // in the On-Hook it was after; so the screen shake did nothing;
         if (cursor.TryGotoNext(instruction => instruction.MatchCall<RoomCamera>("get_screenShake")))
         {
-            Debug.Log("SBCameraScroll: IL_RoomCamera_Update_2: Index " + cursor.Index); // before: 916 // after: 920
+            if (can_log_il_hooks)
+            {
+                Debug.Log("SBCameraScroll: IL_RoomCamera_Update: Index " + cursor.Index); // before: 916 // after: 920
+            }
+
             cursor.EmitDelegate<Action<RoomCamera>>(room_camera =>
             {
                 if (room_camera.Is_Type_Camera_Not_Used()) return;
@@ -427,7 +445,11 @@ public static class RoomCameraMod
         }
         else
         {
-            Debug.LogException(new Exception("SBCameraScroll: IL_RoomCamera_Update_2 failed."));
+            if (can_log_il_hooks)
+            {
+                Debug.Log("SBCameraScroll: IL_RoomCamera_Update failed.");
+            }
+            return;
         }
         // LogAllInstructions(context);
     }

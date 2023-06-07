@@ -96,7 +96,25 @@ public class MainModOptions : OptionInterface
     // main
     //
 
-    public MainModOptions() { }
+    private MainModOptions()
+    {
+        On.OptionInterface._SaveConfigFile -= Save_Config_File;
+        On.OptionInterface._SaveConfigFile += Save_Config_File;
+    }
+
+    private void Save_Config_File(On.OptionInterface.orig__SaveConfigFile orig, OptionInterface option_interface)
+    {
+        // the event OnConfigChange is triggered too often;
+        // it is triggered when you click on the mod name in the
+        // remix menu;
+        // initializing the hooks takes like half a second;
+        // I don't want to do that too often;
+
+        orig(option_interface);
+        if (option_interface != main_mod_options) return;
+        Debug.Log("SBCameraScroll: Save_Config_File.");
+        main_mod_options.Log_All_Options();
+    }
 
     //
     // public

@@ -4,6 +4,8 @@ using MonoMod.Cil;
 using RWCustom;
 using UnityEngine;
 
+using static SBCameraScroll.MainMod;
+
 namespace SBCameraScroll;
 
 internal static class MoreSlugcatsMod
@@ -12,7 +14,6 @@ internal static class MoreSlugcatsMod
     {
         IL.MoreSlugcats.BlizzardGraphics.DrawSprites += IL_BlizzardGraphics_DrawSprites;
         On.MoreSlugcats.BlizzardGraphics.Update += BlizzardGraphics_Update;
-
         On.MoreSlugcats.SnowSource.PackSnowData += SnowSource_PackSnowData;
         On.MoreSlugcats.SnowSource.Update += SnowSource_Update;
     }
@@ -28,7 +29,10 @@ internal static class MoreSlugcatsMod
         ILCursor cursor = new(context);
         if (cursor.TryGotoNext(instruction => instruction.MatchLdarg(2)))
         {
-            Debug.Log("SBCameraScroll: IL_BlizzardGraphics_DrawSprites_1: Index " + cursor.Index); // 16
+            if (can_log_il_hooks)
+            {
+                Debug.Log("SBCameraScroll: IL_BlizzardGraphics_DrawSprites: Index " + cursor.Index); // 16
+            }
 
             cursor.Next.OpCode = OpCodes.Ldarg_0; // blizzardGraphics
             cursor.GotoNext();
@@ -51,7 +55,11 @@ internal static class MoreSlugcatsMod
         }
         else
         {
-            Debug.LogException(new Exception("SBCameraScroll: IL_BlizzardGraphics_DrawSprites_1 failed."));
+            if (can_log_il_hooks)
+            {
+                Debug.Log("SBCameraScroll: IL_BlizzardGraphics_DrawSprites failed.");
+            }
+            return;
         }
         // MainMod.LogAllInstructions(context);
     }

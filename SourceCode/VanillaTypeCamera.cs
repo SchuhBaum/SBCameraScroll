@@ -1,4 +1,5 @@
 using System;
+using RWCustom;
 using UnityEngine;
 
 using static SBCameraScroll.MainMod;
@@ -77,15 +78,21 @@ public class VanillaTypeCamera : IAmATypeCamera
 
         if (distance_x > half_screen_size.x - camera_box_multiplier_x * camera_box_from_border_x)
         {
-            // I cannot use ResetCameraPosition() because it sets vanillaTypePosition to onScreenPosition and useVanillaPositions is set to true
+            // I cannot use ResetCameraPosition() because it sets vanilla_type_position to on_screen_position and useVanillaPositions is set to true;
             seek_position.x = 0.0f;
-            vanilla_type_position.x += direction_x * (distance_x + half_screen_size.x - camera_box_multiplier_x * camera_box_from_border_x - 50f); // new distance to the center of the screen: outerCameraBoxX + 50f // leanStartDistanceX can be up to 40f
+
+            // new distance to the center of the screen: outerCameraBoxX + 50f;
+            // leanStartDistanceX can be up to 40f;
+            vanilla_type_position.x += direction_x * (distance_x + half_screen_size.x - camera_box_multiplier_x * camera_box_from_border_x - 50f);
             room_camera.lastPos.x = vanilla_type_position.x; // prevent transition with in-between frames
             room_camera.pos.x = vanilla_type_position.x;
         }
         else
         {
-            if (distance_x > half_screen_size.x - camera_box_multiplier_x * camera_box_from_border_x - start_lean_distance_x) // lean effect // 20f is a simplification // vanilla uses 
+            // lean effect; 
+            // 20f for start_lean_distance_x is a simplification;
+            // vanilla scales this instead; 
+            if (distance_x > half_screen_size.x - camera_box_multiplier_x * camera_box_from_border_x - start_lean_distance_x)
             {
                 seek_position.x = direction_x * 8f;
             }
@@ -93,7 +100,9 @@ public class VanillaTypeCamera : IAmATypeCamera
             {
                 seek_position.x *= 0.9f;
             }
-            room_camera.pos.x = Mathf.Lerp(room_camera.lastPos.x, vanilla_type_position.x + seek_position.x, 0.1f); // mimic what vanilla is doing with roomCamera.leanPos in Update()
+
+            // mimic what vanilla is doing with roomCamera.leanPos in Update();
+            room_camera.pos.x = Mathf.Lerp(room_camera.lastPos.x, vanilla_type_position.x + seek_position.x, 0.1f);
         }
 
         float direction_y = Math.Sign(attached_fields.on_screen_position.y - vanilla_type_position.y);
@@ -109,7 +118,8 @@ public class VanillaTypeCamera : IAmATypeCamera
         }
         else
         {
-            if (distance_y > half_screen_size.y - camera_box_multiplier_y * camera_box_from_border_y - start_lean_distance_y && seek_position.x < 8f) // vanilla does not do the lean effect for both
+            // vanilla does not do the lean effect for both;
+            if (distance_y > half_screen_size.y - camera_box_multiplier_y * camera_box_from_border_y - start_lean_distance_y && seek_position.x < 8f)
             {
                 seek_position.y = direction_y * 8f;
             }
@@ -127,22 +137,24 @@ public class VanillaTypeCamera : IAmATypeCamera
 
     public void Move_Camera_Transition()
     {
-        Vector2 targetPosition;
+        Vector2 target_position;
         if (use_vanilla_positions)
         {
             // only in case when the player is not the target
             // seekPos can change during a transition
             // this extends the transition until the player stops changing screens
-            targetPosition = room_camera.seekPos;
+            target_position = room_camera.seekPos;
         }
         else
         {
-            targetPosition = attached_fields.on_screen_position;
-            CheckBorders(room_camera, ref targetPosition); // stop at borders
+            target_position = attached_fields.on_screen_position;
+            CheckBorders(room_camera, ref target_position); // stop at borders
         }
 
-        room_camera.pos.x = Mathf.Lerp(room_camera.lastPos.x, targetPosition.x, smoothing_factor_x);
-        room_camera.pos.y = Mathf.Lerp(room_camera.lastPos.y, targetPosition.y, smoothing_factor_y);
+        // the tick helps when the player goes back and forth
+        // to stop the transition earlier;
+        room_camera.pos.x = Custom.LerpAndTick(room_camera.lastPos.x, target_position.x, smoothing_factor_x, 2f);
+        room_camera.pos.y = Custom.LerpAndTick(room_camera.lastPos.y, target_position.y, smoothing_factor_y, 2f);
     }
 
     public void Reset()

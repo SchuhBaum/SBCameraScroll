@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 2.5.1
+###### Version: 2.5.2
 This is a mod for Rain World v1.9.
 
 ### Description
@@ -20,7 +20,7 @@ This mod includes a second camera that behaves almost identical to the vanilla c
 
 ### Installation
 0. Update Rain World to version 1.9 if needed.
-1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.5.1).
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.5.2).
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
@@ -105,8 +105,11 @@ v2.5.0:
 Context: There is an issue with the shader MoonProjection. It seems that it is set to the middle of the current room texture. Since the merged textures are larger it is misaligned and the projections are not placed correctly. I can move the projections but the shader stays in place. This cuts off part of the projected image.
 - Changed implementation for logging the mod options. I saw some logs that didn't contain these for some reason. Should be more reliable now.
 
-v2.5.1:
+v2.5.2:
 - (vanilla type camera) The button for centering the camera can be configured using the mod `Improved Input Config`.
+- IL hooks should no longer log multiple times when other mods add these IL hooks as well.
+- (vanilla type camera) Made transitions between centering and vanilla camera positions faster.
+- Restored original mod id.
 
 #### (Rain World v1.5)
 v0.3:
