@@ -54,6 +54,16 @@ public static class PlayerMod
         return custom_input[0].center_camera && !custom_input[1].center_camera;
     }
 
+    public static bool Wants_To_Switch_Camera(this Player player)
+    {
+        int player_number = player.playerState.playerNumber;
+        if (player_number < 0) return player.input[0].mp && !player.input[1].mp;
+        if (player_number >= number_of_players) return player.input[0].mp && !player.input[1].mp;
+
+        InputPackageMod[] custom_input = custom_input_list[player_number];
+        return custom_input[0].switch_camera && !custom_input[1].switch_camera;
+    }
+
     //
     // private
     //
@@ -85,6 +95,7 @@ public static class PlayerMod
     public struct InputPackageMod
     {
         public bool center_camera = false;
+        public bool switch_camera = false;
         public InputPackageMod() { }
     }
 }

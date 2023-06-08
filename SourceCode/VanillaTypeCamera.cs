@@ -30,7 +30,7 @@ public class VanillaTypeCamera : IAmATypeCamera
     public Vector2 vanilla_type_position = new();
 
     public bool is_centered = false;
-    public bool use_vanilla_positions = false;
+    public bool use_vanilla_positions = true;
 
     //
     // main

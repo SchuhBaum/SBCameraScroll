@@ -16,10 +16,28 @@ public class MainModOptions : OptionInterface
     public static MainModOptions main_mod_options = new();
 
     //
+    // parameters
+    //
+
+    private readonly float spacing = 20f;
+    private readonly float fontHeight = 20f;
+    private readonly int numberOfCheckboxes = 3;
+    private readonly float checkBoxSize = 24f;
+    private float CheckBoxWithSpacing => checkBoxSize + 0.25f * spacing;
+
+    private static readonly string[] cameraTypeKeys = new string[3] { "1-position", "2-vanilla", "3-switch" };
+    private static readonly string[] cameraTypeDescriptions = new string[3]
+    {
+            "This type tries to stay close to the player. A larger distance means a faster camera.\nThe smoothing factor determines how much of the distance is covered per frame.",
+            "Vanilla-style camera. You can center the camera by pressing the map button. Pressing the map button again will revert to vanilla camera positions.\nWhen the player is close to the edge of the screen the camera jumps a constant distance.",
+            "You can switch between the other two camera types by pressing the map button.\nThe keybinding can be configured using the mod 'Improved Input Config'."
+    };
+
+    //
     // options
     //
 
-    public static Configurable<string> cameraType = main_mod_options.config.Bind("cameraType", "position", new ConfigurableInfo("This type tries to stay close to the player. A larger distance means a faster camera.\nThe smoothing factor determines how much of the distance is covered per frame.", null, "", "Camera Type"));
+    public static Configurable<string> cameraType = main_mod_options.config.Bind("cameraType", cameraTypeKeys[0], new ConfigurableInfo(cameraTypeDescriptions[0], null, "", "Camera Type"));
 
     public static Configurable<bool> fogFullScreenEffect = main_mod_options.config.Bind("fogFullScreenEffect", defaultValue: true, new ConfigurableInfo("When disabled, the full screen fog effect is removed. It depends on the camera position and can noticeably move with the screen.", null, "", "Fog Effect"));
     public static Configurable<bool> mergeWhileLoading = main_mod_options.config.Bind("mergeWhileLoading", defaultValue: true, new ConfigurableInfo("When enabled, the camera textures for each room are merged when the region gets loaded.\nWhen disabled, camera textures are merged for each room on demand. Merging happens only once and might take a while.", null, "", "Merge While Loading")); //Merging happens only once and the files are stored inside the folder \"Mods/SBCameraScroll/\".\nThis process can take a while. Merging all rooms in Deserted Wastelands took me around three minutes.
@@ -45,23 +63,6 @@ public class MainModOptions : OptionInterface
 
     public static Configurable<int> outerCameraBoxX_Vanilla = main_mod_options.config.Bind("outerCameraBoxX_Vanilla", defaultValue: 9, new ConfigurableInfo("The camera changes position if the player is closer to the edge of the screen than this value.", new ConfigAcceptableRange<int>(0, 35), "", "Distance from the Edge in X (9)"));
     public static Configurable<int> outerCameraBoxY_Vanilla = main_mod_options.config.Bind("outerCameraBoxY_Vanilla", defaultValue: 1, new ConfigurableInfo("The camera changes position if the player is closer to the edge of the screen than this value.", new ConfigAcceptableRange<int>(0, 35), "", "Distance to the Edge in Y (1)"));
-
-    //
-    // parameters
-    //
-
-    private readonly float spacing = 20f;
-    private readonly float fontHeight = 20f;
-    private readonly int numberOfCheckboxes = 3;
-    private readonly float checkBoxSize = 24f;
-    private float CheckBoxWithSpacing => checkBoxSize + 0.25f * spacing;
-
-    private readonly string[] cameraTypeKeys = new string[2] { "position", "vanilla" };
-    private readonly string[] cameraTypeDescriptions = new string[2]
-    {
-            "This type tries to stay close to the player. A larger distance means a faster camera.\nThe smoothing factor determines how much of the distance is covered per frame.",
-            "Vanilla-style camera. You can center the camera by pressing the map button. Pressing the map button again will revert to vanilla camera positions.\nWhen the player is close to the edge of the screen the camera jumps a constant distance."
-    };
 
     //
     // variables
@@ -184,10 +185,11 @@ public class MainModOptions : OptionInterface
         AddBox();
 
         List<ListItem> _cameraTypes = new()
-            {
-                new ListItem(cameraTypeKeys[0], "Position (Default)") { desc = cameraTypeDescriptions[0] },
-                new ListItem(cameraTypeKeys[1], "Vanilla") { desc = cameraTypeDescriptions[1] }
-            };
+        {
+            new ListItem(cameraTypeKeys[0], "Position (Default)") { desc = cameraTypeDescriptions[0] },
+            new ListItem(cameraTypeKeys[1], "Vanilla") { desc = cameraTypeDescriptions[1] },
+            new ListItem(cameraTypeKeys[2], "Switch") { desc = cameraTypeDescriptions[2] }
+        };
         AddComboBox(cameraType, _cameraTypes, (string)cameraType.info.Tags[0]);
         DrawComboBoxes(ref Tabs[tabIndex]);
 
@@ -345,28 +347,27 @@ public class MainModOptions : OptionInterface
         Debug.Log("SBCameraScroll: smoothingFactorX " + smoothing_factor_x);
         Debug.Log("SBCameraScroll: smoothingFactorY " + smoothing_factor_y);
 
-        switch (camera_type)
+        if (camera_type == RoomCameraMod.CameraType.Position || camera_type == RoomCameraMod.CameraType.Switch)
         {
-            case RoomCameraMod.CameraType.Position:
-                camera_box_x = 20f * innerCameraBoxX_Position.Value;
-                camera_box_y = 20f * innerCameraBoxY_Position.Value;
+            camera_box_x = 20f * innerCameraBoxX_Position.Value;
+            camera_box_y = 20f * innerCameraBoxY_Position.Value;
 
-                Debug.Log("SBCameraScroll: camera_box_x " + camera_box_x);
-                Debug.Log("SBCameraScroll: camera_box_y " + camera_box_y);
+            Debug.Log("SBCameraScroll: camera_box_x " + camera_box_x);
+            Debug.Log("SBCameraScroll: camera_box_y " + camera_box_y);
 
-                offset_speed_multiplier = 0.1f * cameraOffsetSpeedMultiplier_Position.Value;
+            offset_speed_multiplier = 0.1f * cameraOffsetSpeedMultiplier_Position.Value;
 
-                Debug.Log("SBCameraScroll: Option_CameraOffset " + Option_CameraOffset);
-                Debug.Log("SBCameraScroll: offset_speed_multiplier " + offset_speed_multiplier);
-                break;
-            case RoomCameraMod.CameraType.Vanilla:
+            Debug.Log("SBCameraScroll: Option_CameraOffset " + Option_CameraOffset);
+            Debug.Log("SBCameraScroll: offset_speed_multiplier " + offset_speed_multiplier);
+        }
 
-                camera_box_from_border_x = 20f * outerCameraBoxX_Vanilla.Value;
-                camera_box_from_border_y = 20f * outerCameraBoxX_Vanilla.Value;
+        if (camera_type == RoomCameraMod.CameraType.Vanilla || camera_type == RoomCameraMod.CameraType.Switch)
+        {
+            camera_box_from_border_x = 20f * outerCameraBoxX_Vanilla.Value;
+            camera_box_from_border_y = 20f * outerCameraBoxX_Vanilla.Value;
 
-                Debug.Log("SBCameraScroll: camera_box_from_border_x " + camera_box_from_border_x);
-                Debug.Log("SBCameraScroll: camera_box_from_border_y " + camera_box_from_border_y);
-                break;
+            Debug.Log("SBCameraScroll: camera_box_from_border_x " + camera_box_from_border_x);
+            Debug.Log("SBCameraScroll: camera_box_from_border_y " + camera_box_from_border_y);
         }
     }
 

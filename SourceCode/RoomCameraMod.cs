@@ -23,7 +23,7 @@ public static class RoomCameraMod
     public static float smoothing_factor_y = 0.16f;
 
     // used in CoopTweaks; don't rename;
-    public static float maxUpdateShortcut = 3f;
+    public static float number_of_frames_per_shortcut_udpate = 3f;
     public static List<string> blacklisted_rooms = new() { "RM_AI", "GW_ARTYSCENES", "GW_ARTYNIGHTMARE", "SB_E05SAINT", "SL_AI" };
 
     //
@@ -172,8 +172,8 @@ public static class RoomCameraMod
             Vector2 current_position = room_camera.room.MiddleOfTile(shortcutVessel.pos);
             Vector2 next_in_shortcut_position = room_camera.room.MiddleOfTile(ShortcutHandler.NextShortcutPosition(shortcutVessel.pos, shortcutVessel.lastPos, room_camera.room));
 
-            // shortcuts get only updated every 3 frames => calculate exact position here // in JollyCoopFixesAndStuff it can also be 2 frames in order to remove slowdown, i.e. compensate for the mushroom effect
-            position += Vector2.Lerp(current_position, next_in_shortcut_position, room_camera.game.updateShortCut / maxUpdateShortcut);
+            // shortcuts get only updated every 3 frames => calculate exact position here // in CoopTweaks it can also be 2 frames in order to remove slowdown, i.e. compensate for the mushroom effect
+            position += Vector2.Lerp(current_position, next_in_shortcut_position, room_camera.game.updateShortCut / number_of_frames_per_shortcut_udpate);
         }
         else // use the center (of mass(?)) instead // makes rolls more predictable // use lower y such that crouching does not move camera
         {
@@ -742,13 +742,20 @@ public static class RoomCameraMod
                 type_camera = new PositionTypeCamera(room_camera, this);
                 return;
             }
-            type_camera = new VanillaTypeCamera(room_camera, this);
+
+            if (camera_type == CameraType.Vanilla)
+            {
+                type_camera = new VanillaTypeCamera(room_camera, this);
+                return;
+            }
+            type_camera = new SwitchTypeCamera(room_camera, this);
         }
     }
 
     public enum CameraType
     {
         Position,
-        Vanilla
+        Vanilla,
+        Switch
     }
 }

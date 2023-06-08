@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 2.5.2
+###### Version: 2.5.3
 This is a mod for Rain World v1.9.
 
 ### Description
@@ -13,14 +13,15 @@ This mod generates room textures for each room with multiple cameras. These text
 
 If you want to clear the cache and let the textures be generated again then you can go the Remix options menu and press the button `Clear Cache`. In addition, there is the option `Region Mods` (enabled by default) that should update cached textures when mods modify existing rooms.
 
-This mod includes a second camera that behaves almost identical to the vanilla camera -- with one major difference. You can center the camera on the player. The button for centering the camera can be configured using the mod `Improved Input Config`.
+This mod includes a second camera that behaves almost identical to the vanilla camera -- with one major difference. You can center the camera on the player by pressing the map button. The keybinding can be configured using the mod `Improved Input Config`.
+I added a third camera that simply allows you switch between the first two camera types by pressing the map button. The keybinding can be configured using the mod `Improved Input Config`.
 
 ### Incompatibilities
 - The zoom camera option in the Slugcat Eyebrow Raise mod.
 
 ### Installation
 0. Update Rain World to version 1.9 if needed.
-1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.5.2).
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.5.3).
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
@@ -35,11 +36,12 @@ There are two licenses available - MIT and Unlicense. You can choose which one y
 
 ### Changelog
 #### (Rain World v1.9)
-v2.5.2:
+v2.5.3:
 - (vanilla type camera) The button for centering the camera can be configured using the mod `Improved Input Config`.
 - IL hooks should no longer log multiple times when other mods add these IL hooks as well.
 - (vanilla type camera) Made transitions between centering and vanilla camera positions faster.
 - Restored original mod id.
+- (switch type camera) Added this camera type. You can switch between the position and vanilla type camera by pressing the map key. The keybinding for switching the camera type can be configured using the mod `Improved Input Config`.
 
 v2.5.0:
 - Fixed a bug where the JollyCoop's player arrows would be misaligned when using non-default screen resolutions.
