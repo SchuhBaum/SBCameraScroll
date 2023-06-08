@@ -13,7 +13,7 @@ This mod generates room textures for each room with multiple cameras. These text
 
 If you want to clear the cache and let the textures be generated again then you can go the Remix options menu and press the button `Clear Cache`. In addition, there is the option `Region Mods` (enabled by default) that should update cached textures when mods modify existing rooms.
 
-This mod includes a second camera that behaves almost identical to the vanilla camera -- with one major difference. You can center the camera on the player by pressing the map button. The keybinding can be configured using the mod `Improved Input Config`.
+This mod includes a second camera that behaves almost identical to the vanilla camera -- with one major difference. You can center the camera on the player by pressing the map button. The keybinding can be configured using the mod `Improved Input Config`.  
 I added a third camera that simply allows you switch between the first two camera types by pressing the map button. The keybinding can be configured using the mod `Improved Input Config`.
 
 ### Incompatibilities
