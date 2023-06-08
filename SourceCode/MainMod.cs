@@ -16,7 +16,7 @@ using static SBCameraScroll.MainModOptions;
 
 namespace SBCameraScroll;
 
-[BepInPlugin("SBCameraScroll", "SBCameraScroll", "2.5.3")]
+[BepInPlugin("SBCameraScroll", "SBCameraScroll", "2.5.4")]
 public class MainMod : BaseUnityPlugin
 {
     //
@@ -25,7 +25,7 @@ public class MainMod : BaseUnityPlugin
 
     public static readonly string MOD_ID = "SBCameraScroll";
     public static readonly string author = "SchuhBaum";
-    public static readonly string version = "2.5.3";
+    public static readonly string version = "2.5.4";
     public static readonly string mod_directory_path = Directory.GetParent(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)).FullName + Path.DirectorySeparatorChar;
 
     //
@@ -339,8 +339,6 @@ public class MainMod : BaseUnityPlugin
         MachineConnector.SetRegisteredOI(MOD_ID, main_mod_options);
 
         if (is_initialized) return;
-        is_initialized = true;
-
         Debug.Log("SBCameraScroll: version " + version);
         Debug.Log("SBCameraScroll: max_texture_size " + SystemInfo.maxTextureSize);
         Debug.Log("SBCameraScroll: mod_directory_path " + mod_directory_path);
@@ -413,6 +411,11 @@ public class MainMod : BaseUnityPlugin
     {
         orig(rain_world); // loads options;
         Check_For_Newly_Activated_Or_Deactivated_Region_Mods();
+
+        // this function is called again when applying mods;
+        // only initialize once;
+        if (is_initialized) return;
+        is_initialized = true;
         if (!is_improved_input_enabled) return;
         Initialize_Custom_Inputs();
     }

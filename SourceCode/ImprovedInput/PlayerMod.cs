@@ -23,6 +23,7 @@ public static class PlayerMod
     internal static void OnEnable()
     {
         Initialize_Custom_Inputs();
+        On.Player.checkInput -= Player_CheckInput;
         On.Player.checkInput += Player_CheckInput;
     }
 

@@ -20,6 +20,7 @@ public static class RWInputMod
 
     public static void Initialize_Custom_Keybindings()
     {
+        if (center_keybinding != null) return;
         // initialize after ImprovedInput has;
         center_keybinding = PlayerKeybind.Register("SBCameraScroll-Center_Vanilla_Type_Camera", "SBCameraScroll", "Center", KeyCode.None, KeyCode.None);
         switch_keybinding = PlayerKeybind.Register("SBCameraScroll-Switch_Type_Camera", "SBCameraScroll", "Switch", KeyCode.None, KeyCode.None);
