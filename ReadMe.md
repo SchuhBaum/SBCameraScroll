@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 2.5.4
+###### Version: 2.5.5
 This is a mod for Rain World v1.9.
 
 ### Description
@@ -21,7 +21,7 @@ I added a third camera that simply allows you switch between the first two camer
 
 ### Installation
 0. Update Rain World to version 1.9 if needed.
-1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.5.4).
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.5.5).
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
@@ -36,13 +36,14 @@ There are two licenses available - MIT and Unlicense. You can choose which one y
 
 ### Changelog
 #### (Rain World v1.9)
-v2.5.4:
+v2.5.5:
 - (vanilla type camera) The button for centering the camera can be configured using the mod `Improved Input Config`.
 - IL hooks should no longer log multiple times when other mods add these IL hooks as well.
 - (vanilla type camera) Made transitions between centering and vanilla camera positions faster.
 - Restored original mod id.
 - (switch type camera) Added this camera type. You can switch between the position and vanilla type camera by pressing the map key. The keybinding for switching the camera type can be configured using the mod `Improved Input Config`.
 - Fixed a bug where custom keybindings would be initialized more than once.
+- Potentially fixed bad initialization.
 
 v2.5.0:
 - Fixed a bug where the JollyCoop's player arrows would be misaligned when using non-default screen resolutions.

@@ -16,7 +16,7 @@ using static SBCameraScroll.MainModOptions;
 
 namespace SBCameraScroll;
 
-[BepInPlugin("SBCameraScroll", "SBCameraScroll", "2.5.4")]
+[BepInPlugin("SBCameraScroll", "SBCameraScroll", "2.5.5")]
 public class MainMod : BaseUnityPlugin
 {
     //
@@ -25,7 +25,7 @@ public class MainMod : BaseUnityPlugin
 
     public static readonly string MOD_ID = "SBCameraScroll";
     public static readonly string author = "SchuhBaum";
-    public static readonly string version = "2.5.4";
+    public static readonly string version = "2.5.5";
     public static readonly string mod_directory_path = Directory.GetParent(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)).FullName + Path.DirectorySeparatorChar;
 
     //
@@ -51,7 +51,8 @@ public class MainMod : BaseUnityPlugin
     // variables
     //
 
-    public static bool is_initialized = false;
+    public static bool is_on_mods_init_initialized = false;
+    public static bool is_post_mod_init_initialized = false;
     public static bool can_log_il_hooks = false;
 
     // 
@@ -189,9 +190,10 @@ public class MainMod : BaseUnityPlugin
         }
     }
 
-    public static void Initialize_Custom_Inputs()
+    public static void Initialize_Custom_Input()
     {
         // wrap it in order to make it a soft dependency only;
+        Debug.Log("SBCameraScroll: Initialize custom input.");
         RWInputMod.Initialize_Custom_Keybindings();
         PlayerMod.OnEnable();
     }
@@ -338,7 +340,9 @@ public class MainMod : BaseUnityPlugin
         // without applying removes access to the options menu;
         MachineConnector.SetRegisteredOI(MOD_ID, main_mod_options);
 
-        if (is_initialized) return;
+        if (is_on_mods_init_initialized) return;
+        is_on_mods_init_initialized = true;
+
         Debug.Log("SBCameraScroll: version " + version);
         Debug.Log("SBCameraScroll: max_texture_size " + SystemInfo.maxTextureSize);
         Debug.Log("SBCameraScroll: mod_directory_path " + mod_directory_path);
@@ -414,9 +418,9 @@ public class MainMod : BaseUnityPlugin
 
         // this function is called again when applying mods;
         // only initialize once;
-        if (is_initialized) return;
-        is_initialized = true;
+        if (is_post_mod_init_initialized) return;
+        is_post_mod_init_initialized = true;
         if (!is_improved_input_enabled) return;
-        Initialize_Custom_Inputs();
+        Initialize_Custom_Input();
     }
 }
