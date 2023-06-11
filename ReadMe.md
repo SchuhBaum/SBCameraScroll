@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 2.5.5
+###### Version: 2.5.6
 This is a mod for Rain World v1.9.
 
 ### Description
@@ -21,7 +21,7 @@ I added a third camera that simply allows you switch between the first two camer
 
 ### Installation
 0. Update Rain World to version 1.9 if needed.
-1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.5.5).
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.5.6).
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
@@ -29,14 +29,14 @@ I added a third camera that simply allows you switch between the first two camer
 See the corresponding sections on the [Steam Workshop page](https://steamcommunity.com/sharedfiles/filedetails/?id=2928752589) for this mod.
 
 ### Contact
-If you have feedback, you can message me on Discord `@SchuhBaum#7246` or write an email to SchuhBaum71@gmail.com.
+If you have feedback, you can message me on Discord `@schuhbaum` or write an email to SchuhBaum71@gmail.com.
 
 ### License
 There are two licenses available - MIT and Unlicense. You can choose which one you want to use.  
 
 ### Changelog
 #### (Rain World v1.9)
-v2.5.5:
+v2.5.6:
 - (vanilla type camera) The button for centering the camera can be configured using the mod `Improved Input Config`.
 - IL hooks should no longer log multiple times when other mods add these IL hooks as well.
 - (vanilla type camera) Made transitions between centering and vanilla camera positions faster.
@@ -44,6 +44,7 @@ v2.5.5:
 - (switch type camera) Added this camera type. You can switch between the position and vanilla type camera by pressing the map key. The keybinding for switching the camera type can be configured using the mod `Improved Input Config`.
 - Fixed a bug where custom keybindings would be initialized more than once.
 - Potentially fixed bad initialization.
+- (improved input config) Added some conflict handling since it can be confusing and inconsistent otherwise. For example, using the map keybinding should be handled the same way as having no custom keybinding.
 
 v2.5.0:
 - Fixed a bug where the JollyCoop's player arrows would be misaligned when using non-default screen resolutions.

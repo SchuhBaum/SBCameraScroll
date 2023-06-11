@@ -16,7 +16,7 @@ using static SBCameraScroll.MainModOptions;
 
 namespace SBCameraScroll;
 
-[BepInPlugin("SBCameraScroll", "SBCameraScroll", "2.5.5")]
+[BepInPlugin("SBCameraScroll", "SBCameraScroll", "2.5.6")]
 public class MainMod : BaseUnityPlugin
 {
     //
@@ -25,7 +25,7 @@ public class MainMod : BaseUnityPlugin
 
     public static readonly string MOD_ID = "SBCameraScroll";
     public static readonly string author = "SchuhBaum";
-    public static readonly string version = "2.5.5";
+    public static readonly string version = "2.5.6";
     public static readonly string mod_directory_path = Directory.GetParent(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)).FullName + Path.DirectorySeparatorChar;
 
     //
@@ -51,9 +51,9 @@ public class MainMod : BaseUnityPlugin
     // variables
     //
 
+    public static bool can_log_il_hooks = false;
     public static bool is_on_mods_init_initialized = false;
     public static bool is_post_mod_init_initialized = false;
-    public static bool can_log_il_hooks = false;
 
     // 
     // main

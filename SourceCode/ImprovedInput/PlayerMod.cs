@@ -8,7 +8,8 @@ public static class PlayerMod
     // parameters
     //
 
-    public static int number_of_players = 4;
+    // needs to be less than or equal to 4 given how ImprovedInput works;
+    public static readonly int maximum_number_of_players = 4;
 
     //
     // variables
@@ -32,7 +33,7 @@ public static class PlayerMod
         if (custom_input_list != null) return;
         custom_input_list = new();
 
-        for (int player_number = 0; player_number < number_of_players; ++player_number)
+        for (int player_number = 0; player_number < maximum_number_of_players; ++player_number)
         {
             InputPackageMod[] custom_input = new InputPackageMod[2];
             custom_input[0] = new();
@@ -49,7 +50,7 @@ public static class PlayerMod
     {
         int player_number = player.playerState.playerNumber;
         if (player_number < 0) return player.input[0].mp && !player.input[1].mp;
-        if (player_number >= number_of_players) return player.input[0].mp && !player.input[1].mp;
+        if (player_number >= maximum_number_of_players) return player.input[0].mp && !player.input[1].mp;
 
         InputPackageMod[] custom_input = custom_input_list[player_number];
         return custom_input[0].center_camera && !custom_input[1].center_camera;
@@ -59,7 +60,7 @@ public static class PlayerMod
     {
         int player_number = player.playerState.playerNumber;
         if (player_number < 0) return player.input[0].mp && !player.input[1].mp;
-        if (player_number >= number_of_players) return player.input[0].mp && !player.input[1].mp;
+        if (player_number >= maximum_number_of_players) return player.input[0].mp && !player.input[1].mp;
 
         InputPackageMod[] custom_input = custom_input_list[player_number];
         return custom_input[0].switch_camera && !custom_input[1].switch_camera;
@@ -76,7 +77,7 @@ public static class PlayerMod
 
         int player_number = player.playerState.playerNumber;
         if (player_number < 0) return;
-        if (player_number >= number_of_players) return;
+        if (player_number >= maximum_number_of_players) return;
 
         InputPackageMod[] custom_input = custom_input_list[player_number];
         custom_input[1] = custom_input[0];
