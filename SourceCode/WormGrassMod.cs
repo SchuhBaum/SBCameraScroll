@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace SBCameraScroll;
 
-internal static class WormGrassMod
+public static class WormGrassMod
 {
     //
     // variables
