@@ -483,49 +483,6 @@ public static class RoomCameraMod
             }
             return;
         }
-
-        if (cursor.TryGotoNext(instruction => instruction.MatchLdstr("_screenSize")))
-        {
-            if (can_log_il_hooks)
-            {
-                Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate: Index " + cursor.Index); // 516
-            }
-
-            cursor.RemoveRange(5); // 516-520
-            cursor.Emit(OpCodes.Ldarg_0);
-
-            cursor.EmitDelegate<Action<RoomCamera>>(room_camera =>
-            {
-                if (room_camera.Is_Type_Camera_Not_Used())
-                {
-                    Shader.SetGlobalVector("_screenSize", room_camera.sSize);
-                    return;
-                }
-
-                // I need to keep the aspect ratio;
-                // otherwise the underwater glow effect for slugcat is skewed;
-                Vector2 screen_size = room_camera.sSize;
-                float screen_multiplier = Mathf.Floor(Mathf.Max(room_camera.levelGraphic.width / screen_size.x, room_camera.levelGraphic.height / screen_size.y));
-
-                if (screen_multiplier <= 1f)
-                {
-                    Shader.SetGlobalVector("_screenSize", screen_size);
-                    return;
-                }
-
-                // effects the step size that is used for sampling the levelGraphic texture;
-                // this helps with the DeepWater shader in larger rooms;
-                Shader.SetGlobalVector("_screenSize", screen_multiplier * screen_size);
-            });
-        }
-        else
-        {
-            if (can_log_il_hooks)
-            {
-                Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate failed.");
-            }
-            return;
-        }
         // LogAllInstructions(context);
     }
 

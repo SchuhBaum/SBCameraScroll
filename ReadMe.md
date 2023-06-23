@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 2.5.7
+###### Version: 2.5.8
 This is a mod for Rain World v1.9.
 
 ### Description
@@ -22,7 +22,7 @@ This mod includes additional cameras:
 
 ### Installation
 0. Update Rain World to version 1.9 if needed.
-1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.5.7).
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.5.8).
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
@@ -37,7 +37,7 @@ There are two licenses available - MIT and Unlicense. You can choose which one y
 
 ### Changelog
 #### (Rain World v1.9)
-v2.5.7:
+v2.5.8:
 - (vanilla type camera) The button for centering the camera can be configured using the mod `Improved Input Config`.
 - IL hooks should no longer log multiple times when other mods add these IL hooks as well.
 - (vanilla type camera) Made transitions between centering and vanilla camera positions faster.
@@ -47,10 +47,10 @@ v2.5.7:
 - Potentially fixed bad initialization.
 - (improved input config) Added some conflict handling since it can be confusing and inconsistent otherwise. For example, using the map keybinding should be handled the same way as having no custom keybinding.
 - (camera zoom) Added this option. Experimental. Set to 100% (10) by default. Works for the most part, but when zoomed out shaders like the water shaders are cut off. Can be more pixelated and sometimes the the sprites misalign slightly with their "shadows".
-- Increased the shader variable _screenSize in larger rooms. This variable is used to sample the level texture in steps. This makes the underwater shader less blocky and pixelated. I haven't found side effects. Does not help with the snow shader.
 - (vanilla type camera) Fixed a bug where the variable camera_box_from_border_y was not set correctly.
 - Use only one smoothing_factor. It feels weird to have different step sizes.
 - (vanilla type camera) Changed smooth transition logic slightly to make sure that the step size is the same in x and y.
+- ~~Increased the shader variable _screenSize in larger rooms. This variable is used to sample the level texture in steps. This makes the underwater shader less blocky and pixelated. I haven't found side effects. Does not help with the snow shader.~~ Reverted. This messes with the map otherwise.
 
 v2.5.0:
 - Fixed a bug where the JollyCoop's player arrows would be misaligned when using non-default screen resolutions.
