@@ -27,10 +27,7 @@ public class SwitchTypeCamera : IAmATypeCamera
     {
         this.room_camera = room_camera;
         position_type_camera = new(room_camera, attached_fields);
-        vanilla_type_camera = new(room_camera, attached_fields)
-        {
-            use_vanilla_positions = !is_split_screen_coop_enabled
-        };
+        vanilla_type_camera = new(room_camera, attached_fields);
     }
 
     //

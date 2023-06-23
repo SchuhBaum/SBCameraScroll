@@ -53,7 +53,7 @@ public class PositionTypeCamera : IAmATypeCamera
             // the goal is to reach innerCameraBoxX_minus_border-close to target_position.x
             // the result is the same as:
             // roomCamera.pos.x = Mathf.Lerp(roomCamera.lastPos.x, innerCameraBoxX_minus_border-close to target_position.x, t = smoothingFactorX);
-            room_camera.pos.x = Mathf.Lerp(room_camera.lastPos.x, target_position.x, smoothing_factor_x * (distance_x - camera_box_minus_border_x) / distance_x);
+            room_camera.pos.x = Mathf.Lerp(room_camera.lastPos.x, target_position.x, smoothing_factor * (distance_x - camera_box_minus_border_x) / distance_x);
 
             // stop when moving too slow;
             // downside is that the targetposition might not be reached exactly;
@@ -70,7 +70,7 @@ public class PositionTypeCamera : IAmATypeCamera
 
         if (distance_y > camera_box_minus_border_y)
         {
-            room_camera.pos.y = Mathf.Lerp(room_camera.lastPos.y, target_position.y, smoothing_factor_y * (distance_y - camera_box_minus_border_y) / distance_y);
+            room_camera.pos.y = Mathf.Lerp(room_camera.lastPos.y, target_position.y, smoothing_factor * (distance_y - camera_box_minus_border_y) / distance_y);
             if (Mathf.Abs(room_camera.pos.y - room_camera.lastPos.y) < 1f)
             {
                 room_camera.pos.y = room_camera.lastPos.y;

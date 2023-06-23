@@ -18,13 +18,17 @@ public static class RoomCameraMod
     //
 
     public static CameraType camera_type = CameraType.Position;
-
-    public static float smoothing_factor_x = 0.16f;
-    public static float smoothing_factor_y = 0.16f;
+    public static float smoothing_factor = 0.16f;
 
     // used in CoopTweaks; don't rename;
     public static float number_of_frames_per_shortcut_udpate = 3f;
     public static List<string> blacklisted_rooms = new() { "RM_AI", "GW_ARTYSCENES", "GW_ARTYNIGHTMARE", "SB_E05SAINT", "SL_AI" };
+
+    // makes some shader glitch out more;
+    // not recommended;
+    public static float camera_zoom = 1f;
+    public static float Half_Inverse_Camera_Zoom_XY => 0.5f * (1f / camera_zoom - 1f);
+    public static bool Is_Camera_Zoom_Enabled => !is_split_screen_coop_enabled && camera_zoom != 1f;
 
     //
     // variables
@@ -71,6 +75,30 @@ public static class RoomCameraMod
     // public
     //
 
+    public static void Apply_Camera_Zoom(RoomCamera room_camera)
+    {
+        if (!Is_Camera_Zoom_Enabled) return;
+
+        // copied from SlugcatEyebrowRaise mod
+        for (int sprite_layer_index = 0; sprite_layer_index < 11; ++sprite_layer_index)
+        {
+            FContainer sprite_layer = room_camera.SpriteLayers[sprite_layer_index];
+            sprite_layer.scale = 1f;
+            sprite_layer.SetPosition(Vector2.zero);
+
+            // this makes it such that the graphics are centered;
+            // 
+            // still, there are scaling issues:
+            // for example, the underwater glow is only aligned with
+            // slugcat when in the center of the screen;
+            // when zoomed out it will move faster away from the
+            // center compared to slugcat which can only reach the
+            // border of the level visuals; the glow seem to reach
+            // the border of the screen instead;
+            sprite_layer.ScaleAroundPointRelative(0.5f * room_camera.sSize, camera_zoom, camera_zoom);
+        }
+    }
+
     public static void AddFadeTransition(RoomCamera room_camera)
     {
         if (room_camera.room is not Room room) return;
@@ -100,8 +128,38 @@ public static class RoomCameraMod
             return;
         }
 
-        position.x = Mathf.Clamp(position.x, texture_offset.x, room_camera.levelGraphic.width - screen_size.x + texture_offset.x); // stop position at room texture borders // probably works with room.PixelWidth - room_camera.sSize.x / 2f instead as well
-        position.y = Mathf.Clamp(position.y, texture_offset.y, room_camera.levelGraphic.height - screen_size.y + texture_offset.y - 18f); // not sure why I have to decrease positionY by a constant // I picked 18f bc room_camera.seekPos.y gets changed by 18f in Update() // seems to work , i.e. I don't see black bars
+        // Half_Inverse_Camera_Zoom_XY:
+        // in percent; how much screen space is added left and right, top and bottom;
+        // example: camera_zoom = 0.8f increases the screen size in x and y by 25% each; Half_Inverse_Camera_Zoom_XY = 0.5 * 25%;
+        Vector2 screen_size_increase = Is_Camera_Zoom_Enabled ? Half_Inverse_Camera_Zoom_XY * room_camera.sSize : Vector2.zero;
+        float min_x = texture_offset.x + screen_size_increase.x;
+        float max_x = texture_offset.x - screen_size_increase.x + room_camera.levelGraphic.width - screen_size.x;
+
+        if (min_x < max_x)
+        {
+            // stop position at room texture borders;
+            position.x = Mathf.Clamp(position.x, min_x, max_x);
+        }
+        else
+        {
+            // keep the position centered in case the camera is zoomed;
+            position.x = 0.5f * (min_x + max_x);
+        }
+
+        // not sure why I have to decrease max_y by a constant;
+        // I picked 18f bc room_camera.seekPos.y gets changed by 18f in Update();
+        // seems to work, i.e. I don't see black bars;
+        float min_y = texture_offset.y + screen_size_increase.y;
+        float max_y = texture_offset.y - screen_size_increase.y + room_camera.levelGraphic.height - screen_size.y - 18f;
+
+        if (min_y < max_y)
+        {
+            position.y = Mathf.Clamp(position.y, min_y, max_y);
+        }
+        else
+        {
+            position.y = 0.5f * (min_y + max_y);
+        }
     }
 
     public static Vector2 GetCreaturePosition(Creature creature)
@@ -146,9 +204,24 @@ public static class RoomCameraMod
 
             room_camera.lastPos = room_camera.seekPos;
             room_camera.pos = room_camera.seekPos;
+            Reset_Camera_Zoom(room_camera);
             return;
         }
+
         room_camera.GetAttachedFields().type_camera.Reset();
+        Apply_Camera_Zoom(room_camera);
+    }
+
+    public static void Reset_Camera_Zoom(RoomCamera room_camera)
+    {
+        if (!Is_Camera_Zoom_Enabled) return;
+        for (int sprite_layer_index = 0; sprite_layer_index < 11; ++sprite_layer_index)
+        {
+            FContainer sprite_layer = room_camera.SpriteLayers[sprite_layer_index];
+            sprite_layer.scale = 1f;
+            sprite_layer.SetPosition(Vector2.zero);
+            sprite_layer.ScaleAroundPointRelative(Vector2.zero, 1f, 1f);
+        }
     }
 
     public static Vector2 SplitScreenMod_GetScreenOffset(in Vector2 screen_size)
@@ -379,9 +452,70 @@ public static class RoomCameraMod
                     return;
                 }
 
-                // room_camera.levelGraphic.x = textureOffset.x - cameraPosition.x
-                // same for y
-                Shader.SetGlobalVector("_spriteRect", new Vector4((room_camera.levelGraphic.x - 0.5f) / room_camera.sSize.x, (room_camera.levelGraphic.y + 0.5f) / room_camera.sSize.y, (room_camera.levelGraphic.x + room_camera.levelGraphic.width - 0.5f) / room_camera.sSize.x, (room_camera.levelGraphic.y + room_camera.levelGraphic.height + 0.5f) / room_camera.sSize.y)); // if the 0.5f is missing then you get black outlines
+                if (!Is_Camera_Zoom_Enabled)
+                {
+                    Shader.SetGlobalVector("_spriteRect", new Vector4((room_camera.levelGraphic.x - 0.5f) / room_camera.sSize.x, (room_camera.levelGraphic.y + 0.5f) / room_camera.sSize.y, (room_camera.levelGraphic.x + room_camera.levelGraphic.width - 0.5f) / room_camera.sSize.x, (room_camera.levelGraphic.y + room_camera.levelGraphic.height + 0.5f) / room_camera.sSize.y));
+                    return;
+                }
+
+                // the offset here is reached after calculation;
+                // screen_offset = camera_zoom * Half_Inverse_Camera_Zoom_XY * sSize.x / sSize.x;
+                // same with y;
+                float screen_offset = 0.5f * (1f - camera_zoom);
+
+                // room_camera.levelGraphic.x = textureOffset.x - cameraPosition.x;
+                // same for y;
+                // 
+                // there seem to be rounding errors when zooming;
+                // in some instances you see a black outline;
+                // but not in others; depends on the camera position;
+                //
+                // if the 0.5f is missing then you get black outlines;
+                // even without zoom;
+                Shader.SetGlobalVector("_spriteRect", new Vector4(screen_offset + (camera_zoom * room_camera.levelGraphic.x - 0.5f) / room_camera.sSize.x, screen_offset + (camera_zoom * room_camera.levelGraphic.y + 0.5f) / room_camera.sSize.y, screen_offset + (camera_zoom * (room_camera.levelGraphic.x + room_camera.levelGraphic.width) - 0.5f) / room_camera.sSize.x, screen_offset + (camera_zoom * (room_camera.levelGraphic.y + room_camera.levelGraphic.height) + 0.5f) / room_camera.sSize.y));
+            });
+        }
+        else
+        {
+            if (can_log_il_hooks)
+            {
+                Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate failed.");
+            }
+            return;
+        }
+
+        if (cursor.TryGotoNext(instruction => instruction.MatchLdstr("_screenSize")))
+        {
+            if (can_log_il_hooks)
+            {
+                Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate: Index " + cursor.Index); // 516
+            }
+
+            cursor.RemoveRange(5); // 516-520
+            cursor.Emit(OpCodes.Ldarg_0);
+
+            cursor.EmitDelegate<Action<RoomCamera>>(room_camera =>
+            {
+                if (room_camera.Is_Type_Camera_Not_Used())
+                {
+                    Shader.SetGlobalVector("_screenSize", room_camera.sSize);
+                    return;
+                }
+
+                // I need to keep the aspect ratio;
+                // otherwise the underwater glow effect for slugcat is skewed;
+                Vector2 screen_size = room_camera.sSize;
+                float screen_multiplier = Mathf.Floor(Mathf.Max(room_camera.levelGraphic.width / screen_size.x, room_camera.levelGraphic.height / screen_size.y));
+
+                if (screen_multiplier <= 1f)
+                {
+                    Shader.SetGlobalVector("_screenSize", screen_size);
+                    return;
+                }
+
+                // effects the step size that is used for sampling the levelGraphic texture;
+                // this helps with the DeepWater shader in larger rooms;
+                Shader.SetGlobalVector("_screenSize", screen_multiplier * screen_size);
             });
         }
         else
@@ -589,7 +723,9 @@ public static class RoomCameraMod
         {
             return orig(room_camera, camera_position_index, test_position);
         }
-        return test_position.x > room_camera.pos.x - 188f && test_position.x < room_camera.pos.x + 188f + room_camera.game.rainWorld.options.ScreenSize.x && test_position.y > room_camera.pos.y - 18f && test_position.y < room_camera.pos.y + 18f + 768f;
+
+        Vector2 screen_size_increase = Is_Camera_Zoom_Enabled ? Half_Inverse_Camera_Zoom_XY * room_camera.sSize : Vector2.zero;
+        return test_position.x > room_camera.pos.x - 188f - screen_size_increase.x && test_position.x < room_camera.pos.x + 188f + room_camera.game.rainWorld.options.ScreenSize.x + screen_size_increase.x && test_position.y > room_camera.pos.y - 18f - screen_size_increase.y && test_position.y < room_camera.pos.y + 18f + 768f + screen_size_increase.y;
         // return test_position.x > room_camera.pos.x - 200f - 188f && test_position.x < room_camera.pos.x + 200f + 188f + room_camera.game.rainWorld.options.ScreenSize.x && test_position.y > room_camera.pos.y - 200f - 18f && test_position.y < room_camera.pos.y + 200f + 18f + 768f;
         // return test_position.x > room_camera.pos.x - 380f && test_position.x < room_camera.pos.x + 380f + 1400f && test_position.y > room_camera.pos.y - 20f && test_position.y < room_camera.pos.y + 20f + 800f;
     }
@@ -663,7 +799,9 @@ public static class RoomCameraMod
         {
             return orig(room_camera, test_position, margin, widescreen);
         }
-        return test_position.x > room_camera.pos.x - 188f - margin - (widescreen ? 190f : 0f) && test_position.x < room_camera.pos.x + 188f + (ModManager.MMF ? room_camera.game.rainWorld.options.ScreenSize.x : 1024f) + margin + (widescreen ? 190f : 0f) && test_position.y > room_camera.pos.y - 18f - margin && test_position.y < room_camera.pos.y + 18f + 768f + margin;
+
+        Vector2 screen_size_increase = Is_Camera_Zoom_Enabled ? Half_Inverse_Camera_Zoom_XY * room_camera.sSize : Vector2.zero;
+        return test_position.x > room_camera.pos.x - 188f - margin - (widescreen ? 190f : 0f) - screen_size_increase.x && test_position.x < room_camera.pos.x + 188f + (ModManager.MMF ? room_camera.game.rainWorld.options.ScreenSize.x : 1024f) + margin + (widescreen ? 190f : 0f) + screen_size_increase.x && test_position.y > room_camera.pos.y - 18f - margin - screen_size_increase.y && test_position.y < room_camera.pos.y + 18f + 768f + margin + screen_size_increase.y;
         // return test_position.x > room_camera.pos.x - 200f - 188f - margin - (widescreen ? 190f : 0f) && test_position.x < room_camera.pos.x + 200f + 188f + (ModManager.MMF ? room_camera.game.rainWorld.options.ScreenSize.x : 1024f) + margin + (widescreen ? 190f : 0f) && test_position.y > room_camera.pos.y - 200f - 18f - margin && test_position.y < room_camera.pos.y + 200f + 18f + 768f + margin;
         // return test_position.x > room_camera.pos.x - 380f - margin && test_position.x < room_camera.pos.x + 380f + 1400f + margin && test_position.y > room_camera.pos.y - 20f - margin && test_position.y < room_camera.pos.y + 20f + 800f + margin;
     }
@@ -675,8 +813,9 @@ public static class RoomCameraMod
             return orig(room_camera, test_position, margin, widescreen);
         }
 
-        float screenSizeX = ModManager.MMF ? room_camera.game.rainWorld.options.ScreenSize.x : 1024f;
-        return test_position.x > room_camera.pos.x - screenSizeX - 188f - margin - (widescreen ? 190f : 0f) && test_position.x < room_camera.pos.x + 2f * screenSizeX + 188f + margin + (widescreen ? 190f : 0f) && test_position.y > room_camera.pos.y - 768f - 18f - margin && test_position.y < room_camera.pos.y + 2f * 768f + 18f + margin;
+        Vector2 screen_size_increase = Is_Camera_Zoom_Enabled ? Half_Inverse_Camera_Zoom_XY * room_camera.sSize : Vector2.zero;
+        float screen_size_x = ModManager.MMF ? room_camera.game.rainWorld.options.ScreenSize.x : 1024f;
+        return test_position.x > room_camera.pos.x - screen_size_x - 188f - margin - (widescreen ? 190f : 0f) - screen_size_increase.x && test_position.x < room_camera.pos.x + 2f * screen_size_x + 188f + margin + (widescreen ? 190f : 0f) + screen_size_increase.x && test_position.y > room_camera.pos.y - 768f - 18f - margin - screen_size_increase.y && test_position.y < room_camera.pos.y + 2f * 768f + 18f + margin + screen_size_increase.y;
         // return test_position.x > room_camera.pos.x - (ModManager.MMF ? room_camera.game.rainWorld.options.ScreenSize.x : 1024f) - 200f - 188f - margin - (widescreen ? 190f : 0f) && test_position.x < room_camera.pos.x + 2f * (ModManager.MMF ? room_camera.game.rainWorld.options.ScreenSize.x : 1024f) + 200f + 188f + margin + (widescreen ? 190f : 0f) && test_position.y > room_camera.pos.y - 768f - 200f - 18f - margin && test_position.y < room_camera.pos.y + 2f * 768f + 200f + 18f + margin;
         // return test_position.x > room_camera.pos.x - 380f - 1400f - margin && test_position.x < room_camera.pos.x + 380f + 2800f + margin && test_position.y > room_camera.pos.y - 20f - 800f - margin && test_position.y < room_camera.pos.y + 20f + 1600f + margin;
     }
@@ -695,12 +834,13 @@ public static class RoomCameraMod
             return orig(room_camera, test_rectangle, margin, widescreen);
         }
 
+        Vector2 screen_size_increase = Is_Camera_Zoom_Enabled ? Half_Inverse_Camera_Zoom_XY * room_camera.sSize : Vector2.zero;
         Rect other_rectangle = default;
 
-        other_rectangle.xMin = room_camera.pos.x - 188f - margin - (widescreen ? 190f : 0f);
-        other_rectangle.xMax = room_camera.pos.x + 188f + (ModManager.MMF ? room_camera.game.rainWorld.options.ScreenSize.x : 1024f) + margin + (widescreen ? 190f : 0f);
-        other_rectangle.yMin = room_camera.pos.y - 18f - margin;
-        other_rectangle.yMax = room_camera.pos.y + 18f + 768f + margin;
+        other_rectangle.xMin = room_camera.pos.x - 188f - margin - (widescreen ? 190f : 0f) - screen_size_increase.x;
+        other_rectangle.xMax = room_camera.pos.x + 188f + (ModManager.MMF ? room_camera.game.rainWorld.options.ScreenSize.x : 1024f) + margin + (widescreen ? 190f : 0f) + screen_size_increase.x;
+        other_rectangle.yMin = room_camera.pos.y - 18f - margin - screen_size_increase.y;
+        other_rectangle.yMax = room_camera.pos.y + 18f + 768f + margin + screen_size_increase.y;
 
         // other_rectangle.xMin = room_camera.pos.x - 200f - 188f - margin - (widescreen ? 190f : 0f);
         // other_rectangle.xMax = room_camera.pos.x + 200f + 188f + (ModManager.MMF ? room_camera.game.rainWorld.options.ScreenSize.x : 1024f) + margin + (widescreen ? 190f : 0f);

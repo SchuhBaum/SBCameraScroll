@@ -45,8 +45,7 @@ public class MainModOptions : OptionInterface
     public static Configurable<bool> regionMods = main_mod_options.config.Bind("regionMods", defaultValue: true, new ConfigurableInfo("When enabled, the corresponding cached room textures get cleared when new region mods are detected or updated directly during gameplay when the room size changed. The load order matters if multiple mods change the same room.", null, "", "Region Mods"));
     public static Configurable<bool> scrollOneScreenRooms = main_mod_options.config.Bind("scrollOneScreenRooms", defaultValue: false, new ConfigurableInfo("When disabled, the camera does not scroll in rooms with only one screen.", null, "", "One Screen Rooms")); // Automatically enabled when using SplitScreenMod.
 
-    public static Configurable<int> smoothingFactorX = main_mod_options.config.Bind("smoothingFactorX", defaultValue: 8, new ConfigurableInfo("Determines how much of the distance is covered per frame. This is used when switching cameras as well to ensure a smooth transition.", new ConfigAcceptableRange<int>(0, 35), "", "Smoothing Factor for X (8)"));
-    public static Configurable<int> smoothingFactorY = main_mod_options.config.Bind("smoothingFactorY", defaultValue: 8, new ConfigurableInfo("Determines how much of the distance is covered per frame. This is used when switching cameras as well to ensure a smooth transition.", new ConfigAcceptableRange<int>(0, 35), "", "Smoothing Factor for Y (8)"));
+    public static Configurable<int> smoothing_factor_slider = main_mod_options.config.Bind("smoothing_factor_slider", defaultValue: 8, new ConfigurableInfo("Determines how much of the distance is covered per frame. This is used when switching cameras as well to ensure a smooth transition.", new ConfigAcceptableRange<int>(0, 35), "", "Smoothing Factor (8)"));
 
     //
     //
@@ -63,6 +62,12 @@ public class MainModOptions : OptionInterface
 
     public static Configurable<int> outerCameraBoxX_Vanilla = main_mod_options.config.Bind("outerCameraBoxX_Vanilla", defaultValue: 9, new ConfigurableInfo("The camera changes position if the player is closer to the edge of the screen than this value.", new ConfigAcceptableRange<int>(0, 35), "", "Distance from the Edge in X (9)"));
     public static Configurable<int> outerCameraBoxY_Vanilla = main_mod_options.config.Bind("outerCameraBoxY_Vanilla", defaultValue: 1, new ConfigurableInfo("The camera changes position if the player is closer to the edge of the screen than this value.", new ConfigAcceptableRange<int>(0, 35), "", "Distance to the Edge in Y (1)"));
+
+    //
+    //
+    //
+
+    public static Configurable<int> camera_zoom_slider = main_mod_options.config.Bind("camera_zoom_slider", defaultValue: 10, new ConfigurableInfo("Works for the most part but makes some shaders glitch out more. Not used when the SplitScreen Co-op mod is active.", new ConfigAcceptableRange<int>(5, 20), "", "Camera Zoom (10)"));
 
     //
     // variables
@@ -159,7 +164,8 @@ public class MainModOptions : OptionInterface
     public override void Initialize()
     {
         base.Initialize();
-        Tabs = new OpTab[3];
+        int number_of_tabs = 4;
+        Tabs = new OpTab[number_of_tabs];
 
         //-------------//
         // general tab //
@@ -184,6 +190,11 @@ public class MainModOptions : OptionInterface
         AddNewLine();
         AddBox();
 
+        AddTextLabel("General:", FLabelAlignment.Left);
+        DrawTextLabels(ref Tabs[tabIndex]);
+
+        AddNewLine();
+
         List<ListItem> _cameraTypes = new()
         {
             new ListItem(cameraTypeKeys[0], "Position (Default)") { desc = cameraTypeDescriptions[0] },
@@ -195,9 +206,8 @@ public class MainModOptions : OptionInterface
 
         AddNewLine(1.25f);
 
-        // the comboBox keeps overlapping
-        AddNewLine(1.25f);
-        AddNewLine(1.25f);
+        // the comboBox keeps overlapping;
+        AddNewLine(3f);
 
         AddCheckBox(fogFullScreenEffect, (string)fogFullScreenEffect.info.Tags[0]);
         AddCheckBox(otherFullScreenEffects, (string)otherFullScreenEffects.info.Tags[0]);
@@ -208,12 +218,7 @@ public class MainModOptions : OptionInterface
 
         AddNewLine();
 
-        AddSlider(smoothingFactorX, (string)smoothingFactorX.info.Tags[0], "0%", "70%");
-        DrawSliders(ref Tabs[tabIndex]);
-
-        AddNewLine(2f);
-
-        AddSlider(smoothingFactorY, (string)smoothingFactorY.info.Tags[0], "0%", "70%");
+        AddSlider(smoothing_factor_slider, (string)smoothing_factor_slider.info.Tags[0], "0%", "70%");
         DrawSliders(ref Tabs[tabIndex]);
 
         AddNewLine(3f);
@@ -315,6 +320,39 @@ public class MainModOptions : OptionInterface
 
         DrawBox(ref Tabs[tabIndex]);
 
+        //------------------//
+        // experimental tab //
+        //------------------//
+
+        tabIndex++;
+        Tabs[tabIndex] = new OpTab(this, "Experimental");
+        InitializeMarginAndPos();
+
+        // Title
+        AddNewLine();
+        AddTextLabel("SBCameraScroll Mod", bigText: true);
+        DrawTextLabels(ref Tabs[tabIndex]);
+
+        // Subtitle
+        AddNewLine(0.5f);
+        AddTextLabel("Version " + version, FLabelAlignment.Left);
+        AddTextLabel("by " + author, FLabelAlignment.Right);
+        DrawTextLabels(ref Tabs[tabIndex]);
+
+        // Content //
+        AddNewLine();
+        AddBox();
+
+        AddTextLabel("Experimental:", FLabelAlignment.Left);
+        DrawTextLabels(ref Tabs[tabIndex]);
+
+        AddNewLine();
+
+        AddSlider(camera_zoom_slider, (string)camera_zoom_slider.info.Tags[0], "50%", "200%");
+        DrawSliders(ref Tabs[tabIndex]);
+
+        DrawBox(ref Tabs[tabIndex]);
+
         //
         //
         //
@@ -333,30 +371,27 @@ public class MainModOptions : OptionInterface
     {
         // 0: Position type, 1: Vanilla type
         camera_type = (RoomCameraMod.CameraType)Array.IndexOf(cameraTypeKeys, cameraType.Value);
-
         Debug.Log("SBCameraScroll: cameraType " + camera_type);
+
         Debug.Log("SBCameraScroll: Option_FogFullScreenEffect " + Option_FogFullScreenEffect);
         Debug.Log("SBCameraScroll: Option_OtherFullScreenEffects " + Option_OtherFullScreenEffects);
         Debug.Log("SBCameraScroll: Option_MergeWhileLoading " + Option_MergeWhileLoading);
         Debug.Log("SBCameraScroll: Option_RegionMods " + Option_RegionMods);
         Debug.Log("SBCameraScroll: Option_ScrollOneScreenRooms " + Option_ScrollOneScreenRooms);
 
-        smoothing_factor_x = smoothingFactorX.Value / 50f;
-        smoothing_factor_y = smoothingFactorY.Value / 50f;
-
-        Debug.Log("SBCameraScroll: smoothingFactorX " + smoothing_factor_x);
-        Debug.Log("SBCameraScroll: smoothingFactorY " + smoothing_factor_y);
+        camera_zoom = 0.1f * camera_zoom_slider.Value;
+        smoothing_factor = smoothing_factor_slider.Value / 50f;
+        Debug.Log("SBCameraScroll: camera_zoom " + camera_zoom);
+        Debug.Log("SBCameraScroll: smoothing_factor " + smoothing_factor);
 
         if (camera_type == RoomCameraMod.CameraType.Position || camera_type == RoomCameraMod.CameraType.Switch)
         {
             camera_box_x = 20f * innerCameraBoxX_Position.Value;
             camera_box_y = 20f * innerCameraBoxY_Position.Value;
-
             Debug.Log("SBCameraScroll: camera_box_x " + camera_box_x);
             Debug.Log("SBCameraScroll: camera_box_y " + camera_box_y);
 
             offset_speed_multiplier = 0.1f * cameraOffsetSpeedMultiplier_Position.Value;
-
             Debug.Log("SBCameraScroll: Option_CameraOffset " + Option_CameraOffset);
             Debug.Log("SBCameraScroll: offset_speed_multiplier " + offset_speed_multiplier);
         }
@@ -364,8 +399,7 @@ public class MainModOptions : OptionInterface
         if (camera_type == RoomCameraMod.CameraType.Vanilla || camera_type == RoomCameraMod.CameraType.Switch)
         {
             camera_box_from_border_x = 20f * outerCameraBoxX_Vanilla.Value;
-            camera_box_from_border_y = 20f * outerCameraBoxX_Vanilla.Value;
-
+            camera_box_from_border_y = 20f * outerCameraBoxY_Vanilla.Value;
             Debug.Log("SBCameraScroll: camera_box_from_border_x " + camera_box_from_border_x);
             Debug.Log("SBCameraScroll: camera_box_from_border_y " + camera_box_from_border_y);
         }

@@ -30,7 +30,9 @@ public class VanillaTypeCamera : IAmATypeCamera
     public Vector2 vanilla_type_position = new();
 
     public bool is_centered = false;
-    public bool use_vanilla_positions = true;
+    public bool use_vanilla_positions;
+
+    public int transition_counter = 0;
 
     //
     // main
@@ -40,6 +42,7 @@ public class VanillaTypeCamera : IAmATypeCamera
     {
         room_camera = roomCamera;
         attached_fields = attachedFields;
+        use_vanilla_positions = !is_split_screen_coop_enabled && camera_zoom <= 1.33f;
     }
 
     //
@@ -70,6 +73,12 @@ public class VanillaTypeCamera : IAmATypeCamera
                 half_screen_size.x -= 0.25f * room_camera.sSize.x;
                 camera_box_multiplier_x = 0.5f;
             }
+        }
+        else if (Is_Camera_Zoom_Enabled)
+        {
+            half_screen_size += Half_Inverse_Camera_Zoom_XY * room_camera.sSize;
+            camera_box_multiplier_x = 1f / camera_zoom;
+            camera_box_multiplier_y = 1f / camera_zoom;
         }
 
         float direction_x = Math.Sign(attached_fields.on_screen_position.x - vanilla_type_position.x);
@@ -135,7 +144,7 @@ public class VanillaTypeCamera : IAmATypeCamera
         CheckBorders(room_camera, ref room_camera.pos);
     }
 
-    public void Move_Camera_Transition()
+    public bool Move_Camera_Transition()
     {
         Vector2 target_position;
         if (use_vanilla_positions)
@@ -151,10 +160,11 @@ public class VanillaTypeCamera : IAmATypeCamera
             CheckBorders(room_camera, ref target_position); // stop at borders
         }
 
-        // the tick helps when the player goes back and forth
-        // to stop the transition earlier;
-        room_camera.pos.x = Custom.LerpAndTick(room_camera.lastPos.x, target_position.x, smoothing_factor_x, 2f);
-        room_camera.pos.y = Custom.LerpAndTick(room_camera.lastPos.y, target_position.y, smoothing_factor_y, 2f);
+        // 3f is not enough to reach the player that is walking away from the camera;
+        // use a counter as well;
+        room_camera.pos = Vector2.Lerp(room_camera.lastPos, target_position, smoothing_factor);
+        room_camera.pos = Custom.MoveTowards(room_camera.pos, target_position, 3f);
+        return room_camera.pos == target_position;
     }
 
     public void Reset()
@@ -167,7 +177,7 @@ public class VanillaTypeCamera : IAmATypeCamera
         room_camera.seekPos.y += 18f;
         room_camera.leanPos *= 0.0f;
 
-        use_vanilla_positions = !is_split_screen_coop_enabled;
+        use_vanilla_positions = !is_split_screen_coop_enabled && camera_zoom <= 1.33f;
         if (use_vanilla_positions)
         {
             // center camera on vanilla position;
@@ -195,10 +205,22 @@ public class VanillaTypeCamera : IAmATypeCamera
         // smooth transition when switching cameras in the same room
         if (follow_abstract_creature_id != room_camera.followAbstractCreature.ID && room_camera.followAbstractCreature?.realizedCreature is Creature creature)
         {
-            follow_abstract_creature_id = null; // keep transition going even when switching back
-            Move_Camera_Transition(); // needs followAbstractCreatureID = null // updates cameraOffset
+            // keep transition going even when switching back;
+            follow_abstract_creature_id = null;
 
-            if (is_split_screen_coop_enabled)
+            // needs follow_abstract_creature_id = null;
+            // updates camera_offset;
+            if (Move_Camera_Transition() || transition_counter > 20)
+            {
+                follow_abstract_creature_id = room_camera.followAbstractCreature.ID;
+                vanilla_type_position = room_camera.pos;
+                is_centered = true;
+                transition_counter = 0;
+                return;
+            }
+
+            ++transition_counter;
+            if (is_split_screen_coop_enabled || camera_zoom > 1.33f)
             {
                 // vanilla positions don't respect split screen;
                 // otherwise you can move off-screen between camera positions;
@@ -207,16 +229,6 @@ public class VanillaTypeCamera : IAmATypeCamera
             else if (creature is Player player && Is_Map_Pressed(player))
             {
                 use_vanilla_positions = !use_vanilla_positions;
-            }
-
-            // stop transition earlier when player is moving && vanilla positions are not used
-            if (room_camera.pos == room_camera.lastPos || !use_vanilla_positions &&
-                (Mathf.Abs(creature.mainBodyChunk.vel.x) <= 1f && room_camera.pos.x == room_camera.lastPos.x || Mathf.Abs(creature.mainBodyChunk.vel.x) > 1f && Mathf.Abs(room_camera.pos.x - room_camera.lastPos.x) <= 10f) &&
-                (Mathf.Abs(creature.mainBodyChunk.vel.y) <= 1f && room_camera.pos.y == room_camera.lastPos.y || Mathf.Abs(creature.mainBodyChunk.vel.y) > 1f && Mathf.Abs(room_camera.pos.y - room_camera.lastPos.y) <= 10f))
-            {
-                follow_abstract_creature_id = room_camera.followAbstractCreature.ID;
-                vanilla_type_position = room_camera.pos;
-                is_centered = true; // used for vanilla type only
             }
             return;
         }
@@ -239,7 +251,7 @@ public class VanillaTypeCamera : IAmATypeCamera
             if (room_camera.followAbstractCreature?.realizedCreature is not Player player) return;
             if (!Is_Map_Pressed(player)) return;
 
-            if (is_split_screen_coop_enabled)
+            if (is_split_screen_coop_enabled || camera_zoom > 1.33f)
             {
                 use_vanilla_positions = false;
             }
