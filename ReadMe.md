@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 2.5.9
+###### Version: 2.6.0
 This is a mod for Rain World v1.9.
 
 ### Description
@@ -22,7 +22,7 @@ This mod includes additional cameras:
 
 ### Installation
 0. Update Rain World to version 1.9 if needed.
-1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.5.9).
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.6.0).
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
@@ -37,7 +37,7 @@ There are two licenses available - MIT and Unlicense. You can choose which one y
 
 ### Changelog
 #### (Rain World v1.9)
-v2.5.9:
+v2.6.0:
 - (vanilla type camera) The button for centering the camera can be configured using the mod `Improved Input Config`.
 - IL hooks should no longer log multiple times when other mods add these IL hooks as well.
 - (vanilla type camera) Made transitions between centering and vanilla camera positions faster.
@@ -52,6 +52,7 @@ v2.5.9:
 - (vanilla type camera) Changed smooth transition logic slightly to make sure that the step size is the same in x and y.
 - ~~Increased the shader variable _screenSize in larger rooms. This variable is used to sample the level texture in steps. This makes the underwater shader less blocky and pixelated. I haven't found side effects. Does not help with the snow shader.~~ Reverted. This messes with the map otherwise.
 - Added a pdb file for debugging.
+- Modified the underwater shader. This should improve the water distortion effect in larger rooms.
 
 v2.5.0:
 - Fixed a bug where the JollyCoop's player arrows would be misaligned when using non-default screen resolutions.

@@ -8,6 +8,7 @@ using RWCustom;
 using UnityEngine;
 
 using static SBCameraScroll.MainModOptions;
+using static SBCameraScroll.RainWorldMod;
 
 // allows access to private members;
 #pragma warning disable CS0618
@@ -16,7 +17,7 @@ using static SBCameraScroll.MainModOptions;
 
 namespace SBCameraScroll;
 
-[BepInPlugin("SBCameraScroll", "SBCameraScroll", "2.5.9")]
+[BepInPlugin("SBCameraScroll", "SBCameraScroll", "2.6.0")]
 public class MainMod : BaseUnityPlugin
 {
     //
@@ -25,7 +26,7 @@ public class MainMod : BaseUnityPlugin
 
     public static readonly string MOD_ID = "SBCameraScroll";
     public static readonly string author = "SchuhBaum";
-    public static readonly string version = "2.5.9";
+    public static readonly string version = "2.6.0";
     public static readonly string mod_directory_path = Directory.GetParent(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)).FullName + Path.DirectorySeparatorChar;
 
     //
@@ -332,9 +333,9 @@ public class MainMod : BaseUnityPlugin
         Check_For_Newly_Activated_Or_Deactivated_Region_Mods();
     }
 
-    private void RainWorld_OnModsInit(On.RainWorld.orig_OnModsInit orig, RainWorld rainWorld)
+    private void RainWorld_OnModsInit(On.RainWorld.orig_OnModsInit orig, RainWorld rain_world)
     {
-        orig(rainWorld);
+        orig(rain_world);
 
         // if used after isInitialized then disabling and enabling the mod
         // without applying removes access to the options menu;
@@ -349,11 +350,8 @@ public class MainMod : BaseUnityPlugin
 
         CreateDirectory(mod_directory_path + "levels");
         CreateDirectory(mod_directory_path + "world");
-
-        // somehow this is in front of creatures and hides them;
-        // besides that I need the current shader instead of the one from RW v1.5;
-        // it seems to have been modified to contain some changes for the Gutter area;
-        // rainWorld.ReplaceShader("DeepWater");
+        Load_Asset_Bundle();
+        rain_world.Replace_Shader("DeepWater");
 
         foreach (ModManager.Mod mod in ModManager.ActiveMods)
         {

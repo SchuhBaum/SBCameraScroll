@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using UnityEngine;
 
@@ -11,21 +12,32 @@ public static class RainWorldMod
     // parameters
     //
 
-    public static readonly AssetBundle? assetBundle = AssetBundle.LoadFromFile(mod_directory_path + "AssetBundles" + Path.DirectorySeparatorChar + "shaders");
+    public static AssetBundle? asset_bundle = null;
 
     //
     // public
     //
 
-    public static void ReplaceShader(this RainWorld rainWorld, string name)
+    public static void Load_Asset_Bundle()
     {
-        if (assetBundle == null) return;
-        if (!rainWorld.Shaders.ContainsKey(name)) return;
+        if (asset_bundle != null) return;
+        try
+        {
+            asset_bundle = AssetBundle.LoadFromFile(mod_directory_path + "AssetBundles" + Path.DirectorySeparatorChar + "modded_shaders");
+        }
+        catch (Exception exception)
+        {
+            Debug.Log("SBCameraScroll: Could not load the asset bundle with modded shaders.\n  " + exception);
+        }
+    }
 
-        Shader? shader = assetBundle.LoadAsset<Shader>(name);
-        if (shader == null) return;
+    public static void Replace_Shader(this RainWorld rain_world, string name)
+    {
+        if (asset_bundle == null) return;
+        if (!rain_world.Shaders.ContainsKey(name)) return;
 
-        // rainWorld.Shaders[name].shader = new Material(shader).shader;
-        rainWorld.Shaders[name].shader = shader;
+        Shader? modded_shader = asset_bundle.LoadAsset<Shader>(name);
+        if (modded_shader == null) return;
+        rain_world.Shaders[name].shader = modded_shader;
     }
 }
