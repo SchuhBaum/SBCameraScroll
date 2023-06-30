@@ -28,16 +28,18 @@ public static class RainWorldMod
         catch (Exception exception)
         {
             Debug.Log("SBCameraScroll: Could not load the asset bundle with modded shaders.\n  " + exception);
+            asset_bundle = null;
         }
     }
 
-    public static void Replace_Shader(this RainWorld rain_world, string name)
+    public static void Replace_Shader(this RainWorld rain_world, string shader_name)
     {
         if (asset_bundle == null) return;
-        if (!rain_world.Shaders.ContainsKey(name)) return;
-
-        Shader? modded_shader = asset_bundle.LoadAsset<Shader>(name);
+        if (!rain_world.Shaders.ContainsKey(shader_name)) return;
+        Shader? modded_shader = asset_bundle.LoadAsset<Shader>(shader_name);
         if (modded_shader == null) return;
-        rain_world.Shaders[name].shader = modded_shader;
+
+        Debug.Log("SBCameraScroll: Replace shader " + shader_name + ".");
+        rain_world.Shaders[shader_name].shader = modded_shader;
     }
 }

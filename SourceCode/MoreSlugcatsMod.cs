@@ -101,12 +101,12 @@ internal static class MoreSlugcatsMod
         roomCamera.room.cameraPositions[roomCamera.currentCameraPosition].x = roomCameraPositionX;
     }
 
-    private static Vector4[] SnowSource_PackSnowData(On.MoreSlugcats.SnowSource.orig_PackSnowData orig, MoreSlugcats.SnowSource snowSource)
+    private static Vector4[] SnowSource_PackSnowData(On.MoreSlugcats.SnowSource.orig_PackSnowData orig, MoreSlugcats.SnowSource snow_source)
     {
-        if (snowSource.room == null) return orig(snowSource);
+        if (snow_source.room == null) return orig(snow_source);
 
-        RoomCamera roomCamera = snowSource.room.game.cameras[0];
-        if (roomCamera.Is_Type_Camera_Not_Used()) return orig(snowSource);
+        RoomCamera roomCamera = snow_source.room.game.cameras[0];
+        if (roomCamera.Is_Type_Camera_Not_Used()) return orig(snow_source);
 
         // what does this exactly do?
         // generating red green values out of one float?
@@ -137,23 +137,15 @@ internal static class MoreSlugcatsMod
         // Vector2 yRedGreen = Custom.EncodeFloatRG(snowSource.pos.y / roomCamera.levelTexture.height * 0.3f + 0.3f);
         // Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / (1600f * 0.5f * (roomCamera.levelTexture.width / 1400f + roomCamera.levelTexture.height / 800f)));
 
-        Vector2 xRedGreen = Custom.EncodeFloatRG(snowSource.pos.x / snowSource.room.PixelWidth * 0.3f + 0.3f);
-        Vector2 yRedGreen = Custom.EncodeFloatRG(snowSource.pos.y / snowSource.room.PixelHeight * 0.3f + 0.3f);
-        Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / (1600f * Mathf.Max(roomCamera.levelTexture.width / 1400f, roomCamera.levelTexture.height / 800f)));
-
-        // Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / 1600f);
-        // Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / (2f * roomCamera.levelTexture.height));
-        // Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / (roomCamera.levelTexture.width + 200f));
-        // Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / (1400f + 200f * 0.5f * (roomCamera.levelTexture.width / 1400f + roomCamera.levelTexture.height / 800f)));
-        // Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / (1600f * snowSource.room.cameraPositions.Length));
-        // Vector2 xRedGreen = Custom.EncodeFloatRG(snowSource.pos.x / 1400f * 0.3f + 0.3f);
-        // Vector2 yRedGreen = Custom.EncodeFloatRG(snowSource.pos.y / 800f * 0.3f + 0.3f);
-        // Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / 1600f);
+        // saves an approximation of a float (in steps of size 255) and the remainder (times 255 for some reason) in a Vector2;
+        Vector2 position_x_approximation = Custom.EncodeFloatRG(snow_source.pos.x / snow_source.room.PixelWidth * 0.3f + 0.3f);
+        Vector2 position_y_approximation = Custom.EncodeFloatRG(snow_source.pos.y / snow_source.room.PixelHeight * 0.3f + 0.3f);
+        Vector2 radius_approximation = Custom.EncodeFloatRG(snow_source.rad / (1600f * Mathf.Max(roomCamera.levelTexture.width / 1400f, roomCamera.levelTexture.height / 800f)));
 
         Vector4[] array = new Vector4[3];
-        array[0] = new Vector4(xRedGreen.x, xRedGreen.y, yRedGreen.x, yRedGreen.y);
-        array[1] = new Vector4(rRedGreen.x, rRedGreen.y, snowSource.intensity, snowSource.noisiness);
-        array[2] = new Vector4(0f, 0f, 0f, (float)snowSource.shape / 5f);
+        array[0] = new Vector4(position_x_approximation.x, position_x_approximation.y, position_y_approximation.x, position_y_approximation.y);
+        array[1] = new Vector4(radius_approximation.x, radius_approximation.y, snow_source.intensity, snow_source.noisiness);
+        array[2] = new Vector4(0f, 0f, 0f, (float)snow_source.shape / 5f);
         return array;
     }
 

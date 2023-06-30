@@ -572,9 +572,8 @@ public static class RoomCameraMod
 
     private static void RoomCamera_ApplyPositionChange(On.RoomCamera.orig_ApplyPositionChange orig, RoomCamera room_camera)
     {
-        // don't log on every screen change;
-        // only log when the room changes;
-        bool isLoggingEnabled = room_camera.loadingRoom != null;
+        // don't log on every screen change; only log when the room changes;
+        bool is_changing_room = room_camera.loadingRoom != null;
 
         // updates currentCameraPosition;
         // updates room_camera.room if needed;
@@ -605,14 +604,27 @@ public static class RoomCameraMod
 
         // resizes levelGraphic such that the levelTexture fits and is not squashed
         // holy moly don't use room_camera.www.texture.width, etc. // "WWW.texture property allocates a new Texture2D every time"
-        room_camera.levelGraphic.width = room_camera.levelTexture.width;
-        room_camera.levelGraphic.height = room_camera.levelTexture.height;
+        Texture2D level_texture = room_camera.levelTexture;
+        room_camera.levelGraphic.width = level_texture.width;
+        room_camera.levelGraphic.height = level_texture.height;
+
         room_camera.backgroundGraphic.width = room_camera.backgroundTexture.width;
         room_camera.backgroundGraphic.height = room_camera.backgroundTexture.height;
 
+        if (is_changing_room)
+        {
+            // Graphics.Blit() creates this texture again; but only when UpdateSnowLight() is called;
+            // this is forced for example when the room is changed in orig(); therefore, only do
+            // this when this happens;
+            RenderTexture snow_texture = room_camera.SnowTexture;
+            snow_texture.Release();
+            snow_texture.width = level_texture.width;
+            snow_texture.height = level_texture.height;
+        }
+
         if (room_camera.room == null)
         {
-            if (isLoggingEnabled)
+            if (is_changing_room)
             {
                 Debug.Log("SBCameraScroll: The current room is blacklisted.");
             }
@@ -632,7 +644,7 @@ public static class RoomCameraMod
         string roomName = room_camera.room.abstractRoom.name;
         if (blacklisted_rooms.Contains(roomName) || WorldLoader.FindRoomFile(roomName, false, "_0.png") == null && room_camera.room.cameraPositions.Length > 1)
         {
-            if (isLoggingEnabled)
+            if (is_changing_room)
             {
                 Debug.Log("SBCameraScroll: The room " + roomName + " is blacklisted.");
             }
