@@ -1,6 +1,5 @@
 SourceCode/bin
 SourceCode/obj
-
 SBCameraScroll/levels
 SBCameraScroll/world
 
@@ -12,4 +11,5 @@ SBCameraScroll/previously_active_mods.json
 SBCameraScroll.zip
 steam_description.txt
 
+**/*.meta
 .vscode
