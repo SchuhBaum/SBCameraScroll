@@ -105,14 +105,9 @@ Shader "SBCameraScroll/DeepWater" {
                     return (t = t - 1.0) * t * t + 1.0;
                 }
 
-                half4 frag (v2f i) : SV_Target
-                {
+                half4 frag (v2f i) : SV_Target {
                     //return half4(i.uv, 0, 1);
 
-                    // modded:
-                    // _spriteRect is the level texture divided into screens of size _screenSize;
-                    // I want to scale it with how many cameras are combined into one big level texture;
-                    // maybe I need (1400f, 800f) (camera size) instead of the (1366f, 768f) from _screenSize;
                     float2 textCoord = float2(floor(i.scrPos.x*_screenSize.x)/_screenSize.x, floor(i.scrPos.y*_screenSize.y)/_screenSize.y);
 
                     textCoord.x -= _spriteRect.x;
@@ -127,24 +122,22 @@ Shader "SBCameraScroll/DeepWater" {
                     // float2 distortion = float2(lerp(-0.002, 0.002, rbcol) * lerp(1, 20, pow(i.uv.y, 200)), -0.02 * pow(i.uv.y, 8));
 
                     // modded:
-                    // reduces the magnitude of the distortion; this could get out of hand in larger rooms;
-                    float2 distortion = float2(lerp(-0.002, 0.002, rbcol) * lerp(1, 20, pow(i.uv.y, 200)) / (_spriteRect.z - _spriteRect.x), -0.02 * pow(i.uv.y, 8) / (_spriteRect.w - _spriteRect.y));
+                    // reduces the magnitude of the distortion effect; this can get out of hand 
+                    // in larger rooms otherwise;
+                    float2 level_texture_size = float2((_spriteRect.z - _spriteRect.x) * _screenSize.x, (_spriteRect.w - _spriteRect.y) * _screenSize.y);
+                    float2 distortion = float2(lerp(-0.002, 0.002, rbcol) * lerp(1, 20, pow(i.uv.y, 200)) * 1400 / level_texture_size.x, -0.02 * pow(i.uv.y, 8) * 800 / level_texture_size.y);
                     
                     // vanilla:
                     // distortion.x = floor(distortion.x*_screenSize.x)/_screenSize.x;
                     // distortion.y = floor(distortion.y*_screenSize.y)/_screenSize.y;
 
                     // modded:
-                    // makes the distortion less blocky;
-                    float2 level_texture_size = float2((_spriteRect.z - _spriteRect.x) * _screenSize.x, (_spriteRect.w - _spriteRect.y) * _screenSize.y);
+                    // makes the distortion less pixelated;
                     distortion.x = floor(distortion.x * level_texture_size.x) / level_texture_size.x;
                     distortion.y = floor(distortion.y * level_texture_size.y) / level_texture_size.y;
 
                     half4 texcol = tex2D(_LevelTex, textCoord+distortion);
-
                     half plrLightDst = clamp(distance(half2(0,0),  half2((i.scrPos.x - i.clr.x)*(_screenSize.x/_screenSize.y), i.scrPos.y - i.clr.y))*lerp(21, 8, i.clr.z), 0, 1);
-
-
                     half grad = fmod(round(texcol.x * 255)-1, 30.0)/30.0;
                     half4 grabColor = tex2D(_GrabTexture, half2(i.scrPos.x+distortion.x, i.scrPos.y+distortion.y));
 
@@ -167,7 +160,6 @@ Shader "SBCameraScroll/DeepWater" {
                     #endif  
 
                     plrLightDst = clamp(plrLightDst + pow(1.0-grad, 3), 0, 1);
-
                     if(texcol.x == 1.0 && texcol.y == 1.0 && texcol.z == 1.0) {
                         grad = 1;
                     }

@@ -57,16 +57,19 @@ public static class WormGrassMod
     // private functions //
     // ----------------- //
 
-    private static void WormGrass_ctor(On.WormGrass.orig_ctor orig, WormGrass wormGrass, Room room, List<IntVector2> tiles)
+    private static void WormGrass_ctor(On.WormGrass.orig_ctor orig, WormGrass worm_grass, Room room, List<IntVector2> tiles)
     {
-        all_attached_fields.Add(wormGrass, new AttachedFields());
-        orig(wormGrass, room, tiles); // needs attachedFields for wormGrass
+        if (!all_attached_fields.ContainsKey(worm_grass))
+        {
+            all_attached_fields.Add(worm_grass, new AttachedFields());
+        }
+        orig(worm_grass, room, tiles); // needs attachedFields for wormGrass
 
-        if (wormGrass.patches.Count == 0)
+        if (worm_grass.patches.Count == 0)
         {
             Debug.Log("SBCameraScroll: This worm grass for room " + room.abstractRoom.name + " has no patches. Destroy.");
-            wormGrass.Destroy();
-            all_attached_fields.Remove(wormGrass);
+            worm_grass.Destroy();
+            all_attached_fields.Remove(worm_grass);
         }
         else
         {
@@ -77,7 +80,7 @@ public static class WormGrassMod
                 wormGrass_.Destroy();
                 all_attached_fields.Remove(wormGrass_);
             }
-            abstractRoomAF.worm_grass = wormGrass;
+            abstractRoomAF.worm_grass = worm_grass;
         }
     }
 

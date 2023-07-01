@@ -450,6 +450,7 @@ public static class AbstractRoomMod
     private static void AbstractRoom_ctor(On.AbstractRoom.orig_ctor orig, AbstractRoom abstract_room, string name, int[] connections, int index, int swarm_room_index, int shelter_index, int gate_index)
     {
         orig(abstract_room, name, connections, index, swarm_room_index, shelter_index, gate_index);
+        if (all_attached_fields.ContainsKey(abstract_room)) return;
         all_attached_fields.Add(abstract_room, new Attached_Fields());
     }
 

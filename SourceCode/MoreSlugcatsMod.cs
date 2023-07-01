@@ -103,81 +103,60 @@ internal static class MoreSlugcatsMod
 
     private static Vector4[] SnowSource_PackSnowData(On.MoreSlugcats.SnowSource.orig_PackSnowData orig, MoreSlugcats.SnowSource snow_source)
     {
-        if (snow_source.room == null) return orig(snow_source);
+        if (snow_source.room is not Room room) return orig(snow_source);
+        RoomCamera room_camera = snow_source.room.game.cameras[0];
+        if (room_camera.Is_Type_Camera_Not_Used()) return orig(snow_source);
 
-        RoomCamera roomCamera = snow_source.room.game.cameras[0];
-        if (roomCamera.Is_Type_Camera_Not_Used()) return orig(snow_source);
+        // this should be more consistent with vanilla; texture_offset is in most cases
+        // the camera position of the bottom left screen; level texture size would be
+        // (1400f, 800f) for one screen;
+        Vector2 texture_offset = room.abstractRoom.Get_Attached_Fields().texture_offset;
 
-        // what does this exactly do?
-        // generating red green values out of one float?
-        // simply a better storage thing?
+        // saves an approximation of a float (in [0, 1)) (in steps of size 1f/255f) and the remainder (times 255f for some reason) in a Vector2;
+        Vector2 approximated_position_x = Custom.EncodeFloatRG((snow_source.pos.x - texture_offset.x) / room_camera.levelTexture.width * 0.3f + 0.3f);
+        Vector2 approximated_position_y = Custom.EncodeFloatRG((snow_source.pos.y - texture_offset.y) / room_camera.levelTexture.height * 0.3f + 0.3f);
 
-        // this generates too much snow as well as
-        // snow in areas where there shouldn't be;
-
-        // roomCamera.pos.x without scroll is in most cases just the texture offset for the current camera (bottom left position; not anchored;);
-        // for on-screen values this would lead to [0, 1] * 0.3f + 0.3f;
-
-        // Vector2 xRedGreen = Custom.EncodeFloatRG((snowSource.pos.x - roomCamera.pos.x) / 1400f * 0.3f + 0.3f);
-        // Vector2 yRedGreen = Custom.EncodeFloatRG((snowSource.pos.y - roomCamera.pos.y) / 800f * 0.3f + 0.3f);
-        // Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / 1600f);
-
-        // Vector2 xRedGreen = Custom.EncodeFloatRG((snowSource.pos.x - roomCamera.pos.x) / roomCamera.levelTexture.width * 0.3f + 0.3f);
-        // Vector2 yRedGreen = Custom.EncodeFloatRG((snowSource.pos.y - roomCamera.pos.y) / roomCamera.levelTexture.height * 0.3f + 0.3f);
-        // Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / (2f * roomCamera.levelTexture.height));
-
-        // Vector2 xRedGreen = Custom.EncodeFloatRG((snowSource.pos.x - roomCamera.CamPos(roomCamera.currentCameraPosition).x) / 1400f * 0.3f + 0.3f);
-        // Vector2 yRedGreen = Custom.EncodeFloatRG((snowSource.pos.y - roomCamera.CamPos(roomCamera.currentCameraPosition).y) / 800f * 0.3f + 0.3f);
-
-        // prevent the texture scrolling with the camera;
-        // instead have fixed positions;
-        // how does rad need to change?;
-        // leaving it at snowSource.rad/1600f creates too much snow;
-        // Vector2 xRedGreen = Custom.EncodeFloatRG(snowSource.pos.x / roomCamera.levelTexture.width * 0.3f + 0.3f);
-        // Vector2 yRedGreen = Custom.EncodeFloatRG(snowSource.pos.y / roomCamera.levelTexture.height * 0.3f + 0.3f);
-        // Vector2 rRedGreen = Custom.EncodeFloatRG(snowSource.rad / (1600f * 0.5f * (roomCamera.levelTexture.width / 1400f + roomCamera.levelTexture.height / 800f)));
-
-        // saves an approximation of a float (in steps of size 255) and the remainder (times 255 for some reason) in a Vector2;
-        Vector2 position_x_approximation = Custom.EncodeFloatRG(snow_source.pos.x / snow_source.room.PixelWidth * 0.3f + 0.3f);
-        Vector2 position_y_approximation = Custom.EncodeFloatRG(snow_source.pos.y / snow_source.room.PixelHeight * 0.3f + 0.3f);
-        Vector2 radius_approximation = Custom.EncodeFloatRG(snow_source.rad / (1600f * Mathf.Max(roomCamera.levelTexture.width / 1400f, roomCamera.levelTexture.height / 800f)));
+        // all snow sources being visible (prevents pop ins); for some reason there
+        // is too much snow; this is a workaround such that snow sources have less
+        // impact => less snow;
+        Vector2 approximated_radius = Custom.EncodeFloatRG(snow_source.rad / (1600f * Mathf.Max(room_camera.levelTexture.width / 1400f, room_camera.levelTexture.height / 800f)));
 
         Vector4[] array = new Vector4[3];
-        array[0] = new Vector4(position_x_approximation.x, position_x_approximation.y, position_y_approximation.x, position_y_approximation.y);
-        array[1] = new Vector4(radius_approximation.x, radius_approximation.y, snow_source.intensity, snow_source.noisiness);
+        array[0] = new Vector4(approximated_position_x.x, approximated_position_x.y, approximated_position_y.x, approximated_position_y.y);
+        array[1] = new Vector4(approximated_radius.x, approximated_radius.y, snow_source.intensity, snow_source.noisiness);
         array[2] = new Vector4(0f, 0f, 0f, (float)snow_source.shape / 5f);
         return array;
     }
 
-    private static void SnowSource_Update(On.MoreSlugcats.SnowSource.orig_Update orig, MoreSlugcats.SnowSource snowSource, bool eu)
+    private static void SnowSource_Update(On.MoreSlugcats.SnowSource.orig_Update orig, MoreSlugcats.SnowSource snow_source, bool eu)
     {
         // snowChange updates the overlay texture for fallen snow;
-        if (snowSource.room?.game.cameras[0] is not RoomCamera roomCamera)
+        if (snow_source.room?.game.cameras[0] is not RoomCamera roomCamera)
         {
-            orig(snowSource, eu);
+            orig(snow_source, eu);
             return;
         }
 
         if (roomCamera.Is_Type_Camera_Not_Used())
         {
-            orig(snowSource, eu);
+            orig(snow_source, eu);
             return;
         }
 
         // when entering the room;
         if (roomCamera.snowChange)
         {
-            snowSource.visibility = 1;
+            snow_source.visibility = 1;
             return;
         }
 
-        orig(snowSource, eu);
+        orig(snow_source, eu);
 
         // visibility equal to one means that it is used when the snow light is updated in roomCamera;
         // there doesn't seem to be downside to always setting it to one;
         // snowSource.visibility = roomCamera.CheckVisibility(snowSource);
         // snowSource.visibility = roomCamera.PositionVisibleInNextScreen(snowSource.pos, 100f, true) ? 1 : 0;
-        snowSource.visibility = 1;
+        snow_source.visibility = 1;
 
         // this is too performance intensive;
         // changing visibility seems to be enough anyways;

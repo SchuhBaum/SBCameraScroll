@@ -663,7 +663,6 @@ public static class RoomCameraMod
     private static void RoomCamera_ctor(On.RoomCamera.orig_ctor orig, RoomCamera room_camera, RainWorldGame game, int camera_number)
     {
         orig(room_camera, game, camera_number);
-
         if (all_attached_fields.ContainsKey(room_camera)) return;
         all_attached_fields.Add(room_camera, new(room_camera));
     }
