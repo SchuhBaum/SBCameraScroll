@@ -3,45 +3,43 @@
 
 //Unlit Transparent Vertex Colored Additive 
 Shader "SBCameraScroll/LevelHeat" {
-	Properties {
-		_MainTex("Base (RGB) Trans (A)", 2D) = "white" {}
+    Properties {
+        _MainTex("Base (RGB) Trans (A)", 2D) = "white" {}
 
-        //	_PalTex ("Base (RGB) Trans (A)", 2D) = "white" {}
-        //	_NoiseTex ("Base (RGB) Trans (A)", 2D) = "white" {}
-        //    _RAIN ("Rain", Range (0,1.0)) = 0.5
+        //_PalTex ("Base (RGB) Trans (A)", 2D) = "white" {}
+        //_NoiseTex ("Base (RGB) Trans (A)", 2D) = "white" {}
+        //_RAIN ("Rain", Range (0,1.0)) = 0.5
         //_Color ("Main Color", Color) = (1,0,0,1.5)
         //_BlurAmount ("Blur Amount", Range(0,02)) = 0.0005
-	}
+    }
 
-	Category {
-		Tags { "Queue" = "Transparent" "IgnoreProjector" = "True" "RenderType" = "Transparent" }
-		ZWrite Off
-		//Alphatest Greater 0
-		Blend SrcAlpha OneMinusSrcAlpha
-		Fog { Color(0,0,0,0) }
-		Lighting Off
-		Cull Off //we can turn backface culling off because we know nothing will be facing backwards
+    Category {
+        Tags { "Queue" = "Transparent" "IgnoreProjector" = "True" "RenderType" = "Transparent" }
+        ZWrite Off
+        //Alphatest Greater 0
+        Blend SrcAlpha OneMinusSrcAlpha
+        Fog { Color(0,0,0,0) }
+        Lighting Off
+        Cull Off //we can turn backface culling off because we know nothing will be facing backwards
 
-		BindChannels {
-			Bind "Vertex", vertex
-			Bind "texcoord", texcoord
-			Bind "Color", color
-		}
+        BindChannels {
+            Bind "Vertex", vertex
+            Bind "texcoord", texcoord
+            Bind "Color", color
+        }
 
-		SubShader {
-		    GrabPass { }
-			Pass {
-				//SetTexture [_MainTex] {
-				//	Combine texture * primary
-				//}
+        SubShader {
+            GrabPass { }
+            Pass {
+                //SetTexture [_MainTex] {
+                //    Combine texture * primary
+                //}
 
                 CGPROGRAM
                 #pragma target 3.0
                 #pragma vertex vert
                 #pragma fragment frag
                 #include "UnityCG.cginc"
-                //#pragma profileoption NumTemps=64
-                //#pragma profileoption NumInstructionSlots=2048
 
                 //float4 _Color;
                 sampler2D _MainTex;
@@ -234,7 +232,7 @@ Shader "SBCameraScroll/LevelHeat" {
                         setColor = lerp(setColor, tex2D(_PalTex, float2(1.5 / 32.0, 7.5 / 8.0)), clamp(red*(red < 10 ? lerp(notFloorDark, 1, 0.5) : 1)*_fogAmount / 30.0, 0, 1));
 
                         //if (red >= 5) {
-                        //	checkMaskOut = true;
+                        //    checkMaskOut = true;
                         //}
                     }
 
@@ -276,8 +274,8 @@ Shader "SBCameraScroll/LevelHeat" {
                     setColor.rgb += _brightness;
                     return setColor;
                 }
-		    ENDCG
-	        }
-	    }
-	}
+            ENDCG
+            }
+        }
+    }
 }
