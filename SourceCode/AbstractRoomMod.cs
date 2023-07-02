@@ -380,8 +380,22 @@ public static class AbstractRoomMod
             {
                 merged_texture.ReadPixels(new Rect(0.0f, 0.0f, merged_render_texture.width, merged_render_texture.height), 0, 0);
             }
+
             File.WriteAllBytes(merged_room_file_path, merged_texture.EncodeToPNG());
-            Debug.Log("SBCameraScroll: Merging complete.");
+            Debug.Log("SBCameraScroll: Merging completed.");
+
+            if (can_send_message_now)
+            {
+                if (abstract_room.world?.game?.cameras[0] is RoomCamera room_camera && room_camera.hud != null)
+                {
+                    Send_Merging_Completed_Message(room_camera);
+                }
+                else
+                {
+                    has_to_send_message_later = true;
+                }
+                can_send_message_now = false;
+            }
         }
         catch (Exception exception)
         {

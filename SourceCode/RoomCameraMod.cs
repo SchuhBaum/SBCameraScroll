@@ -43,6 +43,9 @@ public static class RoomCameraMod
     public static bool Is_Split_Horizontally => SplitScreenCoop.SplitScreenCoop.CurrentSplitMode == SplitScreenCoop.SplitScreenCoop.SplitMode.SplitHorizontal;
     public static bool Is_Split_Vertically => SplitScreenCoop.SplitScreenCoop.CurrentSplitMode == SplitScreenCoop.SplitScreenCoop.SplitMode.SplitVertical;
 
+    public static bool can_send_message_now = false;
+    public static bool has_to_send_message_later = false;
+
     //
     //
     //
@@ -57,15 +60,17 @@ public static class RoomCameraMod
         On.RoomCamera.ApplyPositionChange += RoomCamera_ApplyPositionChange;
         On.RoomCamera.ctor += RoomCamera_ctor;
 
+        On.RoomCamera.FireUpSafariHUD += RoomCamera_FireUpSafariHUD;
+        On.RoomCamera.FireUpSinglePlayerHUD += RoomCamera_FireUpSinglePlayerHUD;
         On.RoomCamera.IsViewedByCameraPosition += RoomCamera_IsViewedByCameraPosition;
         On.RoomCamera.IsVisibleAtCameraPosition += RoomCamera_IsVisibleAtCameraPosition;
+
         On.RoomCamera.MoveCamera_int += RoomCamera_MoveCamera;
         On.RoomCamera.MoveCamera2 += RoomCamera_MoveCamera2;
-
         On.RoomCamera.PixelColorAtCoordinate += RoomCamera_PixelColorAtCoordinate;
         On.RoomCamera.PositionCurrentlyVisible += RoomCamera_PositionCurrentlyVisible;
-        On.RoomCamera.PositionVisibleInNextScreen += RoomCamera_PositionVisibleInNextScreen;
 
+        On.RoomCamera.PositionVisibleInNextScreen += RoomCamera_PositionVisibleInNextScreen;
         On.RoomCamera.PreLoadTexture += RoomCamera_PreLoadTexture;
         On.RoomCamera.RectCurrentlyVisible += RoomCamera_RectCurrentlyVisible;
         On.RoomCamera.ScreenMovement += RoomCamera_ScreenMovement;
@@ -222,6 +227,17 @@ public static class RoomCameraMod
             sprite_layer.SetPosition(Vector2.zero);
             sprite_layer.ScaleAroundPointRelative(Vector2.zero, 1f, 1f);
         }
+    }
+
+    public static void Send_Merging_Completed_Message(RoomCamera room_camera)
+    {
+        if (!can_send_message_now && !has_to_send_message_later) return;
+        if (room_camera.hud is not HUD.HUD hud) return;
+        if (room_camera.game is not RainWorldGame game) return;
+
+        hud.textPrompt.AddMessage(game.rainWorld.inGameTranslator.Translate("SBCameraScroll: Merging camera textures completed."), wait: 0, time: 200, darken: false, hideHud: false);
+        can_send_message_now = false;
+        has_to_send_message_later = false;
     }
 
     public static Vector2 SplitScreenMod_GetScreenOffset(in Vector2 screen_size)
@@ -665,6 +681,18 @@ public static class RoomCameraMod
         orig(room_camera, game, camera_number);
         if (all_attached_fields.ContainsKey(room_camera)) return;
         all_attached_fields.Add(room_camera, new(room_camera));
+    }
+
+    private static void RoomCamera_FireUpSafariHUD(On.RoomCamera.orig_FireUpSafariHUD orig, RoomCamera room_camera)
+    {
+        orig(room_camera);
+        Send_Merging_Completed_Message(room_camera);
+    }
+
+    private static void RoomCamera_FireUpSinglePlayerHUD(On.RoomCamera.orig_FireUpSinglePlayerHUD orig, RoomCamera room_camera, Player player)
+    {
+        orig(room_camera, player);
+        Send_Merging_Completed_Message(room_camera);
     }
 
     private static bool RoomCamera_IsViewedByCameraPosition(On.RoomCamera.orig_IsViewedByCameraPosition orig, RoomCamera room_camera, int camera_position_index, Vector2 test_position)
