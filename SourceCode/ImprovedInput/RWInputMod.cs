@@ -5,8 +5,7 @@ using static SBCameraScroll.PlayerMod;
 
 namespace SBCameraScroll;
 
-public static class RWInputMod
-{
+public static class RWInputMod {
     //
     // parameters
     //
@@ -18,8 +17,7 @@ public static class RWInputMod
     // main
     //
 
-    public static void Initialize_Custom_Keybindings()
-    {
+    public static void Initialize_Custom_Keybindings() {
         if (center_keybinding != null) return;
 
         // initialize after ImprovedInput has;
@@ -33,12 +31,9 @@ public static class RWInputMod
     // public
     //
 
-    public static bool Can_Hide_Conflict_With(this PlayerKeybind keybinding, PlayerKeybind other_keybinding)
-    {
-        for (int player_index_a = 0; player_index_a < maximum_number_of_players; ++player_index_a)
-        {
-            for (int player_index_b = player_index_a; player_index_b < maximum_number_of_players; ++player_index_b)
-            {
+    public static bool Can_Hide_Conflict_With(this PlayerKeybind keybinding, PlayerKeybind other_keybinding) {
+        for (int player_index_a = 0; player_index_a < maximum_number_of_players; ++player_index_a) {
+            for (int player_index_b = player_index_a; player_index_b < maximum_number_of_players; ++player_index_b) {
                 if (!keybinding.ConflictsWith(player_index_a, other_keybinding, player_index_b)) continue;
                 if (player_index_a != player_index_b) return false;
 
@@ -54,26 +49,19 @@ public static class RWInputMod
         return true;
     }
 
-    public static InputPackageMod Get_Input(Player player)
-    {
+    public static InputPackageMod Get_Input(Player player) {
         InputPackageMod custom_input = new();
         int player_number = player.playerState.playerNumber;
 
-        if (center_keybinding.Unbound(player_number))
-        {
+        if (center_keybinding.Unbound(player_number)) {
             custom_input.center_camera = player.input[0].mp;
-        }
-        else
-        {
+        } else {
             custom_input.center_camera = center_keybinding.CheckRawPressed(player_number);
         }
 
-        if (switch_keybinding.Unbound(player_number))
-        {
+        if (switch_keybinding.Unbound(player_number)) {
             custom_input.switch_camera = player.input[0].mp;
-        }
-        else
-        {
+        } else {
             custom_input.switch_camera = switch_keybinding.CheckRawPressed(player_number);
         }
         return custom_input;

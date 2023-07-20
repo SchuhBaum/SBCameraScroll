@@ -44,10 +44,12 @@ Shader "SBCameraScroll/LevelHeat" {
                 //float4 _Color;
                 sampler2D _MainTex;
                 
+                // vanilla:
+                // uniform float2 _MainTex_TexelSize;
+
                 // modded:
                 // in theory they are the same since this shader is only applied to the level
                 // texture; but they are not for some reason;
-                // uniform float2 _MainTex_TexelSize;
                 uniform float2 _LevelTex_TexelSize;
 
                 sampler2D _PalTex;

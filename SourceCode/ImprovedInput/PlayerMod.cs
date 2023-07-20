@@ -2,8 +2,7 @@ using System.Collections.Generic;
 
 namespace SBCameraScroll;
 
-public static class PlayerMod
-{
+public static class PlayerMod {
     //
     // parameters
     //
@@ -21,20 +20,17 @@ public static class PlayerMod
     // main
     //
 
-    internal static void OnEnable()
-    {
+    internal static void OnEnable() {
         Initialize_Custom_Inputs();
         On.Player.checkInput -= Player_CheckInput;
         On.Player.checkInput += Player_CheckInput;
     }
 
-    public static void Initialize_Custom_Inputs()
-    {
+    public static void Initialize_Custom_Inputs() {
         if (custom_input_list != null) return;
         custom_input_list = new();
 
-        for (int player_number = 0; player_number < maximum_number_of_players; ++player_number)
-        {
+        for (int player_number = 0; player_number < maximum_number_of_players; ++player_number) {
             InputPackageMod[] custom_input = new InputPackageMod[2];
             custom_input[0] = new();
             custom_input[1] = new();
@@ -46,8 +42,7 @@ public static class PlayerMod
     // public
     //
 
-    public static bool Wants_To_Center_Camera(this Player player)
-    {
+    public static bool Wants_To_Center_Camera(this Player player) {
         int player_number = player.playerState.playerNumber;
         if (player_number < 0) return player.input[0].mp && !player.input[1].mp;
         if (player_number >= maximum_number_of_players) return player.input[0].mp && !player.input[1].mp;
@@ -56,8 +51,7 @@ public static class PlayerMod
         return custom_input[0].center_camera && !custom_input[1].center_camera;
     }
 
-    public static bool Wants_To_Switch_Camera(this Player player)
-    {
+    public static bool Wants_To_Switch_Camera(this Player player) {
         int player_number = player.playerState.playerNumber;
         if (player_number < 0) return player.input[0].mp && !player.input[1].mp;
         if (player_number >= maximum_number_of_players) return player.input[0].mp && !player.input[1].mp;
@@ -70,8 +64,7 @@ public static class PlayerMod
     // private
     //
 
-    private static void Player_CheckInput(On.Player.orig_checkInput orig, Player player)
-    {
+    private static void Player_CheckInput(On.Player.orig_checkInput orig, Player player) {
         // update player.input first;
         orig(player);
 
@@ -82,8 +75,7 @@ public static class PlayerMod
         InputPackageMod[] custom_input = custom_input_list[player_number];
         custom_input[1] = custom_input[0];
 
-        if (player.stun == 0 && !player.dead)
-        {
+        if (player.stun == 0 && !player.dead) {
             custom_input[0] = RWInputMod.Get_Input(player);
             return;
         }
@@ -94,8 +86,7 @@ public static class PlayerMod
     //
     //
 
-    public struct InputPackageMod
-    {
+    public struct InputPackageMod {
         public bool center_camera = false;
         public bool switch_camera = false;
         public InputPackageMod() { }

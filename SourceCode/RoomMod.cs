@@ -4,12 +4,10 @@ using static SBCameraScroll.RoomCameraMod;
 
 namespace SBCameraScroll;
 
-public static class RoomMod
-{
+public static class RoomMod {
     public static bool CanScrollCamera(this Room room) => Option_ScrollOneScreenRooms || room.cameraPositions.Length > 1;
 
-    internal static void OnEnable()
-    {
+    internal static void OnEnable() {
         On.Room.Loaded += Room_Loaded; // removes DeathFallFocus objects (which create fall focal points);
         On.Room.LoadFromDataString += Room_LoadFromDataString;
     }
@@ -18,8 +16,7 @@ public static class RoomMod
     // private
     //
 
-    private static void Room_Loaded(On.Room.orig_Loaded orig, Room room)
-    {
+    private static void Room_Loaded(On.Room.orig_Loaded orig, Room room) {
         orig(room);
 
         // these focal points change the height of death fall indicators;
@@ -30,8 +27,7 @@ public static class RoomMod
         room.deathFallFocalPoints = new();
     }
 
-    private static void Room_LoadFromDataString(On.Room.orig_LoadFromDataString orig, Room room, string[] lines)
-    {
+    private static void Room_LoadFromDataString(On.Room.orig_LoadFromDataString orig, Room room, string[] lines) {
         orig(room, lines);
 
         if (room?.game == null) return;

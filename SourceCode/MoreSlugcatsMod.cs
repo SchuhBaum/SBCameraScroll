@@ -1,17 +1,14 @@
-using System;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using RWCustom;
+using System;
 using UnityEngine;
-
 using static SBCameraScroll.MainMod;
 
 namespace SBCameraScroll;
 
-internal static class MoreSlugcatsMod
-{
-    internal static void OnEnable()
-    {
+internal static class MoreSlugcatsMod {
+    internal static void OnEnable() {
         IL.MoreSlugcats.BlizzardGraphics.DrawSprites += IL_BlizzardGraphics_DrawSprites;
         On.MoreSlugcats.BlizzardGraphics.Update += BlizzardGraphics_Update;
         On.MoreSlugcats.SnowSource.PackSnowData += SnowSource_PackSnowData;
@@ -22,15 +19,12 @@ internal static class MoreSlugcatsMod
     // private
     //
 
-    private static void IL_BlizzardGraphics_DrawSprites(ILContext context)
-    {
+    private static void IL_BlizzardGraphics_DrawSprites(ILContext context) {
         // MainMod.LogAllInstructions(context);
 
         ILCursor cursor = new(context);
-        if (cursor.TryGotoNext(instruction => instruction.MatchLdarg(2)))
-        {
-            if (can_log_il_hooks)
-            {
+        if (cursor.TryGotoNext(instruction => instruction.MatchLdarg(2))) {
+            if (can_log_il_hooks) {
                 Debug.Log("SBCameraScroll: IL_BlizzardGraphics_DrawSprites: Index " + cursor.Index); // 16
             }
 
@@ -39,24 +33,19 @@ internal static class MoreSlugcatsMod
             cursor.RemoveRange(9);
             cursor.Emit(OpCodes.Ldarg, 4); // cameraPosition
 
-            cursor.EmitDelegate<Func<MoreSlugcats.BlizzardGraphics, Vector2, Vector2>>((blizzardGraphics, cameraPosition) =>
-            {
-                RoomCamera roomCamera = blizzardGraphics.rCam;
-                if (roomCamera.Is_Type_Camera_Not_Used())
-                {
-                    return roomCamera.pos - blizzardGraphics.room.cameraPositions[roomCamera.currentCameraPosition];
+            cursor.EmitDelegate<Func<MoreSlugcats.BlizzardGraphics, Vector2, Vector2>>((blizzard_graphics, camera_position) => {
+                RoomCamera room_camera = blizzard_graphics.rCam;
+                if (room_camera.Is_Type_Camera_Not_Used()) {
+                    return room_camera.pos - blizzard_graphics.room.cameraPositions[room_camera.currentCameraPosition];
                 }
 
                 // jumps but I can't cover the whole room otherwise..;
                 // the size of blizzardGraphics is probably determined by the shader;
                 // if you scale the sprites then the snow flakes are scaled instead;
-                return cameraPosition - blizzardGraphics.room.cameraPositions[roomCamera.currentCameraPosition];
+                return camera_position - blizzard_graphics.room.cameraPositions[room_camera.currentCameraPosition];
             });
-        }
-        else
-        {
-            if (can_log_il_hooks)
-            {
+        } else {
+            if (can_log_il_hooks) {
                 Debug.Log("SBCameraScroll: IL_BlizzardGraphics_DrawSprites failed.");
             }
             return;
@@ -68,18 +57,15 @@ internal static class MoreSlugcatsMod
     //
     //
 
-    private static void BlizzardGraphics_Update(On.MoreSlugcats.BlizzardGraphics.orig_Update orig, MoreSlugcats.BlizzardGraphics blizzardGraphics, bool eu)
-    {
-        RoomCamera roomCamera = blizzardGraphics.rCam;
-        if (roomCamera.room == null)
-        {
-            orig(blizzardGraphics, eu);
+    private static void BlizzardGraphics_Update(On.MoreSlugcats.BlizzardGraphics.orig_Update orig, MoreSlugcats.BlizzardGraphics blizzard_graphics, bool eu) {
+        RoomCamera room_camera = blizzard_graphics.rCam;
+        if (room_camera.room == null) {
+            orig(blizzard_graphics, eu);
             return;
         }
 
-        if (roomCamera.Is_Type_Camera_Not_Used())
-        {
-            orig(blizzardGraphics, eu);
+        if (room_camera.Is_Type_Camera_Not_Used()) {
+            orig(blizzard_graphics, eu);
             return;
         }
 
@@ -90,19 +76,18 @@ internal static class MoreSlugcatsMod
         // I can only move it around;
         //
         // these here seem to don't have that; they have see below;
-        float roomCameraPositionX = roomCamera.room.cameraPositions[roomCamera.currentCameraPosition].x;
+        float room_camera_position_x = room_camera.room.cameraPositions[room_camera.currentCameraPosition].x;
 
         // this is a compromise (only change x);
         // this results in extra jumps for the snow;
         // but otherwise show might fall through the ceiling for some screens;
 
-        roomCamera.room.cameraPositions[roomCamera.currentCameraPosition].x = roomCamera.room.cameraPositions[0].x;
-        orig(blizzardGraphics, eu);
-        roomCamera.room.cameraPositions[roomCamera.currentCameraPosition].x = roomCameraPositionX;
+        room_camera.room.cameraPositions[room_camera.currentCameraPosition].x = room_camera.room.cameraPositions[0].x;
+        orig(blizzard_graphics, eu);
+        room_camera.room.cameraPositions[room_camera.currentCameraPosition].x = room_camera_position_x;
     }
 
-    private static Vector4[] SnowSource_PackSnowData(On.MoreSlugcats.SnowSource.orig_PackSnowData orig, MoreSlugcats.SnowSource snow_source)
-    {
+    private static Vector4[] SnowSource_PackSnowData(On.MoreSlugcats.SnowSource.orig_PackSnowData orig, MoreSlugcats.SnowSource snow_source) {
         if (snow_source.room is not Room room) return orig(snow_source);
         RoomCamera room_camera = snow_source.room.game.cameras[0];
         if (room_camera.Is_Type_Camera_Not_Used()) return orig(snow_source);
@@ -128,24 +113,20 @@ internal static class MoreSlugcatsMod
         return array;
     }
 
-    private static void SnowSource_Update(On.MoreSlugcats.SnowSource.orig_Update orig, MoreSlugcats.SnowSource snow_source, bool eu)
-    {
+    private static void SnowSource_Update(On.MoreSlugcats.SnowSource.orig_Update orig, MoreSlugcats.SnowSource snow_source, bool eu) {
         // snowChange updates the overlay texture for fallen snow;
-        if (snow_source.room?.game.cameras[0] is not RoomCamera roomCamera)
-        {
+        if (snow_source.room?.game.cameras[0] is not RoomCamera room_camera) {
             orig(snow_source, eu);
             return;
         }
 
-        if (roomCamera.Is_Type_Camera_Not_Used())
-        {
+        if (room_camera.Is_Type_Camera_Not_Used()) {
             orig(snow_source, eu);
             return;
         }
 
         // when entering the room;
-        if (roomCamera.snowChange)
-        {
+        if (room_camera.snowChange) {
             snow_source.visibility = 1;
             return;
         }
@@ -163,6 +144,6 @@ internal static class MoreSlugcatsMod
         // roomCamera.snowChange = true;
 
         // don't update again after the room is loaded;
-        roomCamera.snowChange = false;
+        room_camera.snowChange = false;
     }
 }

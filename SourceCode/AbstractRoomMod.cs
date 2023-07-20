@@ -1,45 +1,42 @@
+using RWCustom;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using RWCustom;
 using Unity.Collections;
 using UnityEngine;
-
 using static SBCameraScroll.MainMod;
 using static SBCameraScroll.RoomCameraMod;
 
 namespace SBCameraScroll;
 
-public static class AbstractRoomMod
-{
+public static class AbstractRoomMod {
     //
     // parameters
     //
 
-    public static readonly int maximumTextureWidth = 16384;
-    public static readonly int maximumTextureHeight = 16384;
+    public static readonly int maximum_texture_width = 16384;
+    public static readonly int maximum_texture_height = 16384;
     public static bool HasCopyTextureSupport => SystemInfo.copyTextureSupport >= UnityEngine.Rendering.CopyTextureSupport.TextureToRT;
 
     //
     // variables
     //
 
-    internal static readonly Dictionary<AbstractRoom, Attached_Fields> all_attached_fields = new();
-    public static Attached_Fields Get_Attached_Fields(this AbstractRoom abstractRoom) => all_attached_fields[abstractRoom];
+    internal static readonly Dictionary<AbstractRoom, Attached_Fields> _all_attached_fields = new();
+    public static Attached_Fields Get_Attached_Fields(this AbstractRoom abstract_room) => _all_attached_fields[abstract_room];
 
-    public static readonly Dictionary<string, Vector2> textureOffsetModifier = new();
+    public static readonly Dictionary<string, Vector2> texture_offset_modifier = new();
 
     public static RenderTexture? merged_render_texture = null;
     public static readonly Texture2D merged_texture = new(1, 1, TextureFormat.RGB24, false);
-    public static readonly Texture2D cameraTexture = new(1, 1, TextureFormat.RGB24, false);
+    public static readonly Texture2D camera_texture = new(1, 1, TextureFormat.RGB24, false);
 
     //
     //
     //
 
-    internal static void OnEnable()
-    {
-        On.AbstractRoom.ctor += AbstractRoom_ctor;
+    internal static void OnEnable() {
+        On.AbstractRoom.ctor += AbstractRoom_Ctor;
         On.AbstractRoom.Abstractize += AbstractRoom_Abstractize;
     }
 
@@ -47,74 +44,61 @@ public static class AbstractRoomMod
     // public functions //
     // ---------------- //
 
-    public static void AddCameraTexture(int cameraIndex, string roomFilePath, in Vector2[] cameraPositions, in Vector2 baseTextureOffset)
-    {
-        Vector2 _textureOffset = cameraPositions[cameraIndex] - baseTextureOffset; // already contains the offsetModifier
-        cameraTexture.LoadImage(File.ReadAllBytes(roomFilePath)); // resizes if needed // calls Apply() as well
+    public static void AddCameraTexture(int camera_index, string room_file_path, in Vector2[] camera_positions, in Vector2 base_texture_offset) {
+        Vector2 texture_offset = camera_positions[camera_index] - base_texture_offset; // already contains the offsetModifier
+        camera_texture.LoadImage(File.ReadAllBytes(room_file_path)); // resizes if needed // calls Apply() as well
 
-        int x = (int)_textureOffset.x;
-        int y = (int)_textureOffset.y;
-        int cutoffX = 0;
-        int cutoffY = 0;
+        int x = (int)texture_offset.x;
+        int y = (int)texture_offset.y;
+        int cutoff_x = 0;
+        int cutoff_y = 0;
 
-        if (x < 0) cutoffX = -x;
-        if (y < 0) cutoffY = -y;
+        if (x < 0) cutoff_x = -x;
+        if (y < 0) cutoff_y = -y;
 
-        if (x < maximumTextureWidth && y < maximumTextureHeight)
-        {
-            int width = Math.Min(1400 - cutoffX, maximumTextureWidth - x);
-            int height = Math.Min(800 - cutoffY, maximumTextureHeight - y);
+        if (x < maximum_texture_width && y < maximum_texture_height) {
+            int width = Math.Min(1400 - cutoff_x, maximum_texture_width - x);
+            int height = Math.Min(800 - cutoff_y, maximum_texture_height - y);
 
             // I would need to de-compress the source first;
             // how do I even do that?;
             // Buffer.BlockCopy(bytes, 3 * ((cutoffX + 1) * (cutoffY + 1) - 1), mergedTexture.GetRawTextureData(), 3 * ((Mathf.Max(x, 0) + 1) * (Mathf.Max(y, 0) + 1) - 1), 3 * ((width - cutoffX) * (height - cutoffY) - 1));
 
-            if (HasCopyTextureSupport && merged_render_texture != null)
-            {
-                Graphics.CopyTexture(cameraTexture, 0, 0, cutoffX, cutoffY, width, height, merged_render_texture, 0, 0, Mathf.Max(x, 0), Mathf.Max(y, 0));
-            }
-            else
-            {
-                merged_texture.SetPixels(Mathf.Max(x, 0), Mathf.Max(y, 0), width, height, cameraTexture.GetPixels(cutoffX, cutoffY, width, height));
+            if (HasCopyTextureSupport && merged_render_texture != null) {
+                Graphics.CopyTexture(camera_texture, 0, 0, cutoff_x, cutoff_y, width, height, merged_render_texture, 0, 0, Mathf.Max(x, 0), Mathf.Max(y, 0));
+            } else {
+                merged_texture.SetPixels(Mathf.Max(x, 0), Mathf.Max(y, 0), width, height, camera_texture.GetPixels(cutoff_x, cutoff_y, width, height));
             }
         }
     }
 
-    public static void CheckCameraPositions(ref Vector2[] cameraPositions)
-    {
-        bool isFaultyCameraFound = false;
-        foreach (Vector2 cameraPosition in cameraPositions)
-        {
-            if (Mathf.Abs(cameraPosition.x) > 20000f || Mathf.Abs(cameraPosition.y) > 20000f)
-            {
-                isFaultyCameraFound = true;
+    public static void CheckCameraPositions(ref Vector2[] camera_positions) {
+        bool is_faulty_camera_found = false;
+        foreach (Vector2 camera_position in camera_positions) {
+            if (Mathf.Abs(camera_position.x) > 20000f || Mathf.Abs(camera_position.y) > 20000f) {
+                is_faulty_camera_found = true;
             }
         }
 
-        if (isFaultyCameraFound)
-        {
+        if (is_faulty_camera_found) {
             // SL_C01 has two cameras which are in outer space or something => needed too much memory
             Debug.Log("SBCameraScroll: One or more camera screen positions are out of bounds. Remove them from cameraPositions.");
 
-            List<Vector2> cameraPositions_ = new();
-            foreach (Vector2 cameraPosition in cameraPositions)
-            {
-                if (Mathf.Abs(cameraPosition.x) <= 20000f && Mathf.Abs(cameraPosition.y) <= 20000f)
-                {
-                    cameraPositions_.Add(cameraPosition);
+            List<Vector2> camera_positions_ = new();
+            foreach (Vector2 camera_position in camera_positions) {
+                if (Mathf.Abs(camera_position.x) <= 20000f && Mathf.Abs(camera_position.y) <= 20000f) {
+                    camera_positions_.Add(camera_position);
                 }
             }
-            cameraPositions = cameraPositions_.ToArray();
+            camera_positions = camera_positions_.ToArray();
         }
     }
 
-    public static void Clean_Up()
-    {
+    public static void Clean_Up() {
         merged_texture.Resize(1, 1);
-        cameraTexture.Resize(1, 1);
+        camera_texture.Resize(1, 1);
 
-        if (merged_render_texture != null)
-        {
+        if (merged_render_texture != null) {
             merged_render_texture.Release();
             merged_render_texture = null;
         }
@@ -125,86 +109,76 @@ public static class AbstractRoomMod
         GC.Collect();
     }
 
-    public static void DestroyWormGrassInAbstractRoom(AbstractRoom abstract_room)
-    {
+    public static void DestroyWormGrassInAbstractRoom(AbstractRoom abstract_room) {
         Attached_Fields attached_fields = abstract_room.Get_Attached_Fields();
-        if (attached_fields.worm_grass is WormGrass wormGrass)
-        {
+        if (attached_fields.worm_grass is WormGrass worm_grass) {
             Debug.Log("SBCameraScroll: Remove worm grass from " + abstract_room.name + ".");
 
             // I expect only one wormGrass per room
             // wormGrass can have multiple patches with multiple tiles each
 
-            wormGrass.Destroy();
-            WormGrassMod.all_attached_fields.Remove(wormGrass);
+            worm_grass.Destroy();
+            WormGrassMod._all_attached_fields.Remove(worm_grass);
         }
         attached_fields.worm_grass = null;
     }
 
     // creates directories if they don't exist
-    public static string GetRelativeRoomsPath(string? regionName)
-    {
-        if (regionName == null) return "";
+    public static string GetRelativeRoomsPath(string? region_name) {
+        if (region_name == null) return "";
 
-        string relativeRegionPath = "world" + Path.DirectorySeparatorChar + regionName.ToLower() + "-rooms";
-        CreateDirectory(mod_directory_path + relativeRegionPath);
-        return relativeRegionPath + Path.DirectorySeparatorChar;
+        string relative_region_path = "world" + Path.DirectorySeparatorChar + region_name.ToLower() + "-rooms";
+        CreateDirectory(mod_directory_path + relative_region_path);
+        return relative_region_path + Path.DirectorySeparatorChar;
     }
 
-    public static string GetRelativeRoomsPath_Arena()
-    {
-        string relativeRegionPath = "levels";
-        CreateDirectory(mod_directory_path + relativeRegionPath);
-        return relativeRegionPath + Path.DirectorySeparatorChar;
+    public static string GetRelativeRoomsPath_Arena() {
+        string relative_region_path = "levels";
+        CreateDirectory(mod_directory_path + relative_region_path);
+        return relative_region_path + Path.DirectorySeparatorChar;
     }
 
     // copied from: https://stackoverflow.com/questions/60857830/finding-png-image-width-height-via-file-metadata-net-core-3-1-c-sharp
-    public static IntVector2 GetImageSize_PNG(string filePath)
-    {
+    public static IntVector2 GetImageSize_PNG(string file_path) {
         // using disposes IDisposable after it leaves scope
-        using FileStream fileStream = File.OpenRead(filePath);
-        using BinaryReader binaryReader = new(fileStream);
-        binaryReader.BaseStream.Position = 16;
+        using FileStream file_stream = File.OpenRead(file_path);
+        using BinaryReader binary_reader = new(file_stream);
+        binary_reader.BaseStream.Position = 16;
 
         byte[] widthbytes = new byte[sizeof(int)];
-        for (int i = 0; i < sizeof(int); i++)
-        {
-            widthbytes[sizeof(int) - 1 - i] = binaryReader.ReadByte();
+        for (int i = 0; i < sizeof(int); i++) {
+            widthbytes[sizeof(int) - 1 - i] = binary_reader.ReadByte();
         }
         int width = BitConverter.ToInt32(widthbytes, 0);
 
         byte[] heightbytes = new byte[sizeof(int)];
-        for (int i = 0; i < sizeof(int); i++)
-        {
-            heightbytes[sizeof(int) - 1 - i] = binaryReader.ReadByte();
+        for (int i = 0; i < sizeof(int); i++) {
+            heightbytes[sizeof(int) - 1 - i] = binary_reader.ReadByte();
         }
         int height = BitConverter.ToInt32(heightbytes, 0);
 
         return new IntVector2(width, height);
     }
 
-    public static Vector2[]? LoadCameraPositions(string? roomName)
-    {
-        if (roomName == null) return null;
+    public static Vector2[]? LoadCameraPositions(string? room_name) {
+        if (room_name == null) return null;
 
-        string filePath = WorldLoader.FindRoomFile(roomName, false, ".txt");
-        if (!File.Exists(filePath)) return null;
+        string file_path = WorldLoader.FindRoomFile(room_name, false, ".txt");
+        if (!File.Exists(file_path)) return null;
 
         // copy and paste from vanilla code
-        string[] lines = File.ReadAllLines(filePath);
+        string[] lines = File.ReadAllLines(file_path);
         int height = Convert.ToInt32(lines[1].Split('|')[0].Split('*')[1]);
         string[] line3 = lines[3].Split('|');
-        Vector2[] cameraPositions = new Vector2[line3.Length];
+        Vector2[] camera_positions = new Vector2[line3.Length];
 
-        for (int index = 0; index < line3.Length; ++index)
-        {
-            cameraPositions[index] = new Vector2(Convert.ToSingle(line3[index].Split(',')[0]), height * 20f - 800f - Convert.ToSingle(line3[index].Split(',')[1]));
+        for (int index = 0; index < line3.Length; ++index) {
+            camera_positions[index] = new Vector2(Convert.ToSingle(line3[index].Split(',')[0]), height * 20f - 800f - Convert.ToSingle(line3[index].Split(',')[1]));
         }
-        return cameraPositions;
+        return camera_positions;
     }
 
-    public static void MergeCameraTextures(AbstractRoom? abstract_room, string? region_name, Vector2[]? camera_positions = null)
-    {
+    public static void MergeCameraTextures(AbstractRoom? abstract_room, string? region_name, Vector2[]? camera_positions = null) {
         if (abstract_room == null) return;
         if (abstract_room.offScreenDen) return;
 
@@ -212,26 +186,21 @@ public static class AbstractRoomMod
         if (blacklisted_rooms.Contains(room_name)) return;
 
         string relative_rooms_path;
-        if (region_name == null)
-        {
-            if (abstract_room.world == null || !abstract_room.world.game.IsArenaSession)
-            {
+        if (region_name == null) {
+            if (abstract_room.world == null || !abstract_room.world.game.IsArenaSession) {
                 Debug.Log("SBCameraScroll: Region is null. Blacklist room " + room_name + ".");
                 blacklisted_rooms.Add(room_name);
                 return;
             }
             relative_rooms_path = GetRelativeRoomsPath_Arena();
-        }
-        else
-        {
+        } else {
             relative_rooms_path = GetRelativeRoomsPath(region_name);
         }
 
         string merged_room_file_path = mod_directory_path + relative_rooms_path + room_name.ToLower() + "_0.png";
 
         camera_positions ??= LoadCameraPositions(room_name);
-        if (camera_positions == null)
-        {
+        if (camera_positions == null) {
             Debug.Log("SBCameraScroll: Camera positions could not be loaded. Blacklist room " + room_name + ".");
             blacklisted_rooms.Add(room_name);
             return;
@@ -246,42 +215,35 @@ public static class AbstractRoomMod
         int max_height = 0;
 
         Vector2 offset_modifier = new();
-        if (textureOffsetModifier.ContainsKey(room_name))
-        {
-            offset_modifier = textureOffsetModifier[room_name];
+        if (texture_offset_modifier.ContainsKey(room_name)) {
+            offset_modifier = texture_offset_modifier[room_name];
         }
 
-        foreach (Vector2 camera_position in camera_positions)
-        {
+        foreach (Vector2 camera_position in camera_positions) {
             Vector2 texture_offset = offset_modifier + camera_position - base_texture_offset; // remove the effect of offsetModifier // baseTextureOffset already contains the offsetModifier
             max_width = Mathf.Max(max_width, (int)texture_offset.x + 1400);
             max_height = Mathf.Max(max_height, (int)texture_offset.y + 800);
         }
 
-        if (max_width > maximumTextureWidth || max_height > maximumTextureHeight)
-        {
+        if (max_width > maximum_texture_width || max_height > maximum_texture_height) {
             Debug.Log("SBCameraScroll: Warning! Merged texture width or height is too large. Setting to the maximum and hoping for the best.");
-            max_width = Mathf.Min(max_width, maximumTextureWidth);
-            max_height = Mathf.Min(max_height, maximumTextureHeight);
+            max_width = Mathf.Min(max_width, maximum_texture_width);
+            max_height = Mathf.Min(max_height, maximum_texture_height);
         }
 
-        if (max_width > SystemInfo.maxTextureSize || max_height > SystemInfo.maxTextureSize)
-        {
+        if (max_width > SystemInfo.maxTextureSize || max_height > SystemInfo.maxTextureSize) {
             Debug.Log("SBCameraScroll: This graphics card does not support large textures. Blacklist room " + room_name + ".");
             blacklisted_rooms.Add(room_name);
             return;
         }
 
         // ignore empty merged texture files that were created but not written to
-        if (File.Exists(merged_room_file_path) && new FileInfo(merged_room_file_path).Length > 0)
-        {
-            try
-            {
+        if (File.Exists(merged_room_file_path) && new FileInfo(merged_room_file_path).Length > 0) {
+            try {
                 IntVector2 image_size = GetImageSize_PNG(merged_room_file_path);
 
                 // this needs to be first since it blacklists room that were merged but are too large;
-                if (image_size.x > SystemInfo.maxTextureSize || image_size.y > SystemInfo.maxTextureSize)
-                {
+                if (image_size.x > SystemInfo.maxTextureSize || image_size.y > SystemInfo.maxTextureSize) {
                     Debug.Log("SBCameraScroll: This graphics card does not support large textures. Blacklist room " + room_name + ".");
                     blacklisted_rooms.Add(room_name);
                     return;
@@ -295,17 +257,14 @@ public static class AbstractRoomMod
                 // the load order matters here;
                 // ONH (SB_F03 with 8 cameras) needs to be higher than MSC (SB_F03 with 6 cameras) for example;
                 Debug.Log("SBCameraScroll: The dimensions for the merged texture have changed. Merge again");
-            }
-            catch
-            {
+            } catch {
                 // the chance that they have the same dimensions is high;
                 // don't update when the size could not be determined;
                 return;
             }
         }
 
-        if (textureOffsetModifier.ContainsKey(room_name))
-        {
+        if (texture_offset_modifier.ContainsKey(room_name)) {
             Debug.Log("SBCameraScroll: Cutting edges by modifying the texture offset.");
             Debug.Log("SBCameraScroll: offsetModifier " + offset_modifier);
         }
@@ -314,33 +273,28 @@ public static class AbstractRoomMod
 
         // not sure if this helps;
         // someone ran into an out of memory exception for this function;
-        try
-        {
+        try {
             merged_texture.Resize(max_width, max_height); // don't create new Texture2D objects => high memory usage
-            if (merged_texture.width != max_width || merged_texture.height != max_height)
-            {
+            if (merged_texture.width != max_width || merged_texture.height != max_height) {
                 Debug.Log("SBCameraScroll: Resize failed. Blacklist room " + room_name + ".");
                 blacklisted_rooms.Add(room_name);
                 Clean_Up();
                 return;
             }
 
-            if (merged_render_texture != null)
-            {
+            if (merged_render_texture != null) {
                 merged_render_texture.Release();
                 merged_render_texture = null;
             }
 
-            if (HasCopyTextureSupport)
-            {
+            if (HasCopyTextureSupport) {
                 // uses GPU instead of CPU;
                 // I can't really tell the difference in speed;
                 // but using this makes memory consumption during merging basically zero;
                 merged_render_texture = new(max_width, max_height, 24, RenderTextureFormat.ARGB32);
                 Graphics.SetRenderTarget(merged_render_texture); // sets RenderTexture.active
 
-                if (merged_render_texture.width != max_width || merged_render_texture.height != max_height)
-                {
+                if (merged_render_texture.width != max_width || merged_render_texture.height != max_height) {
                     Debug.Log("SBCameraScroll: Resize failed. Blacklist room " + room_name + ".");
                     blacklisted_rooms.Add(room_name);
                     Clean_Up();
@@ -350,55 +304,41 @@ public static class AbstractRoomMod
                 // clears the active;
                 // and fills it with non-transparent black (dark grey);
                 GL.Clear(true, true, new Color(1f / 255f, 0.0f, 0.0f, 1f));
-            }
-            else
-            {
+            } else {
                 NativeArray<byte> colors = merged_texture.GetRawTextureData<byte>();
-                for (int colorIndex = 0; colorIndex < colors.Length; ++colorIndex)
-                {
-                    colors[colorIndex] = colorIndex % 3 == 0 ? (byte)1 : (byte)0; // non-transparent black (dark grey)
+                for (int color_index = 0; color_index < colors.Length; ++color_index) {
+                    colors[color_index] = color_index % 3 == 0 ? (byte)1 : (byte)0; // non-transparent black (dark grey)
                 }
             }
 
-            for (int cameraIndex = 0; cameraIndex < camera_positions.Length; ++cameraIndex)
-            {
-                string roomFilePath = WorldLoader.FindRoomFile(room_name, false, "_" + (cameraIndex + 1) + ".png");
-                if (File.Exists(roomFilePath))
-                {
-                    AddCameraTexture(cameraIndex, roomFilePath, camera_positions, base_texture_offset); // changes cameraTexture and mergedTexture
-                }
-                else
-                {
-                    Debug.Log("SBCameraScroll: Could not find or load texture with path " + roomFilePath + ". Blacklist " + room_name + ".");
+            for (int camera_index = 0; camera_index < camera_positions.Length; ++camera_index) {
+                string room_file_path = WorldLoader.FindRoomFile(room_name, false, "_" + (camera_index + 1) + ".png");
+                if (File.Exists(room_file_path)) {
+                    AddCameraTexture(camera_index, room_file_path, camera_positions, base_texture_offset); // changes cameraTexture and mergedTexture
+                } else {
+                    Debug.Log("SBCameraScroll: Could not find or load texture with path " + room_file_path + ". Blacklist " + room_name + ".");
                     blacklisted_rooms.Add(room_name);
                     Clean_Up();
                     return;
                 }
             }
 
-            if (HasCopyTextureSupport && merged_render_texture != null)
-            {
+            if (HasCopyTextureSupport && merged_render_texture != null) {
                 merged_texture.ReadPixels(new Rect(0.0f, 0.0f, merged_render_texture.width, merged_render_texture.height), 0, 0);
             }
 
             File.WriteAllBytes(merged_room_file_path, merged_texture.EncodeToPNG());
             Debug.Log("SBCameraScroll: Merging completed.");
 
-            if (can_send_message_now)
-            {
-                if (abstract_room.world?.game?.cameras[0] is RoomCamera room_camera && room_camera.hud != null)
-                {
+            if (can_send_message_now) {
+                if (abstract_room.world?.game?.cameras[0] is RoomCamera room_camera && room_camera.hud != null) {
                     Send_Merging_Completed_Message(room_camera);
-                }
-                else
-                {
+                } else {
                     has_to_send_message_later = true;
                 }
                 can_send_message_now = false;
             }
-        }
-        catch (Exception exception)
-        {
+        } catch (Exception exception) {
             Debug.Log("SBCameraScroll: " + exception);
             Debug.Log("SBCameraScroll: Encountered an exception. Blacklist " + room_name + ".");
             blacklisted_rooms.Add(room_name);
@@ -430,29 +370,25 @@ public static class AbstractRoomMod
         // GC.Collect();
     }
 
-    public static void UpdateTextureOffset(AbstractRoom abstract_room, in Vector2[]? cameraPositions)
-    {
+    public static void UpdateTextureOffset(AbstractRoom abstract_room, in Vector2[]? camera_positions) {
         Attached_Fields attached_fields = abstract_room.Get_Attached_Fields();
         if (attached_fields.is_initialized) return;
 
-        if (cameraPositions == null || cameraPositions.Length == 0)
-        {
+        if (camera_positions == null || camera_positions.Length == 0) {
             Debug.Log("SBCameraScroll: Failed to initiate textureOffset properly. Setting as new Vector2()."); // automatically set
             attached_fields.is_initialized = true;
             return;
         }
 
-        attached_fields.texture_offset = cameraPositions[0];
-        foreach (Vector2 cameraPosition in cameraPositions)
-        {
-            attached_fields.texture_offset.x = Mathf.Min(attached_fields.texture_offset.x, cameraPosition.x);
-            attached_fields.texture_offset.y = Mathf.Min(attached_fields.texture_offset.y, cameraPosition.y);
+        attached_fields.texture_offset = camera_positions[0];
+        foreach (Vector2 camera_position in camera_positions) {
+            attached_fields.texture_offset.x = Mathf.Min(attached_fields.texture_offset.x, camera_position.x);
+            attached_fields.texture_offset.y = Mathf.Min(attached_fields.texture_offset.y, camera_position.y);
         }
 
-        string roomName = abstract_room.name;
-        if (textureOffsetModifier.ContainsKey(roomName))
-        {
-            attached_fields.texture_offset += textureOffsetModifier[roomName];
+        string room_name = abstract_room.name;
+        if (texture_offset_modifier.ContainsKey(room_name)) {
+            attached_fields.texture_offset += texture_offset_modifier[room_name];
         }
         attached_fields.is_initialized = true;
     }
@@ -461,15 +397,13 @@ public static class AbstractRoomMod
     // private
     //
 
-    private static void AbstractRoom_ctor(On.AbstractRoom.orig_ctor orig, AbstractRoom abstract_room, string name, int[] connections, int index, int swarm_room_index, int shelter_index, int gate_index)
-    {
+    private static void AbstractRoom_Ctor(On.AbstractRoom.orig_ctor orig, AbstractRoom abstract_room, string name, int[] connections, int index, int swarm_room_index, int shelter_index, int gate_index) {
         orig(abstract_room, name, connections, index, swarm_room_index, shelter_index, gate_index);
-        if (all_attached_fields.ContainsKey(abstract_room)) return;
-        all_attached_fields.Add(abstract_room, new Attached_Fields());
+        if (_all_attached_fields.ContainsKey(abstract_room)) return;
+        _all_attached_fields.Add(abstract_room, new Attached_Fields());
     }
 
-    private static void AbstractRoom_Abstractize(On.AbstractRoom.orig_Abstractize orig, AbstractRoom abstract_room)
-    {
+    private static void AbstractRoom_Abstractize(On.AbstractRoom.orig_Abstractize orig, AbstractRoom abstract_room) {
         DestroyWormGrassInAbstractRoom(abstract_room);
         orig(abstract_room);
     }
@@ -478,8 +412,7 @@ public static class AbstractRoomMod
     //
     //
 
-    public sealed class Attached_Fields
-    {
+    public sealed class Attached_Fields {
         public bool is_initialized = false;
         public Vector2 texture_offset = new();
         public WormGrass? worm_grass = null;
