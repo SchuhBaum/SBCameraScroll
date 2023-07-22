@@ -130,16 +130,18 @@ public class MainModOptions : OptionInterface {
     //
 
     public void ClearCacheButton_OnClick(UIfocusable _) {
-        FileInfo[] files = new DirectoryInfo(mod_directory_path + "world").GetFiles("*.*", SearchOption.AllDirectories);
-        for (int file_index = files.Length - 1; file_index >= 0; --file_index) {
-            files[file_index].Delete();
+        DirectoryInfo[] region_directories = new DirectoryInfo(mod_directory_path + "world").GetDirectories();
+        for (int directory_index = region_directories.Length - 1; directory_index >= 0; --directory_index) {
+            region_directories[directory_index].Delete(recursive: true);
         }
 
-        files = new DirectoryInfo(mod_directory_path + "levels").GetFiles("*.*", SearchOption.AllDirectories);
-        for (int file_index = files.Length - 1; file_index >= 0; --file_index) {
-            files[file_index].Delete();
+        FileInfo[] arena_files = new DirectoryInfo(mod_directory_path + "levels").GetFiles("*.*", SearchOption.AllDirectories);
+        for (int file_index = arena_files.Length - 1; file_index >= 0; --file_index) {
+            arena_files[file_index].Delete();
         }
+
         ClearCacheButton_UpdateColor();
+        CreateCacheButton_UpdateColor();
     }
 
     public void ClearCacheButton_UpdateColor() {
@@ -172,15 +174,16 @@ public class MainModOptions : OptionInterface {
 
             if (world_loader.world is not World world) continue;
             Debug.Log("SBCameraScroll: Check rooms in region " + region.name + " for missing merged textures.");
-            can_send_message_now = true;
+            can_send_message_now = false;
             has_to_send_message_later = false;
 
             foreach (AbstractRoom abstract_room in world.abstractRooms) {
                 MergeCameraTextures(abstract_room, region.name);
             }
-            can_send_message_now = false;
         }
+
         CreateCacheButton_UpdateColor(all_regions);
+        ClearCacheButton_UpdateColor();
     }
 
     public void CreateCacheButton_UpdateColor(Region[]? all_regions = null) {
