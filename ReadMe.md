@@ -8,10 +8,10 @@ Creates a smooth, scrolling camera that moves with the slugcat. Based on pipi to
 Here is a youtube video showing Rain World v1.5 + SBCameraScroll (+ other mods) in action:  
 https://www.youtube.com/watch?v=ePJbY4GSMck
 
-This mod generates room textures for each room with multiple cameras. These textures are cached in the folders `levels` and `world` inside the folder:  
+This mod generates (i.e. merges) camera textures for each room with multiple cameras. These textures are cached in the folders `levels` and `world` inside the folder:  
 'Steam\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods\SBCameraScroll\'
 
-If you want to manually merge all room textures then you can go to the mod's options menu (in the Remix menu click on the name for this mod) and press the button `Create Cache`. In addition, there is the option `Region Mods` (enabled by default) that should update cached textures when mods modify existing rooms.  
+If you want to manually generate all merged textures then you can go to the mod's options menu (in the Remix menu click on the name for this mod) and press the button `Create Cache`. In addition, there is the option `Region Mods` (enabled by default) that should update cached textures when mods modify existing rooms.  
 If you want to delete all merged textures and let them be generated again then you can press the button `Clear Cache`.
 
 This mod includes additional cameras:
