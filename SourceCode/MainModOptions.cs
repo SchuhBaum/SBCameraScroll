@@ -1,12 +1,18 @@
 using Menu.Remix.MixedUI;
+using RWCustom;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using UnityEngine;
+using static RWCustom.Custom;
+using static SBCameraScroll.AbstractRoomMod;
 using static SBCameraScroll.MainMod;
 using static SBCameraScroll.PositionTypeCamera;
 using static SBCameraScroll.RoomCameraMod;
 using static SBCameraScroll.VanillaTypeCamera;
+using static SlugcatStats.Name;
+using static WorldLoader.LoadingContext;
 
 namespace SBCameraScroll;
 
@@ -83,6 +89,7 @@ public class MainModOptions : OptionInterface {
     private int _last_camera_type = 0;
 
     private OpSimpleButton? _clear_cache_button = null;
+    private OpSimpleButton? _create_cache_button = null;
 
     private readonly List<Configurable<string>> _combo_box_configurables = new();
     private readonly List<List<ListItem>> _combo_box_lists = new();
@@ -152,6 +159,45 @@ public class MainModOptions : OptionInterface {
         _clear_cache_button.greyedOut = false;
     }
 
+    public void CreateCacheButton_OnClick(UIfocusable _) {
+        Region[] all_regions = Region.LoadAllRegions(White);
+        foreach (Region region in all_regions) {
+            WorldLoader world_loader = new(null, White, singleRoomWorld: false, region.name, region, rainWorld.setup, FASTTRAVEL);
+            world_loader.NextActivity();
+
+            while (!world_loader.Finished) {
+                world_loader.Update();
+                Thread.Sleep(1);
+            }
+
+            if (world_loader.world is not World world) continue;
+            Debug.Log("SBCameraScroll: Check rooms in region " + region.name + " for missing merged textures.");
+            can_send_message_now = true;
+            has_to_send_message_later = false;
+
+            foreach (AbstractRoom abstract_room in world.abstractRooms) {
+                MergeCameraTextures(abstract_room, region.name);
+            }
+            can_send_message_now = false;
+        }
+        CreateCacheButton_UpdateColor(all_regions);
+    }
+
+    public void CreateCacheButton_UpdateColor(Region[]? all_regions = null) {
+        if (_create_cache_button == null) return;
+        all_regions ??= Region.LoadAllRegions(White);
+
+        foreach (Region region in all_regions) {
+            if (Directory.Exists(mod_directory_path + "world" + Path.DirectorySeparatorChar + region.name.ToLower() + "-rooms")) continue;
+            _create_cache_button.colorFill = new Color(0.0f, 1f, 0.0f, 0.5f);
+            _create_cache_button.greyedOut = false;
+            return;
+        }
+
+        _create_cache_button.colorFill = new Color(0.0f, 0.0f, 0.0f, 0.0f);
+        _create_cache_button.greyedOut = true;
+    }
+
     public override void Initialize() {
         base.Initialize();
         int number_of_tabs = 4;
@@ -214,7 +260,14 @@ public class MainModOptions : OptionInterface {
         AddNewLine(3f);
 
         // same size as apply / back button in ConfigMachine 
-        _clear_cache_button = new(new Vector2(_pos.x + (_margin_x.y - _margin_x.x) / 2f - 55f, _pos.y), new Vector2(110f, 30f), "CLEAR CACHE") {
+        _create_cache_button = new(new Vector2(_pos.x + (_margin_x.y - _margin_x.x) / 2f - 55f - 65f, _pos.y), new Vector2(110f, 30f), "CREATE CACHE") {
+            description = "WARNING: This can take several (10+) minutes. Merges camera textures for all rooms\nin all regions at once. This way you don't have to wait when using region gates later.",
+        };
+        CreateCacheButton_UpdateColor();
+        _create_cache_button.OnClick += CreateCacheButton_OnClick;
+        Tabs[tab_index].AddItems(_create_cache_button);
+
+        _clear_cache_button = new(new Vector2(_pos.x + (_margin_x.y - _margin_x.x) / 2f - 55f + 65f, _pos.y), new Vector2(110f, 30f), "CLEAR CACHE") {
             description = "WARNING: Deletes all merged textures inside the folders \"levels\" and \"world\". These folders can be found inside the folder \"mods/SBCameraScroll/\" or \"312520/2928752589\"."
         };
         ClearCacheButton_UpdateColor();

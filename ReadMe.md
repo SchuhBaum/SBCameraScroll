@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 2.6.3
+###### Version: 2.6.4
 This is a mod for Rain World v1.9.
 
 ### Description
@@ -11,7 +11,8 @@ https://www.youtube.com/watch?v=ePJbY4GSMck
 This mod generates room textures for each room with multiple cameras. These textures are cached in the folders `levels` and `world` inside the folder:  
 'Steam\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods\SBCameraScroll\'
 
-If you want to clear the cache and let the textures be generated again then you can go to the mod's options menu (in the Remix menu click on the name for this mod) and press the button `Clear Cache`. In addition, there is the option `Region Mods` (enabled by default) that should update cached textures when mods modify existing rooms.
+If you want to manually merge all room textures then you can go to the mod's options menu (in the Remix menu click on the name for this mod) and press the button `Create Cache`. In addition, there is the option `Region Mods` (enabled by default) that should update cached textures when mods modify existing rooms.  
+If you want to delete all merged textures and let them be generated again then you can press the button `Clear Cache`.
 
 This mod includes additional cameras:
 - (Vanilla Type Camera) Behaves almost identical to the vanilla camera -- with one major difference. You can center the camera on the slugcat by pressing the map button. The keybinding can be configured using the mod [Improved Input Config](https://steamcommunity.com/sharedfiles/filedetails/?id=2944727862).  
@@ -22,7 +23,7 @@ This mod includes additional cameras:
 
 ### Installation
 0. Update Rain World to version 1.9 if needed.
-1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.6.3).
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.6.4).
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
@@ -37,11 +38,12 @@ There are two licenses available - MIT and Unlicense. You can choose which one y
 
 ### Changelog
 #### (Rain World v1.9)
-v2.6.3:
+v2.6.4:
 - Snow on the level texture should be less pixelated now. (I am blind. I missed the snow texture in the class RoomCamera. It needs to fit the size of the level texture.)
 - Adjusted some snow parameters and some DeepWater shader variables slightly (for consistency).
 - Potentially fixed a bug where the level texture could be misaligned when the AboveCloudsView effect was used.
 - Added an in-game message when camera textures have been merged.
+- Added the button `Create Cache` to the Remix options menu.
 
 v2.6.0:
 - (vanilla type camera) The button for centering the camera can be configured using the mod `Improved Input Config`.
