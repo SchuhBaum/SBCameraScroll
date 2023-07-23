@@ -161,6 +161,57 @@ public class MainModOptions : OptionInterface {
         _clear_cache_button.greyedOut = false;
     }
 
+    // I only have one active RenderTexture; I can't use async to merge all camera
+    // textures in parallel; I can use it to load the abstract rooms in parallel 
+    // though; on the other hand it probably is not much faster; the merging is the
+    // part that takes quite a while;
+    // just tested it; it wasn't faster; given that the game still waits it isn't
+    // even more responsive in terms of GUI for example; I guess I leave it as is 
+    // for now;
+    //
+    // Not sure why I have to wrap these things in a function like this; for some
+    // reason I can't create a Task that returns something otherwise;
+    // public async Task<List<AbstractRoom>> LoadAbstractRooms_Async(WorldLoader world_loader) {
+    //     List<AbstractRoom> LoadAbstractRooms() {
+    //         world_loader.NextActivity();
+    //         while (!world_loader.Finished) {
+    //             world_loader.Update();
+    //             Thread.Sleep(1);
+    //         }
+    //         return world_loader.abstractRooms;
+    //     }
+    //     return await Task.Run(LoadAbstractRooms);
+    // }
+
+    // public async void CreateCacheButton_OnClick(UIfocusable _) {
+    //     Region[] all_regions = Region.LoadAllRegions(White);
+    //     Task<List<AbstractRoom>>[] all_load_abstract_rooms_tasks = new Task<List<AbstractRoom>>[all_regions.Length];
+
+    //     for (int region_index = all_regions.Length - 1; region_index >= 0; --region_index) {
+    //         Region region = all_regions[region_index];
+    //         WorldLoader world_loader = new(null, White, singleRoomWorld: false, region.name, region, rainWorld.setup, FASTTRAVEL);
+    //         all_load_abstract_rooms_tasks[region_index] = LoadAbstractRooms_Async(world_loader);
+    //     }
+
+    //     await Task.WhenAll(all_load_abstract_rooms_tasks);
+    //     for (int region_index = all_regions.Length - 1; region_index >= 0; --region_index) {
+    //         Region region = all_regions[region_index];
+    //         Task<List<AbstractRoom>> load_abstract_rooms_task = all_load_abstract_rooms_tasks[region_index];
+
+    //         Debug.Log("SBCameraScroll: Check rooms in region " + region.name + " for missing merged textures.");
+    //         can_send_message_now = false;
+    //         has_to_send_message_later = false;
+
+    //         foreach (AbstractRoom abstract_room in load_abstract_rooms_task.Result) {
+    //             MergeCameraTextures(abstract_room, region.name);
+    //         }
+    //         load_abstract_rooms_task.Dispose();
+    //     }
+
+    //     CreateCacheButton_UpdateColor(all_regions);
+    //     ClearCacheButton_UpdateColor();
+    // }
+
     public void CreateCacheButton_OnClick(UIfocusable _) {
         Region[] all_regions = Region.LoadAllRegions(White);
         foreach (Region region in all_regions) {
@@ -172,12 +223,11 @@ public class MainModOptions : OptionInterface {
                 Thread.Sleep(1);
             }
 
-            if (world_loader.world is not World world) continue;
             Debug.Log("SBCameraScroll: Check rooms in region " + region.name + " for missing merged textures.");
             can_send_message_now = false;
             has_to_send_message_later = false;
 
-            foreach (AbstractRoom abstract_room in world.abstractRooms) {
+            foreach (AbstractRoom abstract_room in world_loader.abstractRooms) {
                 MergeCameraTextures(abstract_room, region.name);
             }
         }
