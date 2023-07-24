@@ -1,6 +1,6 @@
 using Menu.Remix.MixedUI;
-using RWCustom;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -36,6 +36,12 @@ public class MainModOptions : OptionInterface {
             "Vanilla-style camera. You can center the camera by pressing the map button. Pressing the map button again will revert to vanilla camera positions.\nWhen the player is close to the edge of the screen the camera jumps a constant distance.",
             "You can switch between the other two camera types by pressing the map button.\nThe keybinding can be configured using the mod 'Improved Input Config'."
     };
+
+    // does not work for some reason;
+    // private MonoBehaviour _create_cache_coroutine_wrapper = new GameObject().AddComponent<MonoBehaviour>();
+    private class Coroutine_Wrapper : MonoBehaviour { }
+    private static MonoBehaviour _create_cache_coroutine_wrapper = new GameObject().AddComponent<Coroutine_Wrapper>();
+
 
     //
     // options
@@ -90,6 +96,7 @@ public class MainModOptions : OptionInterface {
 
     private OpSimpleButton? _clear_cache_button = null;
     private OpSimpleButton? _create_cache_button = null;
+    private string? _create_cache_button_description = null;
 
     private readonly List<Configurable<string>> _combo_box_configurables = new();
     private readonly List<List<ListItem>> _combo_box_lists = new();
@@ -110,6 +117,7 @@ public class MainModOptions : OptionInterface {
     private MainModOptions() {
         On.OptionInterface._SaveConfigFile -= Save_Config_File;
         On.OptionInterface._SaveConfigFile += Save_Config_File;
+        OnDeactivate += CreateCache_StopCoroutines;
     }
 
     private void Save_Config_File(On.OptionInterface.orig__SaveConfigFile orig, OptionInterface option_interface) {
@@ -161,79 +169,14 @@ public class MainModOptions : OptionInterface {
         _clear_cache_button.greyedOut = false;
     }
 
-    // I only have one active RenderTexture; I can't use async to merge all camera
-    // textures in parallel; I can use it to load the abstract rooms in parallel 
-    // though; on the other hand it probably is not much faster; the merging is the
-    // part that takes quite a while;
-    // just tested it; it wasn't faster; given that the game still waits it isn't
-    // even more responsive in terms of GUI for example; I guess I leave it as is 
-    // for now;
-    //
-    // Not sure why I have to wrap these things in a function like this; for some
-    // reason I can't create a Task that returns something otherwise;
-    // public async Task<List<AbstractRoom>> LoadAbstractRooms_Async(WorldLoader world_loader) {
-    //     List<AbstractRoom> LoadAbstractRooms() {
-    //         world_loader.NextActivity();
-    //         while (!world_loader.Finished) {
-    //             world_loader.Update();
-    //             Thread.Sleep(1);
-    //         }
-    //         return world_loader.abstractRooms;
-    //     }
-    //     return await Task.Run(LoadAbstractRooms);
-    // }
-
-    // public async void CreateCacheButton_OnClick(UIfocusable _) {
-    //     Region[] all_regions = Region.LoadAllRegions(White);
-    //     Task<List<AbstractRoom>>[] all_load_abstract_rooms_tasks = new Task<List<AbstractRoom>>[all_regions.Length];
-
-    //     for (int region_index = all_regions.Length - 1; region_index >= 0; --region_index) {
-    //         Region region = all_regions[region_index];
-    //         WorldLoader world_loader = new(null, White, singleRoomWorld: false, region.name, region, rainWorld.setup, FASTTRAVEL);
-    //         all_load_abstract_rooms_tasks[region_index] = LoadAbstractRooms_Async(world_loader);
-    //     }
-
-    //     await Task.WhenAll(all_load_abstract_rooms_tasks);
-    //     for (int region_index = all_regions.Length - 1; region_index >= 0; --region_index) {
-    //         Region region = all_regions[region_index];
-    //         Task<List<AbstractRoom>> load_abstract_rooms_task = all_load_abstract_rooms_tasks[region_index];
-
-    //         Debug.Log("SBCameraScroll: Check rooms in region " + region.name + " for missing merged textures.");
-    //         can_send_message_now = false;
-    //         has_to_send_message_later = false;
-
-    //         foreach (AbstractRoom abstract_room in load_abstract_rooms_task.Result) {
-    //             MergeCameraTextures(abstract_room, region.name);
-    //         }
-    //         load_abstract_rooms_task.Dispose();
-    //     }
-
-    //     CreateCacheButton_UpdateColor(all_regions);
-    //     ClearCacheButton_UpdateColor();
-    // }
+    public void CreateCache_StopCoroutines() {
+        _create_cache_coroutine_wrapper.StopAllCoroutines();
+        _create_cache_button_description = null;
+    }
 
     public void CreateCacheButton_OnClick(UIfocusable _) {
-        Region[] all_regions = Region.LoadAllRegions(White);
-        foreach (Region region in all_regions) {
-            WorldLoader world_loader = new(null, White, singleRoomWorld: false, region.name, region, rainWorld.setup, FASTTRAVEL);
-            world_loader.NextActivity();
-
-            while (!world_loader.Finished) {
-                world_loader.Update();
-                Thread.Sleep(1);
-            }
-
-            Debug.Log("SBCameraScroll: Check rooms in region " + region.name + " for missing merged textures.");
-            can_send_message_now = false;
-            has_to_send_message_later = false;
-
-            foreach (AbstractRoom abstract_room in world_loader.abstractRooms) {
-                MergeCameraTextures(abstract_room, region.name);
-            }
-        }
-
-        CreateCacheButton_UpdateColor(all_regions);
-        ClearCacheButton_UpdateColor();
+        CreateCache_StopCoroutines();
+        _create_cache_coroutine_wrapper.StartCoroutine(CreateCache_Coroutine());
     }
 
     public void CreateCacheButton_UpdateColor(Region[]? all_regions = null) {
@@ -312,10 +255,9 @@ public class MainModOptions : OptionInterface {
 
         AddNewLine(3f);
 
-        // same size as apply / back button in ConfigMachine 
-        _create_cache_button = new(new Vector2(_pos.x + (_margin_x.y - _margin_x.x) / 2f - 55f - 65f, _pos.y), new Vector2(110f, 30f), "CREATE CACHE") {
-            description = "WARNING: This can take several (10+) minutes. Merges camera textures for all rooms\nin all regions at once. This way you don't have to wait when using region gates later.",
-        };
+        // same size as apply and back button in ConfigMachine; the text and description
+        // for _create_cache_button is updated later;
+        _create_cache_button = new(new Vector2(_pos.x + (_margin_x.y - _margin_x.x) / 2f - 55f - 65f, _pos.y), new Vector2(110f, 30f), "");
         CreateCacheButton_UpdateColor();
         _create_cache_button.OnClick += CreateCacheButton_OnClick;
         Tabs[tab_index].AddItems(_create_cache_button);
@@ -504,11 +446,53 @@ public class MainModOptions : OptionInterface {
                 _camera_type_combo_box.description = _camera_type_descriptions[camera_type];
             }
         }
+        Update_CreateCacheButton();
+    }
+
+    private void Update_CreateCacheButton() {
+        if (_create_cache_button == null) return;
+        if (_create_cache_button_description != null) {
+            _create_cache_button.text = "Please wait...";
+            _create_cache_button.description = _create_cache_button_description;
+            return;
+        }
+
+        _create_cache_button.text = "CREATE CACHE";
+        _create_cache_button.description = "WARNING: This can take several (10+) minutes. Merges camera textures for all rooms\nin all regions at once. This way you don't have to wait when using region gates later.";
     }
 
     //
     // private
     //
+
+    private IEnumerator CreateCache_Coroutine() {
+        Region[] all_regions = Region.LoadAllRegions(White);
+        for (int region_index = 0; region_index < all_regions.Length; ++region_index) {
+            Region region = all_regions[region_index];
+            WorldLoader world_loader = new(null, White, singleRoomWorld: false, region.name, region, rainWorld.setup, FASTTRAVEL);
+            world_loader.NextActivity();
+
+            while (!world_loader.Finished) {
+                world_loader.Update();
+                Thread.Sleep(1);
+            }
+
+            Debug.Log("SBCameraScroll: Checking rooms in region " + region.name + " for missing merged textures.");
+            _create_cache_button_description = "Checking rooms in region " + region.name + " (" + (region_index + 1) + "/" + all_regions.Length + ") for missing merged textures.";
+
+            can_send_message_now = false;
+            has_to_send_message_later = false;
+
+            foreach (AbstractRoom abstract_room in world_loader.abstractRooms) {
+                yield return new WaitForSeconds(0.001f);
+                MergeCameraTextures(abstract_room, region.name);
+            }
+        }
+
+        _create_cache_button_description = null;
+        CreateCacheButton_UpdateColor(all_regions);
+        ClearCacheButton_UpdateColor();
+    }
 
     private void InitializeMarginAndPos() {
         _margin_x = new Vector2(50f, 550f);

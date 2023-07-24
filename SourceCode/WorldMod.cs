@@ -23,7 +23,7 @@ internal static class WorldMod {
         orig(world, slugcat_name, abstract_rooms_list, swarm_rooms, shelters, gates);
         if (MainMod.Option_MergeWhileLoading && world.game?.IsStorySession == true) // regionState is a function and needs world.game != null
         {
-            Debug.Log("SBCameraScroll: Check rooms for missing merged textures.");
+            Debug.Log("SBCameraScroll: Checking rooms for missing merged textures.");
             can_send_message_now = true;
             has_to_send_message_later = false;
 
