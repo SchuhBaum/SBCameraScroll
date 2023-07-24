@@ -175,6 +175,11 @@ public class MainModOptions : OptionInterface {
     }
 
     public void CreateCacheButton_OnClick(UIfocusable _) {
+        if (_create_cache_button_description != null) {
+            CreateCache_StopCoroutines();
+            return;
+        }
+
         CreateCache_StopCoroutines();
         _create_cache_coroutine_wrapper.StartCoroutine(CreateCache_Coroutine());
     }
