@@ -16,7 +16,7 @@ using static SBCameraScroll.RainWorldMod;
 
 namespace SBCameraScroll;
 
-[BepInPlugin("SBCameraScroll", "SBCameraScroll", "2.6.7")]
+[BepInPlugin("SBCameraScroll", "SBCameraScroll", "2.6.8")]
 public class MainMod : BaseUnityPlugin {
     //
     // meta data
@@ -24,7 +24,7 @@ public class MainMod : BaseUnityPlugin {
 
     public static readonly string mod_id = "SBCameraScroll";
     public static readonly string author = "SchuhBaum";
-    public static readonly string version = "2.6.7";
+    public static readonly string version = "2.6.8";
     public static readonly string mod_directory_path = Directory.GetParent(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)).FullName + Path.DirectorySeparatorChar;
 
     //
@@ -36,7 +36,7 @@ public class MainMod : BaseUnityPlugin {
     public static bool Option_MergeWhileLoading => merge_while_loading.Value;
     public static bool Option_RegionMods => region_mods.Value;
 
-    public static bool Option_ScrollOneScreenRooms => scroll_one_screen_rooms.Value || is_split_screen_coop_enabled;
+    public static bool Option_ScrollOneScreenRooms => scroll_one_screen_rooms.Value;
     public static bool Option_CameraOffset => cameraoffset_position.Value;
 
     //

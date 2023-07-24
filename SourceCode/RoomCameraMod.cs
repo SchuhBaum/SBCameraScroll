@@ -32,8 +32,8 @@ public static class RoomCameraMod {
     // variables
     //
 
-    internal static readonly Dictionary<RoomCamera, Attached_Fields> all_attached_fields = new();
-    public static Attached_Fields Get_Attached_Fields(this RoomCamera room_camera) => all_attached_fields[room_camera];
+    internal static readonly Dictionary<RoomCamera, Attached_Fields> _all_attached_fields = new();
+    public static Attached_Fields Get_Attached_Fields(this RoomCamera room_camera) => _all_attached_fields[room_camera];
     public static bool Is_Type_Camera_Not_Used(this RoomCamera room_camera) => room_camera.Get_Attached_Fields().is_room_blacklisted || room_camera.voidSeaMode;
 
     // call only if is_split_screen_coop_enabled is true;
@@ -55,7 +55,7 @@ public static class RoomCameraMod {
         On.RoomCamera.ApplyDepth += RoomCamera_ApplyDepth;
         On.RoomCamera.ApplyPalette += RoomCamera_ApplyPalette;
         On.RoomCamera.ApplyPositionChange += RoomCamera_ApplyPositionChange;
-        On.RoomCamera.ctor += RoomCamera_ctor;
+        On.RoomCamera.ctor += RoomCamera_Ctor;
 
         On.RoomCamera.FireUpSafariHUD += RoomCamera_FireUpSafariHUD;
         On.RoomCamera.FireUpSinglePlayerHUD += RoomCamera_FireUpSinglePlayerHUD;
@@ -172,8 +172,8 @@ public static class RoomCameraMod {
         // I consider this a bug;
         // the overseer should not jump around when focusing on a shortcut;
         // because the audio stops playing as well;
-        else if (creature.abstractCreature.abstractAI is OverseerAbstractAI abstractAI && abstractAI.safariOwner && abstractAI.doorSelectionIndex != -1) {
-            return abstractAI.parent.Room.realizedRoom.MiddleOfTile(abstractAI.parent.Room.realizedRoom.ShortcutLeadingToNode(abstractAI.doorSelectionIndex).startCoord);
+        else if (creature.abstractCreature.abstractAI is OverseerAbstractAI abstract_ai && abstract_ai.safariOwner && abstract_ai.doorSelectionIndex != -1) {
+            return abstract_ai.parent.Room.realizedRoom.MiddleOfTile(abstract_ai.parent.Room.realizedRoom.ShortcutLeadingToNode(abstract_ai.doorSelectionIndex).startCoord);
         }
         return creature.mainBodyChunk.pos;
     }
@@ -230,9 +230,9 @@ public static class RoomCameraMod {
         if (room_camera.followAbstractCreature.realizedCreature is not Creature creature) return;
 
         Vector2 position = -0.5f * room_camera.sSize;
-        if (creature.inShortcut && GetShortcutVessel(room_camera.game.shortcuts, room_camera.followAbstractCreature) is ShortcutHandler.ShortCutVessel shortcutVessel) {
-            Vector2 current_position = room_camera.room.MiddleOfTile(shortcutVessel.pos);
-            Vector2 next_in_shortcut_position = room_camera.room.MiddleOfTile(ShortcutHandler.NextShortcutPosition(shortcutVessel.pos, shortcutVessel.lastPos, room_camera.room));
+        if (creature.inShortcut && GetShortcutVessel(room_camera.game.shortcuts, room_camera.followAbstractCreature) is ShortcutHandler.ShortCutVessel shortcut_vessel) {
+            Vector2 current_position = room_camera.room.MiddleOfTile(shortcut_vessel.pos);
+            Vector2 next_in_shortcut_position = room_camera.room.MiddleOfTile(ShortcutHandler.NextShortcutPosition(shortcut_vessel.pos, shortcut_vessel.lastPos, room_camera.room));
 
             // shortcuts get only updated every 3 frames => calculate exact position here // in CoopTweaks it can also be 2 frames in order to remove slowdown, i.e. compensate for the mushroom effect
             position += Vector2.Lerp(current_position, next_in_shortcut_position, room_camera.game.updateShortCut / number_of_frames_per_shortcut_udpate);
@@ -241,9 +241,9 @@ public static class RoomCameraMod {
             position += GetCreaturePosition(creature);
         }
 
-        Attached_Fields attachedFields = room_camera.Get_Attached_Fields();
-        attachedFields.last_on_screen_position = attachedFields.on_screen_position;
-        attachedFields.on_screen_position = position;
+        Attached_Fields attached_fields = room_camera.Get_Attached_Fields();
+        attached_fields.last_on_screen_position = attached_fields.on_screen_position;
+        attached_fields.on_screen_position = position;
     }
 
     //
@@ -263,7 +263,7 @@ public static class RoomCameraMod {
             cursor.RemoveRange(3); // remove CamPos(currentCameraPosition)
 
             cursor.Emit(OpCodes.Ldloc_1);
-            cursor.EmitDelegate<Func<RoomCamera, Vector2, Vector2>>((room_camera, cameraPosition) => {
+            cursor.EmitDelegate<Func<RoomCamera, Vector2, Vector2>>((room_camera, camera_position) => {
                 if (room_camera.Is_Type_Camera_Not_Used()) {
                     // Mathf.Clamp(vector.x, CamPos(currentCameraPosition).x + hDisplace + 8f - 20f, CamPos(currentCameraPosition).x + hDisplace + 8f + 20f);
                     return room_camera.CamPos(room_camera.currentCameraPosition);
@@ -271,8 +271,8 @@ public static class RoomCameraMod {
 
                 // hDisplace gives a straight offset when using non-default screen resolutions;
                 // we don't want offsets; we just want to skip the clamping;
-                cameraPosition.x -= room_camera.hDisplace;
-                return cameraPosition;
+                camera_position.x -= room_camera.hDisplace;
+                return camera_position;
             });
         } else {
             if (can_log_il_hooks) {
@@ -290,13 +290,13 @@ public static class RoomCameraMod {
             cursor.RemoveRange(3);
 
             cursor.Emit(OpCodes.Ldloc_1);
-            cursor.EmitDelegate<Func<RoomCamera, Vector2, Vector2>>((room_camera, cameraPosition) => {
+            cursor.EmitDelegate<Func<RoomCamera, Vector2, Vector2>>((room_camera, camera_position) => {
                 if (room_camera.Is_Type_Camera_Not_Used()) {
                     return room_camera.CamPos(room_camera.currentCameraPosition);
                 }
 
-                cameraPosition.x -= room_camera.hDisplace;
-                return cameraPosition;
+                camera_position.x -= room_camera.hDisplace;
+                return camera_position;
             });
         } else {
             if (can_log_il_hooks) {
@@ -314,11 +314,11 @@ public static class RoomCameraMod {
             cursor.RemoveRange(3);
 
             cursor.Emit(OpCodes.Ldloc_1);
-            cursor.EmitDelegate<Func<RoomCamera, Vector2, Vector2>>((room_camera, cameraPosition) => {
+            cursor.EmitDelegate<Func<RoomCamera, Vector2, Vector2>>((room_camera, camera_position) => {
                 if (room_camera.Is_Type_Camera_Not_Used()) {
                     return room_camera.CamPos(room_camera.currentCameraPosition);
                 }
-                return cameraPosition;
+                return camera_position;
             });
         } else {
             if (can_log_il_hooks) {
@@ -336,11 +336,11 @@ public static class RoomCameraMod {
             cursor.RemoveRange(3);
 
             cursor.Emit(OpCodes.Ldloc_1);
-            cursor.EmitDelegate<Func<RoomCamera, Vector2, Vector2>>((room_camera, cameraPosition) => {
+            cursor.EmitDelegate<Func<RoomCamera, Vector2, Vector2>>((room_camera, camera_position) => {
                 if (room_camera.Is_Type_Camera_Not_Used()) {
                     return room_camera.CamPos(room_camera.currentCameraPosition);
                 }
-                return cameraPosition;
+                return camera_position;
             });
         } else {
             if (can_log_il_hooks) {
@@ -565,10 +565,10 @@ public static class RoomCameraMod {
         }
 
         // if I blacklist too early then the camera might jump in the current room
-        string roomName = room_camera.room.abstractRoom.name;
-        if (blacklisted_rooms.Contains(roomName) || WorldLoader.FindRoomFile(roomName, false, "_0.png") == null && room_camera.room.cameraPositions.Length > 1) {
+        string room_name = room_camera.room.abstractRoom.name;
+        if (blacklisted_rooms.Contains(room_name) || WorldLoader.FindRoomFile(room_name, false, "_0.png") == null && room_camera.room.cameraPositions.Length > 1) {
             if (is_changing_room) {
-                Debug.Log("SBCameraScroll: The room " + roomName + " is blacklisted.");
+                Debug.Log("SBCameraScroll: The room " + room_name + " is blacklisted.");
             }
 
             room_camera.Get_Attached_Fields().is_room_blacklisted = true;
@@ -582,10 +582,10 @@ public static class RoomCameraMod {
         ResetCameraPosition(room_camera);
     }
 
-    private static void RoomCamera_ctor(On.RoomCamera.orig_ctor orig, RoomCamera room_camera, RainWorldGame game, int camera_number) {
+    private static void RoomCamera_Ctor(On.RoomCamera.orig_ctor orig, RoomCamera room_camera, RainWorldGame game, int camera_number) {
         orig(room_camera, game, camera_number);
-        if (all_attached_fields.ContainsKey(room_camera)) return;
-        all_attached_fields.Add(room_camera, new(room_camera));
+        if (_all_attached_fields.ContainsKey(room_camera)) return;
+        _all_attached_fields.Add(room_camera, new(room_camera));
     }
 
     private static void RoomCamera_FireUpSafariHUD(On.RoomCamera.orig_FireUpSafariHUD orig, RoomCamera room_camera) {
@@ -636,7 +636,7 @@ public static class RoomCameraMod {
         }
 
         room_camera.currentCameraPosition = camera_position_index;
-        if (room_camera.Get_Attached_Fields().type_camera is VanillaTypeCamera vanillaTypeCamera && vanillaTypeCamera.use_vanilla_positions && vanillaTypeCamera.follow_abstract_creature_id == room_camera.followAbstractCreature.ID) // camera moves otherwise after vanilla transition since variables are not reset // ignore reset during a smooth transition
+        if (room_camera.Get_Attached_Fields().type_camera is VanillaTypeCamera vanilla_type_camera && vanilla_type_camera.use_vanilla_positions && vanilla_type_camera.follow_abstract_creature_id == room_camera.followAbstractCreature.ID) // camera moves otherwise after vanilla transition since variables are not reset // ignore reset during a smooth transition
         {
             ResetCameraPosition(room_camera);
         }

@@ -14,7 +14,7 @@ internal static class RainWorldGameMod {
 
     private static void RainWorldGame_Ctor(On.RainWorldGame.orig_ctor orig, RainWorldGame game, ProcessManager manager) {
         AbstractRoomMod._all_attached_fields.Clear();
-        RoomCameraMod.all_attached_fields.Clear();
+        RoomCameraMod._all_attached_fields.Clear();
         WormGrassMod._all_attached_fields.Clear();
 
         Debug.Log("SBCameraScroll: Initialize variables.");
@@ -26,7 +26,7 @@ internal static class RainWorldGameMod {
         orig(game);
 
         AbstractRoomMod._all_attached_fields.Clear();
-        RoomCameraMod.all_attached_fields.Clear();
+        RoomCameraMod._all_attached_fields.Clear();
         WormGrassMod._all_attached_fields.Clear();
     }
 }
