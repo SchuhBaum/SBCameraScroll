@@ -1,3 +1,4 @@
+using Menu;
 using Menu.Remix.MixedUI;
 using System;
 using System.Collections;
@@ -115,22 +116,9 @@ public class MainModOptions : OptionInterface {
     //
 
     private MainModOptions() {
-        On.OptionInterface._SaveConfigFile -= Save_Config_File;
-        On.OptionInterface._SaveConfigFile += Save_Config_File;
+        On.OptionInterface._SaveConfigFile -= OptionInterface_SaveConfigFile;
+        On.OptionInterface._SaveConfigFile += OptionInterface_SaveConfigFile;
         OnDeactivate += CreateCache_StopCoroutines;
-    }
-
-    private void Save_Config_File(On.OptionInterface.orig__SaveConfigFile orig, OptionInterface option_interface) {
-        // the event OnConfigChange is triggered too often;
-        // it is triggered when you click on the mod name in the
-        // remix menu;
-        // initializing the hooks takes like half a second;
-        // I don't want to do that too often;
-
-        orig(option_interface);
-        if (option_interface != main_mod_options) return;
-        Debug.Log("SBCameraScroll: Save_Config_File.");
-        main_mod_options.Log_All_Options();
     }
 
     //
@@ -167,6 +155,35 @@ public class MainModOptions : OptionInterface {
 
         _clear_cache_button.colorFill = new Color(1f, 0.0f, 0.0f, 0.5f);
         _clear_cache_button.greyedOut = false;
+    }
+
+    public IEnumerator CreateCache_Coroutine() {
+        Region[] all_regions = Region.LoadAllRegions(White);
+        for (int region_index = 0; region_index < all_regions.Length; ++region_index) {
+            Region region = all_regions[region_index];
+            WorldLoader world_loader = new(null, White, singleRoomWorld: false, region.name, region, rainWorld.setup, FASTTRAVEL);
+            world_loader.NextActivity();
+
+            while (!world_loader.Finished) {
+                world_loader.Update();
+                Thread.Sleep(1);
+            }
+
+            Debug.Log("SBCameraScroll: Checking rooms in region " + region.name + " for missing merged textures.");
+            _create_cache_button_description = "Checking rooms in region " + region.name + " (" + (region_index + 1) + "/" + all_regions.Length + ") for missing merged textures.";
+
+            can_send_message_now = false;
+            has_to_send_message_later = false;
+
+            foreach (AbstractRoom abstract_room in world_loader.abstractRooms) {
+                yield return new WaitForSeconds(0.001f);
+                MergeCameraTextures(abstract_room, region.name);
+            }
+        }
+
+        _create_cache_button_description = null;
+        CreateCacheButton_UpdateColor(all_regions);
+        ClearCacheButton_UpdateColor();
     }
 
     public void CreateCache_StopCoroutines() {
@@ -454,9 +471,15 @@ public class MainModOptions : OptionInterface {
         Update_CreateCacheButton();
     }
 
-    private void Update_CreateCacheButton() {
+    public void Update_CreateCacheButton() {
         if (_create_cache_button == null) return;
         if (_create_cache_button_description != null) {
+            // update description even when the element is currently not focused (i.e. not 
+            // hovered over with the mouse);
+            if (rainWorld.processManager.currentMainLoop is ModdingMenu modding_menu && modding_menu.description == _create_cache_button.description) {
+                modding_menu.ShowDescription(_create_cache_button_description);
+            }
+
             _create_cache_button.text = "Please wait...";
             _create_cache_button.description = _create_cache_button_description;
             return;
@@ -470,34 +493,23 @@ public class MainModOptions : OptionInterface {
     // private
     //
 
-    private IEnumerator CreateCache_Coroutine() {
-        Region[] all_regions = Region.LoadAllRegions(White);
-        for (int region_index = 0; region_index < all_regions.Length; ++region_index) {
-            Region region = all_regions[region_index];
-            WorldLoader world_loader = new(null, White, singleRoomWorld: false, region.name, region, rainWorld.setup, FASTTRAVEL);
-            world_loader.NextActivity();
-
-            while (!world_loader.Finished) {
-                world_loader.Update();
-                Thread.Sleep(1);
-            }
-
-            Debug.Log("SBCameraScroll: Checking rooms in region " + region.name + " for missing merged textures.");
-            _create_cache_button_description = "Checking rooms in region " + region.name + " (" + (region_index + 1) + "/" + all_regions.Length + ") for missing merged textures.";
-
-            can_send_message_now = false;
-            has_to_send_message_later = false;
-
-            foreach (AbstractRoom abstract_room in world_loader.abstractRooms) {
-                yield return new WaitForSeconds(0.001f);
-                MergeCameraTextures(abstract_room, region.name);
-            }
-        }
-
-        _create_cache_button_description = null;
-        CreateCacheButton_UpdateColor(all_regions);
-        ClearCacheButton_UpdateColor();
+    private void OptionInterface_SaveConfigFile(On.OptionInterface.orig__SaveConfigFile orig, OptionInterface option_interface) {
+        //
+        // the event OnConfigChange is triggered too often;
+        // it is triggered when you click on the mod name in the
+        // remix menu;
+        // initializing the hooks takes like half a second;
+        // I don't want to do that too often;
+        //
+        orig(option_interface);
+        if (option_interface != main_mod_options) return;
+        Debug.Log("SBCameraScroll: Save_Config_File.");
+        main_mod_options.Log_All_Options();
     }
+
+    //
+    //
+    //
 
     private void InitializeMarginAndPos() {
         _margin_x = new Vector2(50f, 550f);

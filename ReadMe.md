@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 2.6.8
+###### Version: 2.6.9
 This is a mod for Rain World v1.9.
 
 ### Description
@@ -23,7 +23,7 @@ This mod includes additional cameras:
 
 ### Installation
 0. Update Rain World to version 1.9 if needed.
-1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.6.8).
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.6.9).
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
@@ -38,16 +38,17 @@ There are two licenses available - MIT and Unlicense. You can choose which one y
 
 ### Changelog
 #### (Rain World v1.9)
-v2.6.8:
+v2.6.9:
 - Snow on the level texture should be less pixelated now. (I am blind. I missed the snow texture in the class RoomCamera. It needs to fit the size of the level texture.)
 - Adjusted some snow parameters and some DeepWater shader variables slightly (for consistency).
 - Potentially fixed a bug where the level texture could be misaligned when the AboveCloudsView effect was used.
 - Added an in-game message when camera textures have been merged.
-- Added the button `Create Cache` to the Remix options menu.
-- Fixed a bug where you could not use the button `Create Cache` after using `Clear Cache` and vice versa.
-- The name and description of the `Create Cache` button is updated when used. This gives the user more information about the progress.
-- Clicking the button `Create Cache` again aborts the action.
+- (create cache) Added the button `Create Cache` to the Remix options menu.
+- (create cache) Fixed a bug where you could not use the button `Create Cache` after using `Clear Cache` and vice versa.
+- (create cache) The name and description is updated while creating the cache. This gives the user more information about the progress.
+- (create cache) Clicking the button again aborts the action.
 - Fixed a bug where one-screen arena rooms would scroll (even with the option `One Screen Rooms` disabled) if you have SplitScreen Co-op enabled. In story mode this is intended since one screen rooms need to scroll when split.
+- (create cache) The updated description is shown even when nothing is currently focused.
 
 v2.6.0:
 - (vanilla type camera) The button for centering the camera can be configured using the mod `Improved Input Config`.
