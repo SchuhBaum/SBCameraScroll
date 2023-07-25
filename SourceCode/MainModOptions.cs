@@ -39,8 +39,8 @@ public class MainModOptions : OptionInterface {
 
     // does not work for some reason;
     // private MonoBehaviour _create_cache_coroutine_wrapper = new GameObject().AddComponent<MonoBehaviour>();
-    private class Coroutine_Wrapper : MonoBehaviour { }
-    private static MonoBehaviour _create_cache_coroutine_wrapper = new GameObject().AddComponent<Coroutine_Wrapper>();
+    private class CreateCache_CoroutineWrapper : MonoBehaviour { }
+    private static MonoBehaviour _create_cache_coroutine_wrapper = new GameObject("SBCameraScroll").AddComponent<CreateCache_CoroutineWrapper>();
 
 
     //
