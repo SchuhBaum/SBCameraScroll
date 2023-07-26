@@ -42,7 +42,8 @@ public class MainModOptions : OptionInterface {
     // private MonoBehaviour _create_cache_coroutine_wrapper = new GameObject().AddComponent<MonoBehaviour>();
     private class CreateCache_CoroutineWrapper : MonoBehaviour { }
     private static MonoBehaviour _create_cache_coroutine_wrapper = new GameObject("SBCameraScroll").AddComponent<CreateCache_CoroutineWrapper>();
-
+    private const string _create_cache_button_text = "CREATE CACHE";
+    private const string _create_cache_button_description = "WARNING: This can take several (10+) minutes. Merges camera textures for all rooms\nin all regions at once. This way you don't have to wait when using region gates later.";
 
     //
     // options
@@ -95,9 +96,9 @@ public class MainModOptions : OptionInterface {
     private OpComboBox? _camera_type_combo_box = null;
     private int _last_camera_type = 0;
 
-    private OpSimpleButton? _clear_cache_button = null;
-    private OpSimpleButton? _create_cache_button = null;
-    private string? _create_cache_button_description = null;
+    // the buttons are properly initialized later;
+    private OpSimpleButton _clear_cache_button = new(new(), new());
+    private OpSimpleButton _create_cache_button = new(new(), new());
 
     private readonly List<Configurable<string>> _combo_box_configurables = new();
     private readonly List<List<ListItem>> _combo_box_lists = new();
@@ -141,8 +142,6 @@ public class MainModOptions : OptionInterface {
     }
 
     public void ClearCacheButton_UpdateColor() {
-        if (_clear_cache_button == null) return;
-
         bool is_levels_empty = Directory.GetFiles(mod_directory_path + "levels", "*.*", SearchOption.AllDirectories).Length == 0;
         bool is_world_empty = Directory.GetFiles(mod_directory_path + "world", "*.*", SearchOption.AllDirectories).Length == 0;
         _clear_cache_button.colorEdge = new Color(1f, 1f, 1f, 1f);
@@ -158,7 +157,10 @@ public class MainModOptions : OptionInterface {
     }
 
     public IEnumerator CreateCache_Coroutine() {
+        if (rainWorld.processManager.currentMainLoop is not ModdingMenu modding_menu) yield break;
+        _create_cache_button.text = "Please wait...";
         Region[] all_regions = Region.LoadAllRegions(White);
+
         for (int region_index = 0; region_index < all_regions.Length; ++region_index) {
             Region region = all_regions[region_index];
             WorldLoader world_loader = new(null, White, singleRoomWorld: false, region.name, region, rainWorld.setup, FASTTRAVEL);
@@ -170,8 +172,15 @@ public class MainModOptions : OptionInterface {
             }
 
             Debug.Log("SBCameraScroll: Checking rooms in region " + region.name + " for missing merged textures.");
-            _create_cache_button_description = "Checking rooms in region " + region.name + " (" + (region_index + 1) + "/" + all_regions.Length + ") for missing merged textures.";
+            string updated_description = "Checking rooms in region " + region.name + " (" + (region_index + 1) + "/" + all_regions.Length + ") for missing merged textures.";
 
+            if (modding_menu.description == _create_cache_button.description) {
+                // update description even when the element is currently not focused (i.e. not 
+                // hovered over with the mouse);
+                modding_menu.ShowDescription(updated_description);
+            }
+
+            _create_cache_button.description = updated_description;
             can_send_message_now = false;
             has_to_send_message_later = false;
 
@@ -181,18 +190,22 @@ public class MainModOptions : OptionInterface {
             }
         }
 
-        _create_cache_button_description = null;
+        if (modding_menu.description == _create_cache_button.description) {
+            modding_menu.ShowDescription("");
+        }
+
+        CreateCacheButton_Reset();
         CreateCacheButton_UpdateColor(all_regions);
         ClearCacheButton_UpdateColor();
     }
 
     public void CreateCache_StopCoroutines() {
         _create_cache_coroutine_wrapper.StopAllCoroutines();
-        _create_cache_button_description = null;
+        CreateCacheButton_Reset();
     }
 
     public void CreateCacheButton_OnClick(UIfocusable _) {
-        if (_create_cache_button_description != null) {
+        if (_create_cache_button.description != _create_cache_button_description) {
             CreateCache_StopCoroutines();
             return;
         }
@@ -201,10 +214,13 @@ public class MainModOptions : OptionInterface {
         _create_cache_coroutine_wrapper.StartCoroutine(CreateCache_Coroutine());
     }
 
-    public void CreateCacheButton_UpdateColor(Region[]? all_regions = null) {
-        if (_create_cache_button == null) return;
-        all_regions ??= Region.LoadAllRegions(White);
+    public void CreateCacheButton_Reset() {
+        _create_cache_button.text = _create_cache_button_text;
+        _create_cache_button.description = _create_cache_button_description;
+    }
 
+    public void CreateCacheButton_UpdateColor(Region[]? all_regions = null) {
+        all_regions ??= Region.LoadAllRegions(White);
         foreach (Region region in all_regions) {
             if (Directory.Exists(mod_directory_path + "world" + Path.DirectorySeparatorChar + region.name.ToLower() + "-rooms")) continue;
             _create_cache_button.colorFill = new Color(0.0f, 1f, 0.0f, 0.5f);
@@ -278,13 +294,15 @@ public class MainModOptions : OptionInterface {
         AddNewLine(3f);
 
         // same size as apply and back button in ConfigMachine; the text and description
-        // for _create_cache_button is updated later;
-        _create_cache_button = new(new Vector2(_pos.x + (_margin_x.y - _margin_x.x) / 2f - 55f - 65f, _pos.y), new Vector2(110f, 30f), "");
+        // for _create_cache_button is updated when used;
+        _create_cache_button = new(new(_pos.x + (_margin_x.y - _margin_x.x) / 2f - 55f - 65f, _pos.y), new(110f, 30f), _create_cache_button_text) {
+            description = _create_cache_button_description
+        };
         CreateCacheButton_UpdateColor();
         _create_cache_button.OnClick += CreateCacheButton_OnClick;
         Tabs[tab_index].AddItems(_create_cache_button);
 
-        _clear_cache_button = new(new Vector2(_pos.x + (_margin_x.y - _margin_x.x) / 2f - 55f + 65f, _pos.y), new Vector2(110f, 30f), "CLEAR CACHE") {
+        _clear_cache_button = new(new(_pos.x + (_margin_x.y - _margin_x.x) / 2f - 55f + 65f, _pos.y), new(110f, 30f), "CLEAR CACHE") {
             description = "WARNING: Deletes all merged textures inside the folders \"levels\" and \"world\". These folders can be found inside the folder \"mods/SBCameraScroll/\" or \"312520/2928752589\"."
         };
         ClearCacheButton_UpdateColor();
@@ -468,25 +486,6 @@ public class MainModOptions : OptionInterface {
                 _camera_type_combo_box.description = _camera_type_descriptions[camera_type];
             }
         }
-        Update_CreateCacheButton();
-    }
-
-    public void Update_CreateCacheButton() {
-        if (_create_cache_button == null) return;
-        if (_create_cache_button_description != null) {
-            // update description even when the element is currently not focused (i.e. not 
-            // hovered over with the mouse);
-            if (rainWorld.processManager.currentMainLoop is ModdingMenu modding_menu && modding_menu.description == _create_cache_button.description) {
-                modding_menu.ShowDescription(_create_cache_button_description);
-            }
-
-            _create_cache_button.text = "Please wait...";
-            _create_cache_button.description = _create_cache_button_description;
-            return;
-        }
-
-        _create_cache_button.text = "CREATE CACHE";
-        _create_cache_button.description = "WARNING: This can take several (10+) minutes. Merges camera textures for all rooms\nin all regions at once. This way you don't have to wait when using region gates later.";
     }
 
     //
