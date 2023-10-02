@@ -492,10 +492,9 @@ public static class RoomCameraMod {
         orig(room_camera);
 
         if (room_camera.fullScreenEffect == null) return;
-        if (room_camera.fullScreenEffect.shader.name == "Fog" && !Option_FogFullScreenEffect || room_camera.fullScreenEffect.shader.name != "Fog" && !Option_OtherFullScreenEffects) {
-            room_camera.fullScreenEffect.RemoveFromContainer();
-            room_camera.fullScreenEffect = null;
-        }
+        if (Option_FullScreenEffects) return;
+        room_camera.fullScreenEffect.RemoveFromContainer();
+        room_camera.fullScreenEffect = null;
     }
 
     private static void RoomCamera_ApplyPositionChange(On.RoomCamera.orig_ApplyPositionChange orig, RoomCamera room_camera) {

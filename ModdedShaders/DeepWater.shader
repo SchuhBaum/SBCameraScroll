@@ -76,8 +76,7 @@ Shader "SBCameraScroll/DeepWater" {
                     return x;
                 }
 
-                v2f vert (appdata_full v)
-                {
+                v2f vert (appdata_full v) {
                     v2f o;
                     o.pos = UnityObjectToClipPos (v.vertex);
                     o.uv = TRANSFORM_TEX (v.texcoord, _MainTex);

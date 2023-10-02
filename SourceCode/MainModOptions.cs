@@ -51,9 +51,8 @@ public class MainModOptions : OptionInterface {
 
     public static Configurable<string> camera_type = main_mod_options.config.Bind("cameraType", _camera_type_keys[0], new ConfigurableInfo(_camera_type_descriptions[0], null, "", "Camera Type"));
 
-    public static Configurable<bool> fog_full_screen_effect = main_mod_options.config.Bind("fogFullScreenEffect", defaultValue: true, new ConfigurableInfo("When disabled, the full screen fog effect is removed. It depends on the camera position and can noticeably move with the screen.", null, "", "Fog Effect"));
     public static Configurable<bool> merge_while_loading = main_mod_options.config.Bind("mergeWhileLoading", defaultValue: true, new ConfigurableInfo("When enabled, the camera textures for each room are merged when the region gets loaded.\nWhen disabled, camera textures are merged for each room on demand. Merging happens only once and might take a while.", null, "", "Merge While Loading")); //Merging happens only once and the files are stored inside the folder \"Mods/SBCameraScroll/\".\nThis process can take a while. Merging all rooms in Deserted Wastelands took me around three minutes.
-    public static Configurable<bool> other_full_screen_effects = main_mod_options.config.Bind("otherFullScreenEffects", defaultValue: true, new ConfigurableInfo("When disabled, full screen effects (except fog) like bloom and melt are removed.", null, "", "Full Screen Effects"));
+    public static Configurable<bool> full_screen_effects = main_mod_options.config.Bind("fullScreenEffects", defaultValue: true, new ConfigurableInfo("When disabled, full screen effects like fog, bloom and melt are removed.", null, "", "Full Screen Effects"));
     public static Configurable<bool> region_mods = main_mod_options.config.Bind("regionMods", defaultValue: true, new ConfigurableInfo("When enabled, the corresponding cached room textures get cleared when new region mods are detected or updated directly during gameplay when the room size changed. The load order matters if multiple mods change the same room.", null, "", "Region Mods"));
     public static Configurable<bool> scroll_one_screen_rooms = main_mod_options.config.Bind("scrollOneScreenRooms", defaultValue: false, new ConfigurableInfo("When disabled, the camera does not scroll in rooms with only one screen.", null, "", "One Screen Rooms")); // Automatically enabled when using SplitScreenMod.
 
@@ -279,8 +278,7 @@ public class MainModOptions : OptionInterface {
         // the comboBox keeps overlapping;
         AddNewLine(3f);
 
-        AddCheckBox(fog_full_screen_effect, (string)fog_full_screen_effect.info.Tags[0]);
-        AddCheckBox(other_full_screen_effects, (string)other_full_screen_effects.info.Tags[0]);
+        AddCheckBox(full_screen_effects, (string)full_screen_effects.info.Tags[0]);
         AddCheckBox(merge_while_loading, (string)merge_while_loading.info.Tags[0]);
         AddCheckBox(region_mods, (string)region_mods.info.Tags[0]);
         AddCheckBox(scroll_one_screen_rooms, (string)scroll_one_screen_rooms.info.Tags[0]);
@@ -447,8 +445,7 @@ public class MainModOptions : OptionInterface {
         RoomCameraMod.camera_type = (RoomCameraMod.CameraType)Array.IndexOf(_camera_type_keys, camera_type.Value);
         Debug.Log("SBCameraScroll: cameraType " + RoomCameraMod.camera_type);
 
-        Debug.Log("SBCameraScroll: Option_FogFullScreenEffect " + Option_FogFullScreenEffect);
-        Debug.Log("SBCameraScroll: Option_OtherFullScreenEffects " + Option_OtherFullScreenEffects);
+        Debug.Log("SBCameraScroll: Option_FullScreenEffects " + Option_FullScreenEffects);
         Debug.Log("SBCameraScroll: Option_MergeWhileLoading " + Option_MergeWhileLoading);
         Debug.Log("SBCameraScroll: Option_RegionMods " + Option_RegionMods);
         Debug.Log("SBCameraScroll: Option_ScrollOneScreenRooms " + Option_ScrollOneScreenRooms);

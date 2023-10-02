@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 2.6.9
+###### Version: 2.7.0
 This is a mod for Rain World v1.9.
 
 ### Description
@@ -23,7 +23,7 @@ This mod includes additional cameras:
 
 ### Installation
 0. Update Rain World to version 1.9 if needed.
-1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.6.9).
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.7.0).
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
@@ -38,7 +38,7 @@ There are two licenses available - MIT and Unlicense. You can choose which one y
 
 ### Changelog
 #### (Rain World v1.9)
-v2.6.9:
+v2.7.0:
 - Snow on the level texture should be less pixelated now. (I am blind. I missed the snow texture in the class RoomCamera. It needs to fit the size of the level texture.)
 - Adjusted some snow parameters and some DeepWater shader variables slightly (for consistency).
 - Potentially fixed a bug where the level texture could be misaligned when the AboveCloudsView effect was used.
@@ -49,6 +49,7 @@ v2.6.9:
 - (create cache) Clicking the button again aborts the action.
 - Fixed a bug where one-screen arena rooms would scroll (even with the option `One Screen Rooms` disabled) if you have SplitScreen Co-op enabled. In story mode this is intended since one screen rooms need to scroll when split.
 - (create cache) The updated description is shown even when nothing is currently focused.
+- (fog) Modded the fog shader. The fog effect should now scroll properly.
 
 v2.6.0:
 - (vanilla type camera) The button for centering the camera can be configured using the mod `Improved Input Config`.
