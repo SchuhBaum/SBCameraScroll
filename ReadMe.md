@@ -50,6 +50,7 @@ v2.7.0:
 - Fixed a bug where one-screen arena rooms would scroll (even with the option `One Screen Rooms` disabled) if you have SplitScreen Co-op enabled. In story mode this is intended since one screen rooms need to scroll when split.
 - (create cache) The updated description is shown even when nothing is currently focused.
 - (fog) Modded the fog shader. The fog effect should now scroll properly.
+- (full screen effects) Now includes the fog full screen effect. The fog option is removed.
 
 v2.6.0:
 - (vanilla type camera) The button for centering the camera can be configured using the mod `Improved Input Config`.
