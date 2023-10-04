@@ -140,7 +140,7 @@ Shader "SBCameraScroll/LevelHeat" {
 
                     if (texcol.x == 1.0 && texcol.y == 1.0 && texcol.z == 1.0) {
                         setColor = tex2D(_PalTex, float2(0.5 / 32.0, 7.5 / 8));
-                        if(_rimFix>.5) {
+                        if (_rimFix>.5) {
                             setColor = _AboveCloudsAtmosphereColor;
                         }
                         checkMaskOut = true;

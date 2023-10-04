@@ -159,7 +159,7 @@ Shader "SBCameraScroll/DeepWater" {
                     #endif  
 
                     plrLightDst = clamp(plrLightDst + pow(1.0-grad, 3), 0, 1);
-                    if(texcol.x == 1.0 && texcol.y == 1.0 && texcol.z == 1.0) {
+                    if (texcol.x == 1.0 && texcol.y == 1.0 && texcol.z == 1.0) {
                         grad = 1;
                     }
 
@@ -167,7 +167,7 @@ Shader "SBCameraScroll/DeepWater" {
                         if (grabColor.x == 0.0 && grabColor.y == 2.0/255.0 && grabColor.z == 0.0) {
                             grad = 1;
                         } else if (grad > 6.0/30.0) {
-                            if(grabColor.x > 1.0/255.0 || grabColor.y != 0.0 || grabColor.z != 0.0) {
+                            if (grabColor.x > 1.0/255.0 || grabColor.y != 0.0 || grabColor.z != 0.0) {
                                 if (grabColor.x == 0.0 && grabColor.y == 1.0/255.0 && grabColor.z == 0.0) {
                                     grad = 1;
                                     grabColor = half4(0,0,0,0);
@@ -202,23 +202,13 @@ Shader "SBCameraScroll/DeepWater" {
                         }
                     #endif
 
-                    if(fmod(round(tex2D(_LevelTex, textCoord).x*255)-1, 30.0)<_waterDepth*31.0) return float4(0, 0, 0, 0);
+                    if (fmod(round(tex2D(_LevelTex, textCoord).x*255)-1, 30.0)<_waterDepth*31.0) return float4(0, 0, 0, 0);
                     
                     grad = pow(grad, clamp(1-pow(i.uv.y, 10), 0.5, 1)) * i.uv.y;
-                    // modded:
-                    // does not work; makes thing just darker;
-                    // grad = pow(grad, clamp(1-pow(i.uv.y, 10), 0.5, 1)) * i.uv.y / (_spriteRect.z - _spriteRect.x);
-
                     half whatToSine = (_RAIN*6) + (tex2D(_NoiseTex, float2((grad/10)+lerp(textCoord.x, 0.5, grad/3)*2.1 + distortion.x,  (_RAIN*0.1)+(grad/5)+lerp(textCoord.y, 0.5, grad/3)*2.1+distortion.y)).x * 7);
-                    // modded:
-                    // does not seem to do much; maybe it is faster;
-                    // half whatToSine = (_RAIN*6) + (tex2D(_NoiseTex, float2((grad/10) + number_of_screens * lerp(textCoord.x, 0.5, grad/3)*2.1 + distortion.x,  (_RAIN*0.1)+(grad/5)+lerp(textCoord.y, 0.5, grad/3)*2.1+distortion.y)).x * 7);
                     half col = ((sin(whatToSine * 3.14 * 2)*0.5)+0.5);
 
                     whatToSine = (_RAIN*2.7) + (tex2D(_NoiseTex, float2((grad/7) + lerp(textCoord.x, 0.5, grad/5)*1.3 + distortion.x,  (_RAIN*-0.21)+(grad/8)+lerp(textCoord.y, 0.5, grad/6)*1.3+distortion.y)).x * 6.33);
-                    // modded:
-                    // same as above;
-                    // whatToSine = (_RAIN*2.7) + (tex2D(_NoiseTex, float2((grad/7) + number_of_screens * lerp(textCoord.x, 0.5, grad/5)*1.3 + distortion.x,  (_RAIN*-0.21)+(grad/8)+lerp(textCoord.y, 0.5, grad/6)*1.3+distortion.y)).x * 6.33);
                     half col2 = (sin(whatToSine * 3.14 * 2)*0.5)+0.5;
 
                     col = pow(max(col, col2), 47);// * i.uv.y;
@@ -233,14 +223,14 @@ Shader "SBCameraScroll/DeepWater" {
                     texcol = lerp(tex2D(_PalTex, float2(5.5/32.0, 7.5/8.0)), tex2D(_PalTex, float2(4.5/32.0, 7.5/8.0)), grad);
                     #if Gutter
                         // texcol +=garbagemask*.1;
-                        if(grabColor.x > 1.0/255.0 || grabColor.y != 0.0 || grabColor.z != 0.0) {
+                        if (grabColor.x > 1.0/255.0 || grabColor.y != 0.0 || grabColor.z != 0.0) {
                             return lerp(tex2D(_PalTex, float2(5.5/32.0, 7.5/8.0)), tex2D(_PalTex, float2(4.5/32.0, 7.5/8.0)), grad+pulse(0.7,.3,1-noisemix)+garbagemask*.2);
                         } else {
                             return texcol;
                         }
                     #endif
 
-                    if(grabColor.x > 1.0/255.0 || grabColor.y != 0.0 || grabColor.z != 0.0) {
+                    if (grabColor.x > 1.0/255.0 || grabColor.y != 0.0 || grabColor.z != 0.0) {
                         return lerp(texcol, grabColor, pow(clamp((i.uv.y-0.9)*10, 0, 1), 3));
                     } else {
                         return texcol;

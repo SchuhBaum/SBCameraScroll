@@ -162,7 +162,7 @@ Shader "SBCameraScroll/LevelColor" {
                     half4 texcol = tex2D(_MainTex, float2(i.uv2.x, i.uv2.y+displace*0.001));
                     if (texcol.x == 1.0 && texcol.y == 1.0 && texcol.z == 1.0) {
                         setColor = tex2D(_PalTex, float2(0.5/32.0, 7.5/8));
-                        if(_rimFix>.5) {
+                        if (_rimFix>.5) {
                             setColor = _AboveCloudsAtmosphereColor;
                         }
                         checkMaskOut = true;
@@ -172,12 +172,12 @@ Shader "SBCameraScroll/LevelColor" {
                         int effectCol = 0;
                         half notFloorDark = 1;
 
-                        if(green >= 16) {
+                        if (green >= 16) {
                             notFloorDark = 0;
                             green -= 16;
                         }
 
-                        if(green >= 8) {
+                        if (green >= 8) {
                             effectCol = 100;
                             green -= 8;
                         } else {
@@ -214,7 +214,7 @@ Shader "SBCameraScroll/LevelColor" {
                     
                         if (effectCol == 100) {
                             half4 decalCol = tex2D(_MainTex, float2((255.5-round(texcol.z*255.0))/1400.0, 799.5/800.0));
-                            if(paletteColor == 2) decalCol = lerp(decalCol, half4(1, 1, 1, 1), 0.2 - shadow*0.1);
+                            if (paletteColor == 2) decalCol = lerp(decalCol, half4(1, 1, 1, 1), 0.2 - shadow*0.1);
                             decalCol = lerp(decalCol, tex2D(_PalTex, float2(1.5/32.0, 7.5/8.0)), red/60.0);
                             setColor = lerp(lerp(setColor, decalCol, 0.7), setColor*decalCol*1.5,  lerp(0.9, 0.3+0.4*shadow, clamp((red-3.5)*0.3, 0, 1) ) );
                         } else if (green > 0 && green < 3) {

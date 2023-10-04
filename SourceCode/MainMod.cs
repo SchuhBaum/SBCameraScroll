@@ -16,7 +16,7 @@ using static SBCameraScroll.RainWorldMod;
 
 namespace SBCameraScroll;
 
-[BepInPlugin("SBCameraScroll", "SBCameraScroll", "2.7.0")]
+[BepInPlugin("SBCameraScroll", "SBCameraScroll", "2.7.1")]
 public class MainMod : BaseUnityPlugin {
     //
     // meta data
@@ -24,7 +24,7 @@ public class MainMod : BaseUnityPlugin {
 
     public static readonly string mod_id = "SBCameraScroll";
     public static readonly string author = "SchuhBaum";
-    public static readonly string version = "2.7.0";
+    public static readonly string version = "2.7.1";
     public static readonly string mod_directory_path = Directory.GetParent(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)).FullName + Path.DirectorySeparatorChar;
 
     //
@@ -305,8 +305,10 @@ public class MainMod : BaseUnityPlugin {
         Load_Asset_Bundle();
         rain_world.Replace_Shader("DeepWater");
         rain_world.Replace_Shader("Fog");
+
         rain_world.Replace_Shader("LevelColor");
         rain_world.Replace_Shader("LevelHeat");
+        rain_world.Replace_Shader("UnderWaterLight");
 
         foreach (ModManager.Mod mod in ModManager.ActiveMods) {
             if (mod.id == "improved-input-config") {
