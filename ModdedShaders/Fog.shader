@@ -84,33 +84,41 @@ Properties {
 
                 half4 frag (v2f i) : SV_Target {
                     #if SNOW_ON
+                        // vanilla:
+                        float2 textCoord = i.scrPos;
+                        
+                        // modded:
                         // not sure why you need make this in pixel size steps; this is done in some shaders but for some 
                         // reason not in fullscreen effect shaders => leave it as is;
-                        // float2 textCoord = float2(floor(i.scrPos.x*_screenSize.x)/_screenSize.x, floor(i.scrPos.y*_screenSize.y)/_screenSize.y); // modded;
+                        // float2 textCoord = float2(floor(i.scrPos.x*_screenSize.x)/_screenSize.x, floor(i.scrPos.y*_screenSize.y)/_screenSize.y);
                         
-                        float2 textCoord = i.scrPos;
                         textCoord.x -= _spriteRect.x;
                         textCoord.y -= _spriteRect.y;
                         
+                        // modded:
                         // I need the non-normalized version for the noise texture;
-                        float2 textCoord2 = textCoord; // modded;
+                        float2 textCoord2 = textCoord;
+                        
                         textCoord.x /= _spriteRect.z - _spriteRect.x;
                         textCoord.y /= _spriteRect.w - _spriteRect.y;
 
-                        // half2 screenPos = half2(i.scrPos.x, 1-i.scrPos.y); // vanilla; but not used;
-                        // half amount = clamp((i.scrPos.y - ((1-_waterLevel) - 0.11))*3, 0, 1); // vanilla;
+                        // vanilla:
+                        // half2 screenPos = half2(i.scrPos.x, 1-i.scrPos.y); // not used;
+                        // half amount = clamp((i.scrPos.y - ((1-_waterLevel) - 0.11))*3, 0, 1);
                         
-                        // modded; if I don't account for the size of the texture in y then the amount 
-                        // might be too low at lower levels;
+                        // modded:
+                        // if I don't account for the size of the texture in y then the amount might
+                        // be too low at lower levels;
                         // half amount = clamp((textCoord.y - ((1-_waterLevel) - 0.11))*3, 0, 1);
                         half amount = clamp((textCoord.y - ((1-_waterLevel) - 0.11) / (_spriteRect.w - _spriteRect.y))*3, 0, 1);
 
-                        // vanilla;
+                        // vanilla:
                         // half fog1 = 0.5 + 0.5f*sin((tex2D(_NoiseTex, half2(textCoord.x*0.44 - _RAIN*0.113, textCoord.y*1.2 - _RAIN*0.0032)).x + _RAIN*0.05 + i.uv.y)*6.28);
                         // half fog2 = 0.5 + 0.5f*sin((tex2D(_NoiseTex, half2(textCoord.x*0.6 + _RAIN*0.08, textCoord.y*1 - _RAIN*0.01)).x + _RAIN*0.04 + i.uv.x)*6.28);
 
-                        // modded; I need to wrap the noise texture; otherwise the fog clouds are way 
-                        // bigger than intended;
+                        // modded:
+                        // I need to wrap the noise texture; otherwise the fog clouds are way bigger
+                        // than intended;
                         // half fog1 = 0.5 + 0.5f*sin((tex2D(_NoiseTex, half2(textCoord.x*0.44 - _RAIN*0.113, textCoord.y*1.2 - _RAIN*0.0032)).x + _RAIN*0.05 + textCoord.y)*6.28);
                         // half fog2 = 0.5 + 0.5f*sin((tex2D(_NoiseTex, half2(textCoord.x*0.6 + _RAIN*0.08, textCoord.y*1 - _RAIN*0.01)).x + _RAIN*0.04 + textCoord.x)*6.28);
                         half fog1 = 0.5 + 0.5f*sin((tex2D(_NoiseTex, half2(textCoord2.x*0.44 - _RAIN*0.113, textCoord2.y*1.2 - _RAIN*0.0032)).x + _RAIN*0.05 + textCoord2.y)*6.28);
@@ -137,11 +145,11 @@ Properties {
                         }
 
                         if (dp == 1) {
-                            // vanilla;
+                            // vanilla:
                             // fog2 = 0.5 + 0.5f*sin((tex2D(_NoiseTex, half2(i.uv.x*1.7 + _RAIN*0.113, i.uv.y*2.82)).x + _RAIN*0.14 - i.uv.x)*6.28);
                             // fog2 *= clamp(1-distance(i.uv, half2(0,0.9)), 0, 1);
                             
-                            // modded;
+                            // modded:
                             // fog2 = 0.5 + 0.5f*sin((tex2D(_NoiseTex, half2(textCoord.x*1.7 + _RAIN*0.113, textCoord.y*2.82)).x + _RAIN*0.14 - textCoord.x)*6.28);
                             fog2 = 0.5 + 0.5f*sin((tex2D(_NoiseTex, half2(textCoord2.x*1.7 + _RAIN*0.113, textCoord2.y*2.82)).x + _RAIN*0.14 - textCoord2.x)*6.28);
                             fog2 *= clamp(1-distance(textCoord, half2(0,0.9)), 0, 1);
@@ -168,24 +176,30 @@ Properties {
                         if (fog1 > 0.1) return half4(lerp(tex2D(_PalTex, float2(0, 2.0/8.0)), tex2D(_PalTex, float2(0, 7.0/8.0)), 0.5+0.5*dp).xyz, fog1 > 0.5 ? 0.6 : 0.2);
                         return half4(0,0,0,0);
                         //return lerp(tex2D(_GrabTexture, float2(screenPos.x, screenPos.y)), half4(displace,0,0,1), 1);//amount*0.75);
-                    #elif SNOW_OFF	
+                    #elif SNOW_OFF
                         float2 textCoord = i.scrPos;
                         textCoord.x -= _spriteRect.x;
                         textCoord.y -= _spriteRect.y;
 
-                        float2 textCoord2 = textCoord; // modded;
+                        // modded:
+                        float2 textCoord2 = textCoord;
+                        
                         textCoord.x /= _spriteRect.z - _spriteRect.x;
                         textCoord.y /= _spriteRect.w - _spriteRect.y;
 
-                        // half2 screenPos = half2(i.scrPos.x, 1-i.scrPos.y); // vanilla; not used;
-                        // half amount = clamp((i.scrPos.y - ((1-_waterLevel) - 0.11))*3, 0, 1); // vanilla
+                        // vanilla:
+                        // half2 screenPos = half2(i.scrPos.x, 1-i.scrPos.y); // not used
+                        // half amount = clamp((i.scrPos.y - ((1-_waterLevel) - 0.11))*3, 0, 1);
+                        
+                        // modded:
                         // half amount = clamp((textCoord.y - ((1-_waterLevel) - 0.11))*3, 0, 1);
                         half amount = clamp((textCoord.y - ((1-_waterLevel) - 0.11) / (_spriteRect.w - _spriteRect.y))*3, 0, 1);
 
-                        // vanilla;
+                        // vanilla:
                         // half fog1 = 0.5 + 0.5f*sin((tex2D(_NoiseTex, half2(textCoord.x*0.44 - _RAIN*0.113, textCoord.y*1.2 - _RAIN*0.0032)).x + _RAIN*0.05 + i.uv.y)*6.28);
                         // half fog2 = 0.5 + 0.5f*sin((tex2D(_NoiseTex, half2(textCoord.x*0.6 + _RAIN*0.08, textCoord.y*1 - _RAIN*0.01)).x + _RAIN*0.04 + i.uv.x)*6.28);
                         
+                        // modded:
                         // half fog1 = 0.5 + 0.5f*sin((tex2D(_NoiseTex, half2(textCoord.x*0.44 - _RAIN*0.113, textCoord.y*1.2 - _RAIN*0.0032)).x + _RAIN*0.05 + textCoord.y)*6.28);
                         // half fog2 = 0.5 + 0.5f*sin((tex2D(_NoiseTex, half2(textCoord.x*0.6 + _RAIN*0.08, textCoord.y*1 - _RAIN*0.01)).x + _RAIN*0.04 + textCoord.x)*6.28);
                         half fog1 = 0.5 + 0.5f*sin((tex2D(_NoiseTex, half2(textCoord2.x*0.44 - _RAIN*0.113, textCoord2.y*1.2 - _RAIN*0.0032)).x + _RAIN*0.05 + textCoord2.y)*6.28);
@@ -208,11 +222,11 @@ Properties {
                         }
 
                         if (dp == 1) {
-                            // vanilla;
+                            // vanilla:
                             // fog2 = 0.5 + 0.5f*sin((tex2D(_NoiseTex, half2(i.uv.x*1.7 + _RAIN*0.113, i.uv.y*2.82)).x + _RAIN*0.14 - i.uv.x)*6.28);
                             // fog2 *= clamp(1-distance(i.uv, half2(0,0.9)), 0, 1);
                             
-                            // modded;
+                            // modded:
                             // fog2 = 0.5 + 0.5f*sin((tex2D(_NoiseTex, half2(textCoord.x*1.7 + _RAIN*0.113, textCoord.y*2.82)).x + _RAIN*0.14 - textCoord.x)*6.28);
                             fog2 = 0.5 + 0.5f*sin((tex2D(_NoiseTex, half2(textCoord2.x*1.7 + _RAIN*0.113, textCoord2.y*2.82)).x + _RAIN*0.14 - textCoord2.x)*6.28);
                             fog2 *= clamp(1-distance(textCoord, half2(0,0.9)), 0, 1);

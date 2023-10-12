@@ -106,7 +106,8 @@ public static class RoomCameraMod {
         // the day-night fade effect does not update paletteBlend in all cases;
         // so this can otherwise reset it sometimes;
         // priotize day-night over this;
-        if ((room_camera.effect_dayNight > 0f && room.world.rainCycle.timer >= room.world.rainCycle.cycleLength) || (ModManager.Expedition && room.game.rainWorld.ExpeditionMode && ExpeditionGame.activeUnlocks.Contains("bur-blinded"))) return;
+        if (room_camera.effect_dayNight > 0f && room.world.rainCycle.timer >= room.world.rainCycle.cycleLength) return;
+        if (ModManager.Expedition && room.game.rainWorld.ExpeditionMode && ExpeditionGame.activeUnlocks.Contains("bur-blinded")) return;
 
         // the fade is automatically applied in RoomCamera.Update();
         room_camera.paletteBlend = Mathf.Lerp(room_camera.paletteBlend, room_camera.room.roomSettings.fadePalette.fades[room_camera.currentCameraPosition], 0.01f);
