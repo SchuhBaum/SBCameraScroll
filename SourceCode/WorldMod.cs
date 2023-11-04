@@ -20,17 +20,20 @@ internal static class WorldMod {
         // cosmeticWormsOnTile.Clear(); // probably caused freezes as well // too risky to do stuff like this while rooms still being updated(?)
         // ClearAllWormGrass(); // safer but too slow // there might worm grass already been created for the (new) world
 
+        // regionState is a function and needs world.game != null
         orig(world, slugcat_name, abstract_rooms_list, swarm_rooms, shelters, gates);
-        if (MainMod.Option_MergeWhileLoading && world.game?.IsStorySession == true) // regionState is a function and needs world.game != null
-        {
-            Debug.Log("SBCameraScroll: Checking rooms for missing merged textures.");
-            can_send_message_now = true;
-            has_to_send_message_later = false;
+        if (!MainMod.Option_MergeWhileLoading) return;
+        if (world.game == null) return;
+        if (!world.game.IsStorySession) return;
 
-            foreach (AbstractRoom abstract_room in abstract_rooms_list) {
-                MergeCameraTextures(abstract_room, world.regionState?.regionName); // regionState can be null (at least in arena)
-            }
-            can_send_message_now = false;
+        Debug.Log("SBCameraScroll: Checking rooms for missing merged textures.");
+        can_send_message_now = true;
+        has_to_send_message_later = false;
+
+        foreach (AbstractRoom abstract_room in abstract_rooms_list) {
+            // regionState can be null (at least in arena);
+            MergeCameraTextures(abstract_room, world.regionState?.regionName);
         }
+        can_send_message_now = false;
     }
 }

@@ -16,7 +16,7 @@ using static SBCameraScroll.RainWorldMod;
 
 namespace SBCameraScroll;
 
-[BepInPlugin("SBCameraScroll", "SBCameraScroll", "2.7.1")]
+[BepInPlugin("SBCameraScroll", "SBCameraScroll", "2.7.2")]
 public class MainMod : BaseUnityPlugin {
     //
     // meta data
@@ -24,7 +24,7 @@ public class MainMod : BaseUnityPlugin {
 
     public static readonly string mod_id = "SBCameraScroll";
     public static readonly string author = "SchuhBaum";
-    public static readonly string version = "2.7.1";
+    public static readonly string version = "2.7.2";
     public static readonly string mod_directory_path = Directory.GetParent(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)).FullName + Path.DirectorySeparatorChar;
 
     //
@@ -42,6 +42,7 @@ public class MainMod : BaseUnityPlugin {
     // other mods
     //
 
+    // public static bool is_custom_region_support_enabled = false;
     public static bool is_improved_input_enabled = false;
     public static bool is_split_screen_coop_enabled = false;
 
@@ -311,6 +312,11 @@ public class MainMod : BaseUnityPlugin {
         rain_world.Replace_Shader("UnderWaterLight");
 
         foreach (ModManager.Mod mod in ModManager.ActiveMods) {
+            // if (mod.id == "crs") {
+            //     is_custom_region_support_enabled = true;
+            //     continue;
+            // }
+
             if (mod.id == "improved-input-config") {
                 is_improved_input_enabled = true;
                 continue;
@@ -321,6 +327,12 @@ public class MainMod : BaseUnityPlugin {
                 continue;
             }
         }
+
+        // if (is_custom_region_support_enabled) {
+        //     Debug.Log("SBCameraScroll: CRS found. Adept merging when the `REPLACEROOM` feature is used.");
+        // } else {
+        //     Debug.Log("SBCameraScroll: CRS not found.");
+        // }
 
         if (is_improved_input_enabled) {
             Debug.Log("SBCameraScroll: Improved Input Config found. Use custom keybindings.");
@@ -350,9 +362,10 @@ public class MainMod : BaseUnityPlugin {
         RoomMod.OnEnable();
 
         SuperStructureProjectorMod.OnEnable();
+        WorldLoaderMod.OnEnable();
         WorldMod.OnEnable();
-        WormGrassPatchMod.OnEnable();
 
+        WormGrassPatchMod.OnEnable();
         WormGrassMod.OnEnable();
         can_log_il_hooks = false;
     }

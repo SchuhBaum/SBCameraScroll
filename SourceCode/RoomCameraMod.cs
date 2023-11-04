@@ -564,8 +564,15 @@ public static class RoomCameraMod {
             return;
         }
 
-        // if I blacklist too early then the camera might jump in the current room
+        // if I blacklist too early then the camera might jump in the current room;
         string room_name = room_camera.room.abstractRoom.name;
+
+        // CRS (Custom-Region-Support) can replace rooms now; I need to check this; 
+        // otherwise I might blacklist the wrong room;
+        if (room_camera.room.abstractRoom.Get_Attached_Fields().name_when_replaced_by_crs is string new_room_name) {
+            room_name = new_room_name;
+        }
+
         if (blacklisted_rooms.Contains(room_name) || WorldLoader.FindRoomFile(room_name, false, "_0.png") == null && room_camera.room.cameraPositions.Length > 1) {
             if (is_changing_room) {
                 Debug.Log("SBCameraScroll: The room " + room_name + " is blacklisted.");
@@ -650,16 +657,19 @@ public static class RoomCameraMod {
         // // it would still update the room;
         // // not sure what would happen if the room would be null;
         // // don't do this:
-        // if (room_camera.room == null)
-        // {
-        //     if (!blacklisted_rooms.Contains(room_name))
-        //     {
+        // if (room_camera.room == null) {
+        //     if (!blacklisted_rooms.Contains(room_name)) {
         //         blacklisted_rooms.Add(room_name);
         //     }
-
         //     orig(room_camera, room_name, camera_position_index);
         //     return;
         // }
+
+        // this is consistent with what CRS is doing in this function when it replaces a
+        // room;
+        if (room_camera.room?.abstractRoom.Get_Attached_Fields().name_when_replaced_by_crs is string new_room_name) {
+            room_name = new_room_name;
+        }
 
         // is_room_blacklisted is not updated yet;
         // needs to be updated in ApplyPositionChange();

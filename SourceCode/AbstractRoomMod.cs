@@ -183,6 +183,10 @@ public static class AbstractRoomMod {
         if (abstract_room.offScreenDen) return;
 
         string room_name = abstract_room.name;
+        if (abstract_room.Get_Attached_Fields().name_when_replaced_by_crs is string new_room_name) {
+            room_name = new_room_name;
+        }
+
         if (blacklisted_rooms.Contains(room_name)) return;
 
         string relative_rooms_path;
@@ -414,6 +418,7 @@ public static class AbstractRoomMod {
 
     public sealed class Attached_Fields {
         public bool is_initialized = false;
+        public string? name_when_replaced_by_crs = null;
         public Vector2 texture_offset = new();
         public WormGrass? worm_grass = null;
     }
