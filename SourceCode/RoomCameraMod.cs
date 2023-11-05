@@ -667,7 +667,7 @@ public static class RoomCameraMod {
 
         // this is consistent with what CRS is doing in this function when it replaces a
         // room;
-        if (room_camera.room?.abstractRoom.Get_Attached_Fields().name_when_replaced_by_crs is string new_room_name) {
+        if (room_camera.loadingRoom?.abstractRoom.Get_Attached_Fields().name_when_replaced_by_crs is string new_room_name) {
             room_name = new_room_name;
         }
 

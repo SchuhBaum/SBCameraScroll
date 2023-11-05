@@ -2,8 +2,6 @@ using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using System;
 
-using static SBCameraScroll.AbstractRoomMod;
-
 namespace SBCameraScroll;
 
 public static class WorldLoaderMod {
