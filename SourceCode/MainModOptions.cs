@@ -79,10 +79,14 @@ public class MainModOptions : OptionInterface {
     //
 
     public static Configurable<int> camera_zoom_slider = main_mod_options.config.Bind("camera_zoom_slider", defaultValue: 10, new ConfigurableInfo("Works for the most part but makes some shaders glitch out more. Not used when the SplitScreen Co-op mod is active.", new ConfigAcceptableRange<int>(5, 20), "", "Camera Zoom (10)"));
+    public static Configurable<string> resolution_width = main_mod_options.config.Bind("resolution_width", "Default", new ConfigurableInfo("Overrides the current resolution width. Can be used to zoom out with\nless pixelation issues. Might reduce black borders on larger monitors.", null, "", "Resolution Width"));
 
     //
     // variables
     //
+
+    public int? saved_resolution_index = null;
+    public float? saved_resolution_width = null;
 
     private Vector2 _margin_x = new();
     private Vector2 _pos = new();
@@ -124,6 +128,43 @@ public class MainModOptions : OptionInterface {
     //
     // public
     //
+
+    public void Apply_And_Log_All_Options() {
+        // 0: Position type, 1: Vanilla type
+        RoomCameraMod.camera_type = (RoomCameraMod.CameraType)Array.IndexOf(_camera_type_keys, camera_type.Value);
+        Debug.Log("SBCameraScroll: cameraType " + RoomCameraMod.camera_type);
+
+        Debug.Log("SBCameraScroll: Option_FullScreenEffects " + Option_FullScreenEffects);
+        Debug.Log("SBCameraScroll: Option_MergeWhileLoading " + Option_MergeWhileLoading);
+        Debug.Log("SBCameraScroll: Option_RegionMods " + Option_RegionMods);
+        Debug.Log("SBCameraScroll: Option_ScrollOneScreenRooms " + Option_ScrollOneScreenRooms);
+
+        camera_zoom = 0.1f * camera_zoom_slider.Value;
+        Set_Resolution_Width(resolution_width.Value);
+        smoothing_factor = smoothing_factor_slider.Value / 50f;
+
+        Debug.Log("SBCameraScroll: camera_zoom " + camera_zoom);
+        Debug.Log("SBCameraScroll: resolution_width " + resolution_width.Value);
+        Debug.Log("SBCameraScroll: smoothing_factor " + smoothing_factor);
+
+        if (RoomCameraMod.camera_type is RoomCameraMod.CameraType.Position or RoomCameraMod.CameraType.Switch) {
+            camera_box_x = 20f * innercameraboxx_position.Value;
+            camera_box_y = 20f * innercameraboxy_position.Value;
+            Debug.Log("SBCameraScroll: camera_box_x " + camera_box_x);
+            Debug.Log("SBCameraScroll: camera_box_y " + camera_box_y);
+
+            offset_speed_multiplier = 0.1f * cameraoffsetspeedmultiplier_position.Value;
+            Debug.Log("SBCameraScroll: Option_CameraOffset " + Option_CameraOffset);
+            Debug.Log("SBCameraScroll: offset_speed_multiplier " + offset_speed_multiplier);
+        }
+
+        if (RoomCameraMod.camera_type is RoomCameraMod.CameraType.Vanilla or RoomCameraMod.CameraType.Switch) {
+            camera_box_from_border_x = 20f * outercameraboxx_vanilla.Value;
+            camera_box_from_border_y = 20f * outercameraboxy_vanilla.Value;
+            Debug.Log("SBCameraScroll: camera_box_from_border_x " + camera_box_from_border_x);
+            Debug.Log("SBCameraScroll: camera_box_from_border_y " + camera_box_from_border_y);
+        }
+    }
 
     public void ClearCacheButton_OnClick(UIfocusable _) {
         DirectoryInfo[] region_directories = new DirectoryInfo(mod_directory_path + "world").GetDirectories();
@@ -229,6 +270,21 @@ public class MainModOptions : OptionInterface {
 
         _create_cache_button.colorFill = new Color(0.0f, 0.0f, 0.0f, 0.0f);
         _create_cache_button.greyedOut = true;
+    }
+
+    public void Set_Resolution_Width(string resolution_width_string) {
+        if (!int.TryParse(resolution_width_string, out int resolution_width)) {
+            Reset_Resolution();
+            return;
+        }
+
+        Reset_Resolution(apply_immediately: false);
+        Options options = rainWorld.options;
+        saved_resolution_index = options.resolution;
+        saved_resolution_width = Options.screenResolutions[(int)saved_resolution_index].x;
+
+        Options.screenResolutions[(int)saved_resolution_index] = new(resolution_width, 768f);
+        rainWorld.options.OnLoadFinished();
     }
 
     public override void Initialize() {
@@ -426,6 +482,19 @@ public class MainModOptions : OptionInterface {
         AddSlider(camera_zoom_slider, (string)camera_zoom_slider.info.Tags[0], "50%", "200%");
         DrawSliders(ref Tabs[tab_index]);
 
+        AddNewLine();
+
+        List<ListItem> resolution_width_item_list = new() { new("Default", "Default", 0) { desc = "Resets the screen resolution width." } };
+        foreach (Resolution resolution in UnityEngine.Screen.resolutions) {
+            ListItem item = new(resolution.width.ToString(), resolution.width) { desc = "Sets the screen resolution width to " + resolution.width + " pixels." };
+            if (resolution_width_item_list.Contains(item)) continue;
+            resolution_width_item_list.Add(item);
+        }
+        AddComboBox(resolution_width, resolution_width_item_list, (string)resolution_width.info.Tags[0]);
+        DrawComboBoxes(ref Tabs[tab_index]);
+
+        AddNewLine(5.25f);
+
         DrawBox(ref Tabs[tab_index]);
 
         //
@@ -440,38 +509,13 @@ public class MainModOptions : OptionInterface {
         }
     }
 
-    public void Log_All_Options() {
-        // 0: Position type, 1: Vanilla type
-        RoomCameraMod.camera_type = (RoomCameraMod.CameraType)Array.IndexOf(_camera_type_keys, camera_type.Value);
-        Debug.Log("SBCameraScroll: cameraType " + RoomCameraMod.camera_type);
+    public void Reset_Resolution(bool apply_immediately = true) {
+        if (saved_resolution_index == null) return;
+        if (saved_resolution_width == null) return;
 
-        Debug.Log("SBCameraScroll: Option_FullScreenEffects " + Option_FullScreenEffects);
-        Debug.Log("SBCameraScroll: Option_MergeWhileLoading " + Option_MergeWhileLoading);
-        Debug.Log("SBCameraScroll: Option_RegionMods " + Option_RegionMods);
-        Debug.Log("SBCameraScroll: Option_ScrollOneScreenRooms " + Option_ScrollOneScreenRooms);
-
-        camera_zoom = 0.1f * camera_zoom_slider.Value;
-        smoothing_factor = smoothing_factor_slider.Value / 50f;
-        Debug.Log("SBCameraScroll: camera_zoom " + camera_zoom);
-        Debug.Log("SBCameraScroll: smoothing_factor " + smoothing_factor);
-
-        if (RoomCameraMod.camera_type is RoomCameraMod.CameraType.Position or RoomCameraMod.CameraType.Switch) {
-            camera_box_x = 20f * innercameraboxx_position.Value;
-            camera_box_y = 20f * innercameraboxy_position.Value;
-            Debug.Log("SBCameraScroll: camera_box_x " + camera_box_x);
-            Debug.Log("SBCameraScroll: camera_box_y " + camera_box_y);
-
-            offset_speed_multiplier = 0.1f * cameraoffsetspeedmultiplier_position.Value;
-            Debug.Log("SBCameraScroll: Option_CameraOffset " + Option_CameraOffset);
-            Debug.Log("SBCameraScroll: offset_speed_multiplier " + offset_speed_multiplier);
-        }
-
-        if (RoomCameraMod.camera_type is RoomCameraMod.CameraType.Vanilla or RoomCameraMod.CameraType.Switch) {
-            camera_box_from_border_x = 20f * outercameraboxx_vanilla.Value;
-            camera_box_from_border_y = 20f * outercameraboxy_vanilla.Value;
-            Debug.Log("SBCameraScroll: camera_box_from_border_x " + camera_box_from_border_x);
-            Debug.Log("SBCameraScroll: camera_box_from_border_y " + camera_box_from_border_y);
-        }
+        Options.screenResolutions[(int)saved_resolution_index] = new((float)saved_resolution_width, 768f);
+        if (!apply_immediately) return;
+        rainWorld.options.OnLoadFinished();
     }
 
     public override void Update() {
@@ -500,7 +544,7 @@ public class MainModOptions : OptionInterface {
         orig(option_interface);
         if (option_interface != main_mod_options) return;
         Debug.Log("SBCameraScroll: Save_Config_File.");
-        main_mod_options.Log_All_Options();
+        main_mod_options.Apply_And_Log_All_Options();
     }
 
     //
@@ -584,7 +628,7 @@ public class MainModOptions : OptionInterface {
         _combo_box_allow_empty.Add(allow_empty);
     }
 
-    private void DrawComboBoxes(ref OpTab tab) {
+    private void DrawComboBoxes(ref OpTab tab, ushort list_height = 5) {
         if (_combo_box_configurables.Count != _combo_boxes_text_labels.Count) return;
         if (_combo_box_configurables.Count != _combo_box_lists.Count) return;
         if (_combo_box_configurables.Count != _combo_box_allow_empty.Count) return;
@@ -604,7 +648,8 @@ public class MainModOptions : OptionInterface {
             Configurable<string> configurable = _combo_box_configurables[combo_box_index];
             OpComboBox combo_box = new(configurable, _pos, width, _combo_box_lists[combo_box_index]) {
                 allowEmpty = _combo_box_allow_empty[combo_box_index],
-                description = configurable.info?.description ?? ""
+                description = configurable.info?.description ?? "",
+                listHeight = list_height
             };
             tab.AddItems(op_label, combo_box);
 

@@ -16,6 +16,6 @@ internal static class ProcessManagerMod {
         ProcessID current_process_id = process_manager.currentMainLoop.ID;
         orig(process_manager, next_process_id);
         if (current_process_id != ProcessID.Initialization) return;
-        main_mod_options.Log_All_Options();
+        main_mod_options.Apply_And_Log_All_Options();
     }
 }

@@ -4,10 +4,11 @@ using System;
 
 namespace SBCameraScroll;
 
-public static class WorldLoaderMod {
+internal static class WorldLoaderMod {
     internal static void OnEnable() {
         // CRS has a `REPLACEROOM` feature; I need to get the changed room name in order
-        // to merge the textures;
+        // to merge the textures; CRS tracks this information too; but so far I only found
+        // it inside an internal class;
         IL.WorldLoader.LoadAbstractRoom += WorldLoader_LoadAbstractRoom;
     }
 
