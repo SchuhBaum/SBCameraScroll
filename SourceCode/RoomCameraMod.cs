@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using static SBCameraScroll.MainMod;
 using static SBCameraScroll.ShortcutHandlerMod;
+using static SBCameraScroll.SplitScreenCoopMod;
 
 namespace SBCameraScroll;
 
@@ -34,12 +35,7 @@ public static class RoomCameraMod {
 
     internal static readonly Dictionary<RoomCamera, Attached_Fields> _all_attached_fields = new();
     public static Attached_Fields Get_Attached_Fields(this RoomCamera room_camera) => _all_attached_fields[room_camera];
-    public static bool Is_Type_Camera_Not_Used(this RoomCamera room_camera) => room_camera.Get_Attached_Fields().is_room_blacklisted || room_camera.voidSeaMode;
-
-    // call only if is_split_screen_coop_enabled is true;
-    public static bool Is_Split => Is_Split_Horizontally || Is_Split_Vertically;
-    public static bool Is_Split_Horizontally => SplitScreenCoop.SplitScreenCoop.CurrentSplitMode == SplitScreenCoop.SplitScreenCoop.SplitMode.SplitHorizontal;
-    public static bool Is_Split_Vertically => SplitScreenCoop.SplitScreenCoop.CurrentSplitMode == SplitScreenCoop.SplitScreenCoop.SplitMode.SplitVertical;
+    public static bool Is_Type_Camera_Not_Used(this RoomCamera room_camera) => room_camera.Get_Attached_Fields() is Attached_Fields attached_fields && (attached_fields.is_room_blacklisted || !attached_fields.is_camera_scroll_enabled && !attached_fields.is_camera_scroll_forced_by_split_screen) || room_camera.voidSeaMode;
 
     public static bool can_send_message_now = false;
     public static bool has_to_send_message_later = false;
@@ -115,12 +111,13 @@ public static class RoomCameraMod {
 
     public static void CheckBorders(RoomCamera room_camera, ref Vector2 position) {
         if (room_camera.room == null) return;
-
         Vector2 screen_size = room_camera.sSize;
         Vector2 texture_offset = room_camera.room.abstractRoom.Get_Attached_Fields().texture_offset; // regionGate's texture offset might be unitialized => RegionGateMod
 
         if (is_split_screen_coop_enabled) {
-            Vector2 screen_offset = SplitScreenMod_GetScreenOffset(screen_size); // half of the camera screen is not visible // the other half is centered // let the non-visible part move past room borders
+            // half of the camera screen is not visible; the other half is centered; let the
+            // non-visible part move past room borders;
+            Vector2 screen_offset = Get_Screen_Offset(room_camera, screen_size);
             position.x = Mathf.Clamp(position.x, texture_offset.x - screen_offset.x, texture_offset.x + screen_offset.x + room_camera.levelGraphic.width - screen_size.x);
             position.y = Mathf.Clamp(position.y, texture_offset.y - screen_offset.y, texture_offset.y + screen_offset.y + room_camera.levelGraphic.height - screen_size.y - 18f);
             return;
@@ -215,12 +212,6 @@ public static class RoomCameraMod {
         hud.textPrompt.AddMessage(game.rainWorld.inGameTranslator.Translate("SBCameraScroll: Merging camera textures completed."), wait: 0, time: 200, darken: false, hideHud: false);
         can_send_message_now = false;
         has_to_send_message_later = false;
-    }
-
-    public static Vector2 SplitScreenMod_GetScreenOffset(in Vector2 screen_size) {
-        if (Is_Split_Horizontally) return new Vector2(0.0f, 0.25f * screen_size.y);
-        if (Is_Split_Vertically) return new Vector2(0.25f * screen_size.x, 0.0f);
-        return new Vector2();
     }
 
     // accounts for room boundaries and shortcuts
@@ -444,8 +435,13 @@ public static class RoomCameraMod {
                 Debug.Log("SBCameraScroll: IL_RoomCamera_Update: Index " + cursor.Index); // 400
             }
 
-            cursor.EmitDelegate<Action<RoomCamera>>(room_camera => // put before UpdateDayNightPalette()
-            {
+            // put before UpdateDayNightPalette()
+            cursor.EmitDelegate<Action<RoomCamera>>(room_camera => {
+                // in four player split screen you can zoom the camera out by double tapping the
+                // map-button; to better transition when doing so I want the scroll to be enabled
+                // in both cases => simply check Is_Split; otherwise it teleports to the target 
+                // location immediately;
+                room_camera.Get_Attached_Fields().is_camera_scroll_forced_by_split_screen = is_split_screen_coop_enabled && Is_Split;
                 if (room_camera.Is_Type_Camera_Not_Used()) return;
                 AddFadeTransition(room_camera);
             });
@@ -559,8 +555,12 @@ public static class RoomCameraMod {
             // I would also not be able to check blacklisted_rooms;
             // blacklisting the room is just a guess at this point;
 
-            room_camera.Get_Attached_Fields().is_room_blacklisted = true;
-            ResetCameraPosition(room_camera); // uses currentCameraPosition and isRoomBlacklisted
+            Attached_Fields attached_fields = room_camera.Get_Attached_Fields();
+            attached_fields.is_room_blacklisted = true;
+            attached_fields.is_camera_scroll_enabled = false;
+
+            // uses currentCameraPosition and is_room_blacklisted;
+            ResetCameraPosition(room_camera);
             return;
         }
 
@@ -578,14 +578,19 @@ public static class RoomCameraMod {
                 Debug.Log("SBCameraScroll: The room " + room_name + " is blacklisted.");
             }
 
-            room_camera.Get_Attached_Fields().is_room_blacklisted = true;
+            Attached_Fields attached_fields = room_camera.Get_Attached_Fields();
+            attached_fields.is_room_blacklisted = true;
+            attached_fields.is_camera_scroll_enabled = false;
+
+            // uses currentCameraPosition and is_room_blacklisted;
             ResetCameraPosition(room_camera);
             return;
         }
 
-        // blacklist instead of checking if you can scroll;
-        // they have the same purpose anyways;
-        room_camera.Get_Attached_Fields().is_room_blacklisted = !room_camera.room.CanScrollCamera();
+        room_camera.Get_Attached_Fields().is_room_blacklisted = false;
+        room_camera.Get_Attached_Fields().is_camera_scroll_enabled = room_camera.room.cameraPositions.Length > 1 || Option_ScrollOneScreenRooms;
+
+        // uses currentCameraPosition and is_room_blacklisted;
         ResetCameraPosition(room_camera);
     }
 
@@ -643,7 +648,7 @@ public static class RoomCameraMod {
         }
 
         room_camera.currentCameraPosition = camera_position_index;
-        if (room_camera.Get_Attached_Fields().type_camera is VanillaTypeCamera vanilla_type_camera && vanilla_type_camera.use_vanilla_positions && vanilla_type_camera.follow_abstract_creature_id == room_camera.followAbstractCreature.ID) // camera moves otherwise after vanilla transition since variables are not reset // ignore reset during a smooth transition
+        if (room_camera.Get_Attached_Fields().type_camera is VanillaTypeCamera vanilla_type_camera && vanilla_type_camera.are_vanilla_positions_used && vanilla_type_camera.follow_abstract_creature_id == room_camera.followAbstractCreature.ID) // camera moves otherwise after vanilla transition since variables are not reset // ignore reset during a smooth transition
         {
             ResetCameraPosition(room_camera);
         }
@@ -758,6 +763,8 @@ public static class RoomCameraMod {
     //
 
     public sealed class Attached_Fields {
+        public bool is_camera_scroll_enabled = true;
+        public bool is_camera_scroll_forced_by_split_screen = false;
         public bool is_room_blacklisted = false;
 
         public Vector2 last_on_screen_position = new();

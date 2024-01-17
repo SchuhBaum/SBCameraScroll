@@ -3,6 +3,7 @@ using System;
 using UnityEngine;
 using static SBCameraScroll.MainMod;
 using static SBCameraScroll.RoomCameraMod;
+using static SBCameraScroll.SplitScreenCoopMod;
 
 namespace SBCameraScroll;
 
@@ -27,8 +28,12 @@ public class VanillaTypeCamera : IAmATypeCamera {
     public Vector2 seek_position = new();
     public Vector2 vanilla_type_position = new();
 
+    // splitting when using split screen can happen dynamically; when split then you 
+    // might not have enough space to use vanilla positions;
+    public bool Are_Vanilla_Positions_Forced_Disabled => is_split_screen_coop_enabled && (Is_Split_Horizontally || Is_Split_Vertically || Is_Split_4Screen && !is_camera_zoomed_out_in_four_player_split_screen);
+    public bool are_vanilla_positions_used;
+    public bool is_camera_zoomed_out_in_four_player_split_screen = false;
     public bool is_centered = false;
-    public bool use_vanilla_positions;
 
     public int transition_counter = 0;
 
@@ -39,7 +44,7 @@ public class VanillaTypeCamera : IAmATypeCamera {
     public VanillaTypeCamera(RoomCamera room_camera, Attached_Fields attached_fields) {
         _room_camera = room_camera;
         _attached_fields = attached_fields;
-        use_vanilla_positions = !is_split_screen_coop_enabled && camera_zoom <= 1.33f;
+        are_vanilla_positions_used = camera_zoom <= 1.33f;
     }
 
     //
@@ -63,6 +68,11 @@ public class VanillaTypeCamera : IAmATypeCamera {
             } else if (Is_Split_Vertically) {
                 half_screen_size.x -= 0.25f * _room_camera.sSize.x;
                 camera_box_multiplier_x = 0.5f;
+            } else if (Is_Split_4Screen && !is_camera_zoomed_out_in_four_player_split_screen) {
+                half_screen_size.x -= 0.25f * _room_camera.sSize.x;
+                half_screen_size.y -= 0.25f * _room_camera.sSize.y;
+                camera_box_multiplier_x = 0.5f;
+                camera_box_multiplier_y = 0.5f;
             }
         } else if (Is_Camera_Zoom_Enabled) {
             half_screen_size += Half_Inverse_Camera_Zoom_XY * _room_camera.sSize;
@@ -123,14 +133,14 @@ public class VanillaTypeCamera : IAmATypeCamera {
 
     public bool Move_Camera_Transition() {
         Vector2 target_position;
-        if (use_vanilla_positions) {
+        if (!are_vanilla_positions_used || Are_Vanilla_Positions_Forced_Disabled) {
+            target_position = _attached_fields.on_screen_position;
+            CheckBorders(_room_camera, ref target_position); // stop at borders
+        } else {
             // only in case when the player is not the target
             // seekPos can change during a transition
             // this extends the transition until the player stops changing screens
             target_position = _room_camera.seekPos;
-        } else {
-            target_position = _attached_fields.on_screen_position;
-            CheckBorders(_room_camera, ref target_position); // stop at borders
         }
 
         // 3f is not enough to reach the player that is walking away from the camera;
@@ -149,14 +159,14 @@ public class VanillaTypeCamera : IAmATypeCamera {
         _room_camera.seekPos.y += 18f;
         _room_camera.leanPos *= 0.0f;
 
-        use_vanilla_positions = !is_split_screen_coop_enabled && camera_zoom <= 1.33f;
-        if (use_vanilla_positions) {
+        are_vanilla_positions_used = camera_zoom <= 1.33f;
+        if (!are_vanilla_positions_used || Are_Vanilla_Positions_Forced_Disabled) {
+            _room_camera.lastPos = _attached_fields.on_screen_position;
+            _room_camera.pos = _attached_fields.on_screen_position;
+        } else {
             // center camera on vanilla position;
             _room_camera.lastPos = _room_camera.seekPos;
             _room_camera.pos = _room_camera.seekPos;
-        } else {
-            _room_camera.lastPos = _attached_fields.on_screen_position;
-            _room_camera.pos = _attached_fields.on_screen_position;
         }
 
         follow_abstract_creature_id = null; // do a smooth transition // this actually makes a difference for the vanilla type camera // otherwise the map input would immediately be processed
@@ -169,6 +179,13 @@ public class VanillaTypeCamera : IAmATypeCamera {
         if (_room_camera.followAbstractCreature == null) return;
         if (_room_camera.room == null) return;
         UpdateOnScreenPosition(_room_camera);
+
+        // do a smooth transition when zoom has changed in split screen; this can happen 
+        // dynamically;
+        if (is_split_screen_coop_enabled && Is_Split_4Screen && is_camera_zoomed_out_in_four_player_split_screen != Is_4Screen_Zoomed_Out(_room_camera)) {
+            is_camera_zoomed_out_in_four_player_split_screen = Is_4Screen_Zoomed_Out(_room_camera);
+            follow_abstract_creature_id = null;
+        }
 
         // smooth transition when switching cameras in the same room
         if (follow_abstract_creature_id != _room_camera.followAbstractCreature.ID && _room_camera.followAbstractCreature?.realizedCreature is Creature creature) {
@@ -186,12 +203,12 @@ public class VanillaTypeCamera : IAmATypeCamera {
             }
 
             ++transition_counter;
-            if (is_split_screen_coop_enabled || camera_zoom > 1.33f) {
+            if (camera_zoom > 1.33f) {
                 // vanilla positions don't respect split screen;
                 // otherwise you can move off-screen between camera positions;
-                use_vanilla_positions = false;
+                are_vanilla_positions_used = false;
             } else if (creature is Player player && Is_Map_Pressed(player)) {
-                use_vanilla_positions = !use_vanilla_positions;
+                are_vanilla_positions_used = !are_vanilla_positions_used;
             }
             return;
         }
@@ -200,7 +217,7 @@ public class VanillaTypeCamera : IAmATypeCamera {
             is_centered = false;
         }
 
-        if (!use_vanilla_positions) {
+        if (!are_vanilla_positions_used || Are_Vanilla_Positions_Forced_Disabled) {
             Move_Camera();
         }
 
@@ -212,10 +229,10 @@ public class VanillaTypeCamera : IAmATypeCamera {
             if (_room_camera.followAbstractCreature?.realizedCreature is not Player player) return;
             if (!Is_Map_Pressed(player)) return;
 
-            if (is_split_screen_coop_enabled || camera_zoom > 1.33f) {
-                use_vanilla_positions = false;
-            } else if (use_vanilla_positions || is_centered) {
-                use_vanilla_positions = !use_vanilla_positions;
+            if (camera_zoom > 1.33f) {
+                are_vanilla_positions_used = false;
+            } else if (are_vanilla_positions_used || is_centered) {
+                are_vanilla_positions_used = !are_vanilla_positions_used;
             }
             follow_abstract_creature_id = null; // start a smooth transition
         }

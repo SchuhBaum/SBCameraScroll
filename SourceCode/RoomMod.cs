@@ -1,12 +1,9 @@
 using static SBCameraScroll.AbstractRoomMod;
-using static SBCameraScroll.MainMod;
 using static SBCameraScroll.RoomCameraMod;
 
 namespace SBCameraScroll;
 
-public static class RoomMod {
-    public static bool CanScrollCamera(this Room room) => Option_ScrollOneScreenRooms || is_split_screen_coop_enabled && room.game.IsStorySession || room.cameraPositions.Length > 1;
-
+internal static class RoomMod {
     internal static void OnEnable() {
         On.Room.Loaded += Room_Loaded; // removes DeathFallFocus objects (which create fall focal points);
         On.Room.LoadFromDataString += Room_LoadFromDataString;

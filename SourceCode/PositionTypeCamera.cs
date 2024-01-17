@@ -1,3 +1,4 @@
+using RWCustom;
 using System;
 using UnityEngine;
 
@@ -39,6 +40,8 @@ public class PositionTypeCamera : IAmATypeCamera {
     //
 
     private void Move_Camera_Towards_Target(Vector2 target_position, Vector2 at_border_difference) {
+        // slow down at border; otherwise it would move at full speed and then suddenly
+        // stop completely;
         float camera_box_minus_border_x = Mathf.Max(0.0f, camera_box_x - Mathf.Abs(at_border_difference.x));
         float camera_box_minus_border_y = Mathf.Max(0.0f, camera_box_y - Mathf.Abs(at_border_difference.y));
 
@@ -46,15 +49,23 @@ public class PositionTypeCamera : IAmATypeCamera {
         float distance_y = Mathf.Abs(target_position.y - _room_camera.lastPos.y);
 
         if (distance_x > camera_box_minus_border_x) {
-            // the goal is to reach innerCameraBoxX_minus_border-close to target_position.x
+            // the goal is to reach camera_box_minus_border_x-close to target_position.x
             // the result is the same as:
-            // roomCamera.pos.x = Mathf.Lerp(roomCamera.lastPos.x, innerCameraBoxX_minus_border-close to target_position.x, t = smoothingFactorX);
-            _room_camera.pos.x = Mathf.Lerp(_room_camera.lastPos.x, target_position.x, smoothing_factor * (distance_x - camera_box_minus_border_x) / distance_x);
+            // roomCamera.pos.x = Mathf.Lerp(roomCamera.lastPos.x, camera_box_minus_border_x-close to target_position.x, t = smoothing_factor);
+            //
+            // the tick can fix a bug; every little difference to target_position can mean 
+            // that your monitor screen is a pixel off; this is only noticeable when using 
+            // split screen; the tick makes sure that the last 0.000-whatever difference 
+            // gets reduced to zero and does not leave a line of black pixels;
+            _room_camera.pos.x = Custom.LerpAndTick(_room_camera.lastPos.x, target_position.x, smoothing_factor * (distance_x - camera_box_minus_border_x) / distance_x, 0.01f);
 
-            // stop when moving too slow;
-            // downside is that the targetposition might not be reached exactly;
-            // depending on smoothingFactorX this can be a couple of pixels far away from target_position;
-            if (Mathf.Abs(_room_camera.pos.x - _room_camera.lastPos.x) < 1f) {
+            // stop when moving too slow; downside is that target_position might not be 
+            // reached exactly => exclude when reaching the border; changing zoom in split
+            // screen can mean that you move from outside the border to target_position;
+            // otherwise, in that case it would leave a small black border; 
+            // depending on smoothing_factor this can be a couple of pixels far away from
+            // target_position;
+            if (Mathf.Abs(_room_camera.pos.x - _room_camera.lastPos.x) < 1f && at_border_difference.x == 0f) {
                 _room_camera.pos.x = _room_camera.lastPos.x;
             }
         } else {
@@ -62,8 +73,8 @@ public class PositionTypeCamera : IAmATypeCamera {
         }
 
         if (distance_y > camera_box_minus_border_y) {
-            _room_camera.pos.y = Mathf.Lerp(_room_camera.lastPos.y, target_position.y, smoothing_factor * (distance_y - camera_box_minus_border_y) / distance_y);
-            if (Mathf.Abs(_room_camera.pos.y - _room_camera.lastPos.y) < 1f) {
+            _room_camera.pos.y = Custom.LerpAndTick(_room_camera.lastPos.y, target_position.y, smoothing_factor * (distance_y - camera_box_minus_border_y) / distance_y, 0.01f);
+            if (Mathf.Abs(_room_camera.pos.y - _room_camera.lastPos.y) < 1f && at_border_difference.y == 0f) {
                 _room_camera.pos.y = _room_camera.lastPos.y;
             }
         } else {
