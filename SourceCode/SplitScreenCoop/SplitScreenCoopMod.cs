@@ -1,4 +1,6 @@
 using UnityEngine;
+using static SplitScreenCoop.SplitScreenCoop;
+using static SplitScreenCoop.SplitScreenCoop.SplitMode;
 
 namespace SBCameraScroll;
 
@@ -8,10 +10,10 @@ public static class SplitScreenCoopMod {
     // variables
     //
 
-    public static bool Is_Split => SplitScreenCoop.SplitScreenCoop.CurrentSplitMode != SplitScreenCoop.SplitScreenCoop.SplitMode.NoSplit;
-    public static bool Is_Split_4Screen => SplitScreenCoop.SplitScreenCoop.CurrentSplitMode == SplitScreenCoop.SplitScreenCoop.SplitMode.Split4Screen;
-    public static bool Is_Split_Horizontally => SplitScreenCoop.SplitScreenCoop.CurrentSplitMode == SplitScreenCoop.SplitScreenCoop.SplitMode.SplitHorizontal;
-    public static bool Is_Split_Vertically => SplitScreenCoop.SplitScreenCoop.CurrentSplitMode == SplitScreenCoop.SplitScreenCoop.SplitMode.SplitVertical;
+    public static bool Is_Split => CurrentSplitMode != NoSplit;
+    public static bool Is_Split_4Screen => CurrentSplitMode == Split4Screen;
+    public static bool Is_Split_Horizontally => CurrentSplitMode == SplitHorizontal;
+    public static bool Is_Split_Vertically => CurrentSplitMode == SplitVertical;
 
     //
     // public
@@ -22,11 +24,11 @@ public static class SplitScreenCoopMod {
         if (Is_Split_Vertically) return new(0.25f * screen_size.x, 0.0f);
 
         if (Is_Split_4Screen) {
-            if (SplitScreenCoop.SplitScreenCoop.cameraZoomed[room_camera.cameraNumber]) return new();
+            if (cameraZoomed[room_camera.cameraNumber]) return new();
             return new(0.25f * screen_size.x, 0.25f * screen_size.y);
         }
         return new();
     }
 
-    public static bool Is_4Screen_Zoomed_Out(RoomCamera room_camera) => SplitScreenCoop.SplitScreenCoop.cameraZoomed[room_camera.cameraNumber];
+    public static bool Is_4Screen_Zoomed_Out(RoomCamera room_camera) => cameraZoomed[room_camera.cameraNumber];
 }
