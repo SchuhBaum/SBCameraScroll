@@ -44,7 +44,7 @@ v2.7.6:
 - Fixed another bug regarding that where the wrong room would be displayed.
 - (resolution width) Added this option. Overrides the current resolution width. Can be used to zoom out with less pixelation issues compared to the option "camera zoom". Might reduce black borders on larger monitors.
 - (SplitScreen Co-op compatibility) Fixed some bugs or rather added support for four player split screen.
-- (position type camera) Added a minimum speed when reaching room borders. Before the last update the camere would stop when moving too slowly (in all cases). But that can leave a black border between screens when using split screen. This way it will reach the exact position as well but less slowly.
+- (position type camera) Added a minimum speed when reaching room borders. Before the last update the camera would stop when moving too slowly (in all cases). But that can leave a black border between screens when using split screen. This way it will reach the exact position as well but less slowly.
 
 v2.7.0:
 - Snow on the level texture should be less pixelated now. (I am blind. I missed the snow texture in the class RoomCamera. It needs to fit the size of the level texture.)
