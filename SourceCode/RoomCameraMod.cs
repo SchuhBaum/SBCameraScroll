@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using static SBCameraScroll.MainMod;
+using static SBCameraScroll.RoomMod;
 using static SBCameraScroll.ShortcutHandlerMod;
 using static SBCameraScroll.SplitScreenCoopMod;
 
@@ -53,18 +54,20 @@ public static class RoomCameraMod {
         On.RoomCamera.ApplyPositionChange += RoomCamera_ApplyPositionChange;
         On.RoomCamera.ctor += RoomCamera_Ctor;
 
+        On.RoomCamera.DepthAtCoordinate += RoomCamera_DepthAtCoordinate;
         On.RoomCamera.FireUpSafariHUD += RoomCamera_FireUpSafariHUD;
         On.RoomCamera.FireUpSinglePlayerHUD += RoomCamera_FireUpSinglePlayerHUD;
         On.RoomCamera.IsViewedByCameraPosition += RoomCamera_IsViewedByCameraPosition;
-        On.RoomCamera.IsVisibleAtCameraPosition += RoomCamera_IsVisibleAtCameraPosition;
 
+        On.RoomCamera.IsVisibleAtCameraPosition += RoomCamera_IsVisibleAtCameraPosition;
         On.RoomCamera.MoveCamera_int += RoomCamera_MoveCamera;
         On.RoomCamera.MoveCamera2 += RoomCamera_MoveCamera2;
         On.RoomCamera.PixelColorAtCoordinate += RoomCamera_PixelColorAtCoordinate;
-        On.RoomCamera.PositionCurrentlyVisible += RoomCamera_PositionCurrentlyVisible;
 
+        On.RoomCamera.PositionCurrentlyVisible += RoomCamera_PositionCurrentlyVisible;
         On.RoomCamera.PositionVisibleInNextScreen += RoomCamera_PositionVisibleInNextScreen;
         On.RoomCamera.PreLoadTexture += RoomCamera_PreLoadTexture;
+
         On.RoomCamera.RectCurrentlyVisible += RoomCamera_RectCurrentlyVisible;
         On.RoomCamera.ScreenMovement += RoomCamera_ScreenMovement;
     }
@@ -478,11 +481,15 @@ public static class RoomCameraMod {
     //
     //
 
-    private static Vector2 RoomCamera_ApplyDepth(On.RoomCamera.orig_ApplyDepth orig, RoomCamera room_camera, Vector2 ps, float depth) {
-        if (room_camera.Is_Type_Camera_Not_Used()) {
-            return orig(room_camera, ps, depth);
-        }
-        return Custom.ApplyDepthOnVector(ps, room_camera.pos + new Vector2(700f, 1600f / 3f), depth);
+    private static Vector2 RoomCamera_ApplyDepth(On.RoomCamera.orig_ApplyDepth orig, RoomCamera room_camera, Vector2 position, float depth) {
+        if (room_camera.Is_Type_Camera_Not_Used()) return orig(room_camera, position, depth);
+        if (room_camera.room is not Room room) return orig(room_camera, position, depth);
+        int camera_index = CameraViewingPoint(room, position);
+        if (camera_index == -1) return orig(room_camera, position, depth);
+
+        // before this I would change the depth based on the camera position; but it is 
+        // static and only needs to match the pre-rendered visuals of the room;
+        return Custom.ApplyDepthOnVector(position, room_camera.CamPos(camera_index) + new Vector2(700f, 1600f / 3f), depth);
     }
 
     private static void RoomCamera_ApplyPalette(On.RoomCamera.orig_ApplyPalette orig, RoomCamera room_camera) {
@@ -600,6 +607,13 @@ public static class RoomCameraMod {
         _all_attached_fields.Add(room_camera, new(room_camera));
     }
 
+    private static float RoomCamera_DepthAtCoordinate(On.RoomCamera.orig_DepthAtCoordinate orig, RoomCamera room_camera, Vector2 position) {
+        // similar to RoomCamera_PixelColorAtCoordinate();
+        if (room_camera.Is_Type_Camera_Not_Used()) return orig(room_camera, position);
+        if (room_camera.room is not Room room) return orig(room_camera, position);
+        return orig(room_camera, position + room_camera.CamPos(room_camera.currentCameraPosition) - room.abstractRoom.Get_Attached_Fields().texture_offset);
+    }
+
     private static void RoomCamera_FireUpSafariHUD(On.RoomCamera.orig_FireUpSafariHUD orig, RoomCamera room_camera) {
         orig(room_camera);
         Send_Merging_Completed_Message(room_camera);
@@ -687,13 +701,15 @@ public static class RoomCameraMod {
         orig(room_camera, room_name, -1);
     }
 
-    private static Color RoomCamera_PixelColorAtCoordinate(On.RoomCamera.orig_PixelColorAtCoordinate orig, RoomCamera room_camera, Vector2 coord) {
-        if (room_camera.Is_Type_Camera_Not_Used()) {
-            return orig(room_camera, coord);
-        }
+    private static Color RoomCamera_PixelColorAtCoordinate(On.RoomCamera.orig_PixelColorAtCoordinate orig, RoomCamera room_camera, Vector2 position) {
+        if (room_camera.Is_Type_Camera_Not_Used()) return orig(room_camera, position);
+        if (room_camera.room is not Room room) return orig(room_camera, position);
 
-        // remove effect of room_camera.CamPos(room_camera.currentCameraPosition) // color of lights might otherwise "jump" in color
-        return orig(room_camera, coord + room_camera.CamPos(room_camera.currentCameraPosition));
+        // cancel the effect of the function CamPos() inside the function orig(); otherwise,
+        // the color of lights might "jump"; the texture_offset is used to translate room
+        // coordinates to level_texture coordinates; these are needed since level_texture.
+        // GetPixel() is called;
+        return orig(room_camera, position + room_camera.CamPos(room_camera.currentCameraPosition) - room.abstractRoom.Get_Attached_Fields().texture_offset);
     }
 
     // use room_camera.pos as reference instead of camPos(..) // seems to be important for unloading graphics and maybe other things
