@@ -4,24 +4,22 @@
     <TargetFramework>net48</TargetFramework>
     <Nullable>enable</Nullable>
     <LangVersion>10.0</LangVersion>
-	  <Version>2.7.7</Version>
+	  <Version>2.7.8</Version>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- <Reference Include="..\..\references\PUBLIC-Assembly-CSharp.dll"/> -->
-    <Reference Include="..\..\references\STRIPPED-Assembly-CSharp.dll"/>
     <Reference Include="..\..\references\BepInEx.dll"/>
-    <!-- <Reference Include="..\..\references\CustomRegionsSupport.dll"/> -->
-
     <Reference Include="..\..\references\HOOKS-Assembly-CSharp.dll"/>
     <Reference Include="..\..\references\ImprovedInput.dll"/>
     <Reference Include="..\..\references\Mono.Cecil.dll"/>
+    
     <Reference Include="..\..\references\MonoMod.Utils.dll"/>
-
+    <Reference Include="..\..\references\PUBLIC-Assembly-CSharp.dll"/>
     <Reference Include="..\..\references\SplitScreen Co-op.dll"/>
+    <Reference Include="..\..\references\Unity.Mathematics.dll"/> 
+    
     <Reference Include="..\..\references\UnityEngine.dll"/> 
     <Reference Include="..\..\references\UnityEngine.AssetBundleModule.dll"/>
-    
     <Reference Include="..\..\references\UnityEngine.CoreModule.dll"/>
     <Reference Include="..\..\references\UnityEngine.ImageConversionModule.dll"/>
   </ItemGroup>

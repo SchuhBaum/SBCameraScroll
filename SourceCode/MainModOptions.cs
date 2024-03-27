@@ -122,7 +122,11 @@ public class MainModOptions : OptionInterface {
     private MainModOptions() {
         On.OptionInterface._SaveConfigFile -= OptionInterface_SaveConfigFile;
         On.OptionInterface._SaveConfigFile += OptionInterface_SaveConfigFile;
-        OnDeactivate += CreateCache_StopCoroutines;
+
+        // OnDeactivate += CreateCache_StopCoroutines;
+        System.Reflection.EventInfo event_info = GetType().GetEvent("OnDeactivate");
+        Delegate event_handler = Delegate.CreateDelegate(event_info.EventHandlerType, this, "CreateCache_StopCoroutines");
+        event_info.AddEventHandler(this, event_handler);
     }
 
     //
@@ -353,14 +357,26 @@ public class MainModOptions : OptionInterface {
             description = _create_cache_button_description
         };
         CreateCacheButton_UpdateColor();
-        _create_cache_button.OnClick += CreateCacheButton_OnClick;
+
+        // gives an ambiguity error; :/
+        // _create_cache_button.OnClick += CreateCacheButton_OnClick;
+
+        System.Reflection.EventInfo event_info = _create_cache_button.GetType().GetEvent("OnClick");
+        Delegate event_handler = Delegate.CreateDelegate(event_info.EventHandlerType, this, "CreateCacheButton_OnClick");
+        event_info.AddEventHandler(_create_cache_button, event_handler);
         Tabs[tab_index].AddItems(_create_cache_button);
 
         _clear_cache_button = new(new(_pos.x + (_margin_x.y - _margin_x.x) / 2f - 55f + 65f, _pos.y), new(110f, 30f), "CLEAR CACHE") {
             description = "WARNING: Deletes all merged textures inside the folders \"levels\" and \"world\". These folders can be found inside the folder \"mods/SBCameraScroll/\" or \"312520/2928752589\"."
         };
         ClearCacheButton_UpdateColor();
-        _clear_cache_button.OnClick += ClearCacheButton_OnClick;
+
+        // gives an ambiguity error; :/
+        // _clear_cache_button.OnClick += ClearCacheButton_OnClick;
+
+        event_info = _clear_cache_button.GetType().GetEvent("OnClick");
+        event_handler = Delegate.CreateDelegate(event_info.EventHandlerType, this, "ClearCacheButton_OnClick");
+        event_info.AddEventHandler(_clear_cache_button, event_handler);
         Tabs[tab_index].AddItems(_clear_cache_button);
 
         DrawBox(ref Tabs[tab_index]);

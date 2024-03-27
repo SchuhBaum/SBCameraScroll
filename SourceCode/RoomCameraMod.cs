@@ -391,12 +391,12 @@ public static class RoomCameraMod {
             cursor.Emit(OpCodes.Ldloc_1);
             cursor.EmitDelegate<Action<RoomCamera, Vector2>>((room_camera, camera_position) => {
                 if (room_camera.Is_Type_Camera_Not_Used()) {
-                    Shader.SetGlobalVector("_spriteRect", new Vector4((-camera_position.x - 0.5f + room_camera.CamPos(room_camera.currentCameraPosition).x) / room_camera.sSize.x, (-camera_position.y + 0.5f + room_camera.CamPos(room_camera.currentCameraPosition).y) / room_camera.sSize.y, (-camera_position.x - 0.5f + room_camera.levelGraphic.width + room_camera.CamPos(room_camera.currentCameraPosition).x) / room_camera.sSize.x, (-camera_position.y + 0.5f + room_camera.levelGraphic.height + room_camera.CamPos(room_camera.currentCameraPosition).y) / room_camera.sSize.y));
+                    Shader.SetGlobalVector(RainWorld.ShadPropSpriteRect, new Vector4((-camera_position.x - 0.5f + room_camera.CamPos(room_camera.currentCameraPosition).x) / room_camera.sSize.x, (-camera_position.y + 0.5f + room_camera.CamPos(room_camera.currentCameraPosition).y) / room_camera.sSize.y, (-camera_position.x - 0.5f + room_camera.levelGraphic.width + room_camera.CamPos(room_camera.currentCameraPosition).x) / room_camera.sSize.x, (-camera_position.y + 0.5f + room_camera.levelGraphic.height + room_camera.CamPos(room_camera.currentCameraPosition).y) / room_camera.sSize.y));
                     return;
                 }
 
                 if (!Is_Camera_Zoom_Enabled) {
-                    Shader.SetGlobalVector("_spriteRect", new Vector4((room_camera.levelGraphic.x - 0.5f) / room_camera.sSize.x, (room_camera.levelGraphic.y + 0.5f) / room_camera.sSize.y, (room_camera.levelGraphic.x + room_camera.levelGraphic.width - 0.5f) / room_camera.sSize.x, (room_camera.levelGraphic.y + room_camera.levelGraphic.height + 0.5f) / room_camera.sSize.y));
+                    Shader.SetGlobalVector(RainWorld.ShadPropSpriteRect, new Vector4((room_camera.levelGraphic.x - 0.5f) / room_camera.sSize.x, (room_camera.levelGraphic.y + 0.5f) / room_camera.sSize.y, (room_camera.levelGraphic.x + room_camera.levelGraphic.width - 0.5f) / room_camera.sSize.x, (room_camera.levelGraphic.y + room_camera.levelGraphic.height + 0.5f) / room_camera.sSize.y));
                     return;
                 }
 
@@ -414,7 +414,7 @@ public static class RoomCameraMod {
                 //
                 // if the 0.5f is missing then you get black outlines;
                 // even without zoom;
-                Shader.SetGlobalVector("_spriteRect", new Vector4(screen_offset + (camera_zoom * room_camera.levelGraphic.x - 0.5f) / room_camera.sSize.x, screen_offset + (camera_zoom * room_camera.levelGraphic.y + 0.5f) / room_camera.sSize.y, screen_offset + (camera_zoom * (room_camera.levelGraphic.x + room_camera.levelGraphic.width) - 0.5f) / room_camera.sSize.x, screen_offset + (camera_zoom * (room_camera.levelGraphic.y + room_camera.levelGraphic.height) + 0.5f) / room_camera.sSize.y));
+                Shader.SetGlobalVector(RainWorld.ShadPropSpriteRect, new Vector4(screen_offset + (camera_zoom * room_camera.levelGraphic.x - 0.5f) / room_camera.sSize.x, screen_offset + (camera_zoom * room_camera.levelGraphic.y + 0.5f) / room_camera.sSize.y, screen_offset + (camera_zoom * (room_camera.levelGraphic.x + room_camera.levelGraphic.width) - 0.5f) / room_camera.sSize.x, screen_offset + (camera_zoom * (room_camera.levelGraphic.y + room_camera.levelGraphic.height) + 0.5f) / room_camera.sSize.y));
             });
         } else {
             if (can_log_il_hooks) {
