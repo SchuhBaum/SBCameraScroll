@@ -2,7 +2,7 @@
   "Title": "SBCameraScroll",
   "Description": "Creates a smooth, scrolling camera that moves with the slugcat. Based on pipi toki\u0027s CameraScroll mod.\u003CLINE\u003E\u003CLINE\u003EINCOMPATIBILITIES:\u003CLINE\u003E- The zoom camera option in the Slugcat Eyebrow Raise mod.",
   "ID": "SBCameraScroll",
-  "Version": "2.7.8",
+  "Version": "2.7.9",
   "TargetGameVersion": "",
   "Requirements": "",
   "RequirementNames": "",

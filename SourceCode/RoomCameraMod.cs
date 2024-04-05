@@ -4,6 +4,7 @@ using MonoMod.Cil;
 using RWCustom;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using static SBCameraScroll.MainMod;
 using static SBCameraScroll.RoomMod;
@@ -580,7 +581,7 @@ public static class RoomCameraMod {
             room_name = new_room_name;
         }
 
-        if (blacklisted_rooms.Contains(room_name) || WorldLoader.FindRoomFile(room_name, false, "_0.png") == null && room_camera.room.cameraPositions.Length > 1) {
+        if (blacklisted_rooms.Contains(room_name) || !File.Exists(WorldLoader.FindRoomFile(room_name, false, "_0.png")) && room_camera.room.cameraPositions.Length > 1) {
             if (is_changing_room) {
                 Debug.Log("SBCameraScroll: The room " + room_name + " is blacklisted.");
             }
@@ -694,7 +695,7 @@ public static class RoomCameraMod {
         // needs to be updated in ApplyPositionChange();
         // I need to check for blacklisted room anyway 
         // since for example "RM_AI" can be merged but is incompatible;
-        if (blacklisted_rooms.Contains(room_name) || WorldLoader.FindRoomFile(room_name, false, "_0.png") == null) {
+        if (blacklisted_rooms.Contains(room_name) || !File.Exists(WorldLoader.FindRoomFile(room_name, false, "_0.png"))) {
             orig(room_camera, room_name, camera_position_index);
             return;
         }
