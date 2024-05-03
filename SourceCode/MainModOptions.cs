@@ -571,6 +571,7 @@ public class MainModOptions : OptionInterface {
 
         Options.screenResolutions[(int)saved_resolution_index] = (Vector2)saved_resolution;
         if (!apply_immediately) return;
+        ReInitialize_Futile();
         rainWorld.options.OnLoadFinished();
     }
 

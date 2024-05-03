@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 2.8.0 
+###### Version: 2.8.1 
 This is a mod for Rain World v1.9.
 
 ### Description
@@ -23,7 +23,7 @@ This mod includes additional cameras:
 
 ### Installation
 0. Update Rain World to version 1.9 if needed.
-1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.8.0).
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.8.1).
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
@@ -38,6 +38,9 @@ There are two licenses available - MIT and Unlicense. You can choose which one y
 
 ### Changelog
 #### (Rain World v1.9)
+v2.8.1:
+- (resolution) Fixed a bug where the height would not be reset after changing back to `Default`.
+
 v2.8.0:
 - Modded the underwater light shader. It had the same distortion pixelation problem as the normal underwater shader.
 - Fixed a bug where the wrong room would be merged or blacklisted when using the `REPLACEROOM` feature in CRS.
