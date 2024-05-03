@@ -79,14 +79,14 @@ public class MainModOptions : OptionInterface {
     //
 
     public static Configurable<int> camera_zoom_slider = main_mod_options.config.Bind("camera_zoom_slider", defaultValue: 10, new ConfigurableInfo("Works for the most part but makes some shaders glitch out more. Not used when the SplitScreen Co-op mod is active.", new ConfigAcceptableRange<int>(5, 20), "", "Camera Zoom (10)"));
-    public static Configurable<string> resolution_width = main_mod_options.config.Bind("resolution_width", "Default", new ConfigurableInfo("Overrides the current resolution width. Can be used to zoom out with\nless pixelation issues. Might reduce black borders on larger monitors.", null, "", "Resolution Width"));
+    public static Configurable<string> resolution = main_mod_options.config.Bind("resolution", "Default", new ConfigurableInfo("Overrides the current resolution. Can be used to zoom out with less\npixelation issues. Might reduce black borders on larger monitors.", null, "", "Resolution"));
 
     //
     // variables
     //
 
     public int? saved_resolution_index = null;
-    public float? saved_resolution_width = null;
+    public Vector2? saved_resolution = null;
 
     private Vector2 _margin_x = new();
     private Vector2 _pos = new();
@@ -144,11 +144,11 @@ public class MainModOptions : OptionInterface {
         Debug.Log("SBCameraScroll: Option_ScrollOneScreenRooms " + Option_ScrollOneScreenRooms);
 
         camera_zoom = 0.1f * camera_zoom_slider.Value;
-        Set_Resolution_Width(resolution_width.Value);
+        Set_Resolution(resolution.Value);
         smoothing_factor = smoothing_factor_slider.Value / 50f;
 
         Debug.Log("SBCameraScroll: camera_zoom " + camera_zoom);
-        Debug.Log("SBCameraScroll: resolution_width " + resolution_width.Value);
+        Debug.Log("SBCameraScroll: resolution_width " + resolution.Value);
         Debug.Log("SBCameraScroll: smoothing_factor " + smoothing_factor);
 
         if (RoomCameraMod.camera_type is RoomCameraMod.CameraType.Position or RoomCameraMod.CameraType.Switch) {
@@ -276,8 +276,45 @@ public class MainModOptions : OptionInterface {
         _create_cache_button.greyedOut = true;
     }
 
-    public void Set_Resolution_Width(string resolution_width_string) {
-        if (!int.TryParse(resolution_width_string, out int resolution_width)) {
+    public void ReInitialize_Futile() {
+        //
+        // the hook for FScreen.ctor is applied after the FScreen in Futile is created;
+        // therefore, re-initialize some of the things;
+        //
+
+        Futile? futile = Futile.instance;
+        if (futile == null) return;
+        Futile.screen = new FScreen(futile._futileParams);
+        futile.InitCamera(futile._camera, 1);
+
+        if (futile.splitScreen) {
+            futile.InitCamera(futile._camera2, 2);
+        }
+
+        if (Display.main.systemWidth < 1366 || Display.main.systemHeight < 768) {
+            Futile.screen.renderTexture.filterMode = FilterMode.Bilinear;
+        } else {
+            Futile.screen.renderTexture.filterMode = FilterMode.Point;
+        }
+
+        futile._cameraImage.texture = Futile.screen.renderTexture;
+        futile.UpdateCameraPosition();
+    }
+
+    public void Set_Resolution(string resolution_string) {
+        // there are some visual bugs and menues are misplaced; like the main menu 
+        // for example is stuck at the bottom; the jollycoop menu is stuck at the 
+        // top; you can move and zoom the game objects; but doing that on the main
+        // futile game object has side effects for the in-game rendered room_camera
+        // stuff; for the menues too; the jollycoop menu might be placed offscreen;
+
+        string[] split_string = resolution_string.Split('x');
+        if (split_string.Length < 2) {
+            Reset_Resolution();
+            return;
+        }
+
+        if (!int.TryParse(split_string[0], out int resolution_width) || !int.TryParse(split_string[1], out int resolution_height)) {
             Reset_Resolution();
             return;
         }
@@ -285,9 +322,12 @@ public class MainModOptions : OptionInterface {
         Reset_Resolution(apply_immediately: false);
         Options options = rainWorld.options;
         saved_resolution_index = options.resolution;
-        saved_resolution_width = Options.screenResolutions[(int)saved_resolution_index].x;
+        saved_resolution = Options.screenResolutions[(int)saved_resolution_index];
 
-        Options.screenResolutions[(int)saved_resolution_index] = new(resolution_width, 768f);
+        // the second screen does not get initialized correctly in split screen coop 
+        // when the height is larger than 768f; the zoom does not match;
+        Options.screenResolutions[(int)saved_resolution_index] = is_split_screen_coop_enabled ? new(resolution_width, 768f) : new(resolution_width, resolution_height);
+        ReInitialize_Futile();
         rainWorld.options.OnLoadFinished();
     }
 
@@ -500,13 +540,13 @@ public class MainModOptions : OptionInterface {
 
         AddNewLine();
 
-        List<ListItem> resolution_width_item_list = new() { new("Default", "Default", 0) { desc = "Resets the screen resolution width." } };
+        List<ListItem> resolution_item_list = new() { new("Default", "Default", 0) { desc = "Resets the screen resolution." } };
         foreach (Resolution resolution in UnityEngine.Screen.resolutions) {
-            ListItem item = new(resolution.width.ToString(), resolution.width) { desc = "Sets the screen resolution width to " + resolution.width + " pixels." };
-            if (resolution_width_item_list.Contains(item)) continue;
-            resolution_width_item_list.Add(item);
+            ListItem item = new(resolution.width.ToString() + " x " + resolution.height.ToString(), resolution.width) { desc = "Sets the screen resolution to " + resolution + " pixels." };
+            if (resolution_item_list.Contains(item)) continue;
+            resolution_item_list.Add(item);
         }
-        AddComboBox(resolution_width, resolution_width_item_list, (string)resolution_width.info.Tags[0]);
+        AddComboBox(resolution, resolution_item_list, (string)resolution.info.Tags[0]);
         DrawComboBoxes(ref Tabs[tab_index]);
 
         AddNewLine(5.25f);
@@ -527,9 +567,9 @@ public class MainModOptions : OptionInterface {
 
     public void Reset_Resolution(bool apply_immediately = true) {
         if (saved_resolution_index == null) return;
-        if (saved_resolution_width == null) return;
+        if (saved_resolution == null) return;
 
-        Options.screenResolutions[(int)saved_resolution_index] = new((float)saved_resolution_width, 768f);
+        Options.screenResolutions[(int)saved_resolution_index] = (Vector2)saved_resolution;
         if (!apply_immediately) return;
         rainWorld.options.OnLoadFinished();
     }

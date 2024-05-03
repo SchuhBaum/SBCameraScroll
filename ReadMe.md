@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 2.7.9
+###### Version: 2.8.0 
 This is a mod for Rain World v1.9.
 
 ### Description
@@ -23,7 +23,7 @@ This mod includes additional cameras:
 
 ### Installation
 0. Update Rain World to version 1.9 if needed.
-1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.7.9).
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.8.0).
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
@@ -38,7 +38,7 @@ There are two licenses available - MIT and Unlicense. You can choose which one y
 
 ### Changelog
 #### (Rain World v1.9)
-v2.7.9:
+v2.8.0:
 - Modded the underwater light shader. It had the same distortion pixelation problem as the normal underwater shader.
 - Fixed a bug where the wrong room would be merged or blacklisted when using the `REPLACEROOM` feature in CRS.
 - Fixed another bug regarding that where the wrong room would be displayed.
@@ -48,6 +48,8 @@ v2.7.9:
 - Changed the depth calculation for shortcut symbols and such. It does not depend on the position of the camera anymore. The depth is static after all and only needs to match the pre-rendered visuals of the room.
 - (SplitScreen Co-op compatibility) Changed the parameters of the functions Shader.Set..() to match the format used in v1.9.15. This might fix some visual issues when using SplitScreen Co-op.
 - Always checking File.Exists() when using the function WorldLoader.FindRoomFile() (for consistency and compatibility with MergeFix).
+- (SplitScreen Co-op) Fixed a bug. When the camera is zoomed out by increasing the resolution width then the camera should no longer scroll in small rooms.
+- (resolution) Renamed resolution width to resolution. The height can now be increased as well. There are some side effects. The main menu is stuck at the bottom for example. Increasing the height does not work for the second screen in SplitScreen Co-op and will be ignored in that case.
 
 v2.7.0:
 - Snow on the level texture should be less pixelated now. (I am blind. I missed the snow texture in the class RoomCamera. It needs to fit the size of the level texture.)
