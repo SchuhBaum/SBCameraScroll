@@ -16,7 +16,7 @@ using static SBCameraScroll.RainWorldMod;
 
 namespace SBCameraScroll;
 
-[BepInPlugin("SBCameraScroll", "SBCameraScroll", "2.8.1 ")]
+[BepInPlugin("SBCameraScroll", "SBCameraScroll", "2.8.1")]
 public class MainMod : BaseUnityPlugin {
     //
     // meta data

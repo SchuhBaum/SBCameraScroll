@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 2.8.1 
+###### Version: 2.8.1
 This is a mod for Rain World v1.9.
 
 ### Description

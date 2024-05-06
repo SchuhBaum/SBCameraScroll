@@ -6,6 +6,7 @@
   "description": "Creates a smooth, scrolling camera that moves with the slugcat. Based on pipi toki's CameraScroll mod.<LINE><LINE>INCOMPATIBILITIES:<LINE>- The zoom camera option in the Slugcat Eyebrow Raise mod.",
   "requirements": [],
   "requirements_names": [],
+  "target_game_version": "v1.9.15",
   "tags": [
     "Accessibility",
     "Game Mechanics"
