@@ -1,3 +1,5 @@
+.gitignore
+
 SourceCode/bin
 SourceCode/obj
 SBCameraScroll/levels
@@ -10,6 +12,7 @@ SBCameraScroll/plugins/
 SBCameraScroll/previously_active_mods.json
 SBCameraScroll.zip
 steam_description.txt
+build.ps1
 
 **/*.meta
 .vscode

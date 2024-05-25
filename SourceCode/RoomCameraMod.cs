@@ -1,4 +1,4 @@
-using Expedition;
+﻿using Expedition;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using RWCustom;
@@ -39,8 +39,7 @@ public static class RoomCameraMod {
     public static Attached_Fields Get_Attached_Fields(this RoomCamera room_camera) => _all_attached_fields[room_camera];
     public static bool Is_Type_Camera_Not_Used(this RoomCamera room_camera) => room_camera.Get_Attached_Fields() is Attached_Fields attached_fields && (attached_fields.is_room_blacklisted || !attached_fields.is_camera_scroll_enabled && !attached_fields.is_camera_scroll_forced_by_split_screen) || room_camera.voidSeaMode;
 
-    public static bool can_send_message_now = false;
-    public static bool has_to_send_message_later = false;
+    public static string? next_text_prompt_message = null;
 
     //
     //
@@ -56,19 +55,16 @@ public static class RoomCameraMod {
         On.RoomCamera.ctor += RoomCamera_Ctor;
 
         On.RoomCamera.DepthAtCoordinate += RoomCamera_DepthAtCoordinate;
-        On.RoomCamera.FireUpSafariHUD += RoomCamera_FireUpSafariHUD;
-        On.RoomCamera.FireUpSinglePlayerHUD += RoomCamera_FireUpSinglePlayerHUD;
         On.RoomCamera.IsViewedByCameraPosition += RoomCamera_IsViewedByCameraPosition;
-
         On.RoomCamera.IsVisibleAtCameraPosition += RoomCamera_IsVisibleAtCameraPosition;
         On.RoomCamera.MoveCamera_int += RoomCamera_MoveCamera;
+
         On.RoomCamera.MoveCamera2 += RoomCamera_MoveCamera2;
         On.RoomCamera.PixelColorAtCoordinate += RoomCamera_PixelColorAtCoordinate;
-
         On.RoomCamera.PositionCurrentlyVisible += RoomCamera_PositionCurrentlyVisible;
         On.RoomCamera.PositionVisibleInNextScreen += RoomCamera_PositionVisibleInNextScreen;
-        On.RoomCamera.PreLoadTexture += RoomCamera_PreLoadTexture;
 
+        On.RoomCamera.PreLoadTexture += RoomCamera_PreLoadTexture;
         On.RoomCamera.RectCurrentlyVisible += RoomCamera_RectCurrentlyVisible;
         On.RoomCamera.ScreenMovement += RoomCamera_ScreenMovement;
     }
@@ -203,14 +199,18 @@ public static class RoomCameraMod {
         }
     }
 
-    public static void Send_Merging_Completed_Message(RoomCamera room_camera) {
-        if (!can_send_message_now && !has_to_send_message_later) return;
+    public static void Send_TextPrompt_Message(RoomCamera room_camera) {
+        if (next_text_prompt_message == null) return;
         if (room_camera.hud is not HUD.HUD hud) return;
         if (room_camera.game is not RainWorldGame game) return;
 
-        hud.textPrompt.AddMessage(game.rainWorld.inGameTranslator.Translate("SBCameraScroll: Merging camera textures completed."), wait: 0, time: 200, darken: false, hideHud: false);
-        can_send_message_now = false;
-        has_to_send_message_later = false;
+        if (hud.textPrompt.currentlyShowing != HUD.TextPrompt.InfoID.Nothing) {
+            next_text_prompt_message = null;
+            return;
+        }
+
+        hud.textPrompt.AddMessage(game.rainWorld.inGameTranslator.Translate(next_text_prompt_message), wait: 0, time: 200, darken: false, hideHud: false);
+        next_text_prompt_message = null;
     }
 
     // accounts for room boundaries and shortcuts
@@ -425,6 +425,11 @@ public static class RoomCameraMod {
         ILCursor cursor = new(context);
         // LogAllInstructions(context);
 
+        cursor.Emit(OpCodes.Ldarg_0);
+        cursor.EmitDelegate<Action<RoomCamera>>(room_camera => {
+            Send_TextPrompt_Message(room_camera);
+        });
+
         // maybe it is just me or is stuff noticeably slower when using On-Hooks + GPU stuff?
         // IL_RoomCamera_DrawUpdate() seems to do a lot..
         // maybe it is better to do Update as an IL-Hook as well;
@@ -608,16 +613,6 @@ public static class RoomCameraMod {
         if (room_camera.Is_Type_Camera_Not_Used()) return orig(room_camera, position);
         if (room_camera.room is not Room room) return orig(room_camera, position);
         return orig(room_camera, position + room_camera.CamPos(room_camera.currentCameraPosition) - room.abstractRoom.Get_Attached_Fields().texture_offset);
-    }
-
-    private static void RoomCamera_FireUpSafariHUD(On.RoomCamera.orig_FireUpSafariHUD orig, RoomCamera room_camera) {
-        orig(room_camera);
-        Send_Merging_Completed_Message(room_camera);
-    }
-
-    private static void RoomCamera_FireUpSinglePlayerHUD(On.RoomCamera.orig_FireUpSinglePlayerHUD orig, RoomCamera room_camera, Player player) {
-        orig(room_camera, player);
-        Send_Merging_Completed_Message(room_camera);
     }
 
     private static bool RoomCamera_IsViewedByCameraPosition(On.RoomCamera.orig_IsViewedByCameraPosition orig, RoomCamera room_camera, int camera_position_index, Vector2 test_position) {

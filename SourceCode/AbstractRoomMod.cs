@@ -1,4 +1,4 @@
-using RWCustom;
+﻿using RWCustom;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -333,15 +333,7 @@ public static class AbstractRoomMod {
 
             File.WriteAllBytes(merged_room_file_path, merged_texture.EncodeToPNG());
             Debug.Log("SBCameraScroll: Merging completed.");
-
-            if (can_send_message_now) {
-                if (abstract_room.world?.game?.cameras[0] is RoomCamera room_camera && room_camera.hud != null) {
-                    Send_Merging_Completed_Message(room_camera);
-                } else {
-                    has_to_send_message_later = true;
-                }
-                can_send_message_now = false;
-            }
+            next_text_prompt_message = mod_id + ": Merging camera textures completed.";
         } catch (Exception exception) {
             Debug.Log("SBCameraScroll: " + exception);
             Debug.Log("SBCameraScroll: Encountered an exception. Blacklist " + room_name + ".");

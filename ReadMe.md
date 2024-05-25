@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 2.8.1
+###### Version: 2.8.2
 This is a mod for Rain World v1.9.
 
 ### Description
@@ -23,7 +23,7 @@ This mod includes additional cameras:
 
 ### Installation
 0. Update Rain World to version 1.9 if needed.
-1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.8.1).
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.8.2).
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
@@ -34,10 +34,13 @@ See the corresponding sections on the [Steam Workshop page](https://steamcommuni
 If you have feedback, you can message me on Discord `@schuhbaum` or write an email to SchuhBaum71@gmail.com.
 
 ### License
-There are two licenses available - MIT and Unlicense. You can choose which one you want to use.  
+See the file LICENSE-MIT.
 
 ### Changelog
 #### (Rain World v1.9)
+v2.8.2:
+- (merge while loading) Wrapped in a coroutine. This way the game is not completely frozen while textures are being merged. And the merging info message appears instantly.
+
 v2.8.1:
 - (resolution) Fixed a bug where the height would not be reset after changing back to `Default`.
 

@@ -1,4 +1,4 @@
-using Menu;
+﻿using Menu;
 using Menu.Remix.MixedUI;
 using System;
 using System.Collections;
@@ -38,10 +38,6 @@ public class MainModOptions : OptionInterface {
             "You can switch between the other two camera types by pressing the map button.\nThe keybinding can be configured using the mod 'Improved Input Config'."
     };
 
-    // does not work for some reason;
-    // private MonoBehaviour _create_cache_coroutine_wrapper = new GameObject().AddComponent<MonoBehaviour>();
-    private class CreateCache_CoroutineWrapper : MonoBehaviour { }
-    private static MonoBehaviour _create_cache_coroutine_wrapper = new GameObject("SBCameraScroll").AddComponent<CreateCache_CoroutineWrapper>();
     private const string _create_cache_button_text = "CREATE CACHE";
     private const string _create_cache_button_description = "WARNING: This can take several (10+) minutes. Merges camera textures for all rooms\nin all regions at once. This way you don't have to wait when using region gates later.";
 
@@ -223,10 +219,7 @@ public class MainModOptions : OptionInterface {
                 // hovered over with the mouse);
                 modding_menu.ShowDescription(updated_description);
             }
-
             _create_cache_button.description = updated_description;
-            can_send_message_now = false;
-            has_to_send_message_later = false;
 
             foreach (AbstractRoom abstract_room in world_loader.abstractRooms) {
                 yield return new WaitForSeconds(0.001f);
@@ -241,11 +234,21 @@ public class MainModOptions : OptionInterface {
         CreateCacheButton_Reset();
         CreateCacheButton_UpdateColor(all_regions);
         ClearCacheButton_UpdateColor();
+
+        // Otherwise, the message will be shown when entering a game.
+        next_text_prompt_message = null;
     }
 
     public void CreateCache_StopCoroutines() {
-        _create_cache_coroutine_wrapper.StopAllCoroutines();
+        if (_coroutine_wrapper == null) {
+            Debug.Log(mod_id + ": ERROR! The coroutine wrapper is null.");
+            CreateCacheButton_Reset();
+            return;
+        }
+
+        _coroutine_wrapper.StopAllCoroutines();
         CreateCacheButton_Reset();
+        next_text_prompt_message = null;
     }
 
     public void CreateCacheButton_OnClick(UIfocusable _) {
@@ -254,8 +257,14 @@ public class MainModOptions : OptionInterface {
             return;
         }
 
+        if (_coroutine_wrapper == null) {
+            Debug.Log(mod_id + ": ERROR! The coroutine wrapper is null.");
+            CreateCacheButton_Reset();
+            return;
+        }
+
         CreateCache_StopCoroutines();
-        _create_cache_coroutine_wrapper.StartCoroutine(CreateCache_Coroutine());
+        _coroutine_wrapper.StartCoroutine(CreateCache_Coroutine());
     }
 
     public void CreateCacheButton_Reset() {

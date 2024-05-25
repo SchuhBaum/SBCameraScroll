@@ -1,4 +1,4 @@
-using BepInEx;
+﻿using BepInEx;
 using MonoMod.Cil;
 using RWCustom;
 using System.Collections.Generic;
@@ -24,7 +24,7 @@ public class MainMod : BaseUnityPlugin {
 
     public static readonly string mod_id = "SBCameraScroll";
     public static readonly string author = "SchuhBaum";
-    public static readonly string version = "2.8.1";
+    public static readonly string version = "2.8.2";
     public static readonly string mod_directory_path = Directory.GetParent(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)).FullName + Path.DirectorySeparatorChar;
 
     //
@@ -45,6 +45,15 @@ public class MainMod : BaseUnityPlugin {
     // public static bool is_custom_region_support_enabled = false;
     public static bool is_improved_input_enabled = false;
     public static bool is_split_screen_coop_enabled = false;
+
+    //
+    // constants
+    //
+
+    // does not work for some reason;
+    // private MonoBehaviour _create_cache_coroutine_wrapper = new GameObject().AddComponent<MonoBehaviour>();
+    private class CoroutineWrapper : MonoBehaviour { }
+    internal static MonoBehaviour? _coroutine_wrapper = null;
 
     //
     // variables
@@ -295,6 +304,7 @@ public class MainMod : BaseUnityPlugin {
 
         if (is_on_mods_init_initialized) return;
         is_on_mods_init_initialized = true;
+        _coroutine_wrapper ??= new GameObject("SBCameraScroll").AddComponent<CoroutineWrapper>();
 
         Debug.Log("SBCameraScroll: version " + version);
         Debug.Log("SBCameraScroll: max_texture_size " + SystemInfo.maxTextureSize);
