@@ -1,4 +1,4 @@
-// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+﻿// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
 
 
 //from http://forum.unity3d.com/threads/68402-Making-a-2D-game-for-iPhone-iPad-and-need-better-performance
@@ -8,6 +8,10 @@ Shader "SBCameraScroll/LevelColor" {
     Properties {
         _MainTex ("Base (RGB) Trans (A)", 2D) = "white" {}
         
+        // modded:
+        // Initialize value.
+        _TextureOffsetArraySize("DO NOT CHANGE", Range(0, 0)) = 0
+
         //_PalTex ("Base (RGB) Trans (A)", 2D) = "white" {}
         //_NoiseTex ("Base (RGB) Trans (A)", 2D) = "white" {}
         // _RAIN ("Rain", Range (0,1.0)) = 0.5
@@ -68,6 +72,11 @@ Shader "SBCameraScroll/LevelColor" {
                 uniform float _palette;
                 uniform float _RAIN;
                 uniform float _light = 0;
+
+                // modded:
+                uniform float2 _textureOffsetArray[30];
+                uniform int    _textureOffsetArrayLength;
+
                 uniform float4 _spriteRect;
                 uniform float2 _screenOffset;
 
@@ -87,9 +96,10 @@ Shader "SBCameraScroll/LevelColor" {
                 uniform fixed _rimFix;
 
                 struct v2f {
-                    float4  pos : SV_POSITION;
-                    float2  uv : TEXCOORD0;
-                    float2  uv2 : TEXCOORD1;
+                    float4  pos         : SV_POSITION;
+                    float2  uv          : TEXCOORD0;
+                    float2  uv2         : TEXCOORD1;
+                    float2  pixel_coord : TEXCOORD2;
                 };
 
                 float4 _MainTex_ST;
@@ -98,6 +108,7 @@ Shader "SBCameraScroll/LevelColor" {
                     v2f o;
                     o.pos = UnityObjectToClipPos (v.vertex);
                     o.uv = TRANSFORM_TEX (v.texcoord, _MainTex);
+                    o.pixel_coord = o.uv / _LevelTex_TexelSize;
 
                     // problem:
                     // when using larger level textures and _rimFix is used the texture is shifted to the right
@@ -123,6 +134,23 @@ Shader "SBCameraScroll/LevelColor" {
                     o.uv2 = o.uv - _LevelTex_TexelSize * .5 * _rimFix;
 
                     return o;
+                }
+
+                inline float2 getScreenTextureOffset(float2 pixel_coord) {
+                    if (_textureOffsetArrayLength <= 0) return float2(0,0);
+                    if (_textureOffsetArrayLength > 30) return float2(0,0);
+                    float  smallest_distance      = 1e30;
+                    float2 closest_texture_offset = float2(0,0);
+
+                    for (int index = 0; index < _textureOffsetArrayLength; ++index) {
+                        float2 texture_offset = _textureOffsetArray[index];
+                        if (pixel_coord.x < texture_offset.x || pixel_coord.y < texture_offset.y) continue;
+                        if (distance(pixel_coord, texture_offset) >= smallest_distance) continue;
+
+                        smallest_distance = distance(pixel_coord, texture_offset);
+                        closest_texture_offset = texture_offset;
+                    }
+                    return closest_texture_offset;
                 }
 
                 inline float3 applyHue(float3 aColor, float aHue) {
@@ -213,7 +241,16 @@ Shader "SBCameraScroll/LevelColor" {
                         setColor = lerp(setColor, tex2D(_PalTex, float2((5.5 + rbcol*25)/32.0, 6.5 / 8.0) ), (green >= 4 ? 0.2 : 0.0) * _Grime);
                     
                         if (effectCol == 100) {
-                            half4 decalCol = tex2D(_MainTex, float2((255.5-round(texcol.z*255.0))/1400.0, 799.5/800.0));
+                            // vanilla:
+                            // half4 decalCol = tex2D(_MainTex, float2((255.5-round(texcol.z*255.0))/1400.0, 799.5/800.0));
+
+                            // modded:
+                            // There are some pixels on every screen texture that
+                            // contain color information. Here, the offset to these
+                            // pixels is calculated and used.
+                            float2 texture_offset = getScreenTextureOffset(i.pixel_coord);
+                            half4 decalCol = tex2D(_MainTex, float2((texture_offset.x + (255.5-round(texcol.z*255.0))) * _LevelTex_TexelSize.x, (texture_offset.y + 799.5) * _LevelTex_TexelSize.y));
+
                             if (paletteColor == 2) decalCol = lerp(decalCol, half4(1, 1, 1, 1), 0.2 - shadow*0.1);
                             decalCol = lerp(decalCol, tex2D(_PalTex, float2(1.5/32.0, 7.5/8.0)), red/60.0);
                             setColor = lerp(lerp(setColor, decalCol, 0.7), setColor*decalCol*1.5,  lerp(0.9, 0.3+0.4*shadow, clamp((red-3.5)*0.3, 0, 1) ) );

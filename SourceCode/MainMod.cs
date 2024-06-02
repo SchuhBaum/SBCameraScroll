@@ -16,7 +16,7 @@ using static SBCameraScroll.RainWorldMod;
 
 namespace SBCameraScroll;
 
-[BepInPlugin("SBCameraScroll", "SBCameraScroll", "2.8.1")]
+[BepInPlugin("SBCameraScroll", "SBCameraScroll", "2.8.3")]
 public class MainMod : BaseUnityPlugin {
     //
     // meta data
@@ -24,7 +24,7 @@ public class MainMod : BaseUnityPlugin {
 
     public static readonly string mod_id = "SBCameraScroll";
     public static readonly string author = "SchuhBaum";
-    public static readonly string version = "2.8.2";
+    public static readonly string version = "2.8.3";
     public static readonly string mod_directory_path = Directory.GetParent(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)).FullName + Path.DirectorySeparatorChar;
 
     //
@@ -49,6 +49,9 @@ public class MainMod : BaseUnityPlugin {
     //
     // constants
     //
+
+	public static readonly int TextureOffsetArray = Shader.PropertyToID("_textureOffsetArray");
+	public static readonly int TextureOffsetArrayLength = Shader.PropertyToID("_textureOffsetArrayLength");
 
     // does not work for some reason;
     // private MonoBehaviour _create_cache_coroutine_wrapper = new GameObject().AddComponent<MonoBehaviour>();

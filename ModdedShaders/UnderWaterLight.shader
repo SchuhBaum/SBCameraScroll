@@ -1,4 +1,4 @@
-// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+﻿// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
 // Upgrade NOTE: replaced 'samplerRECT' with 'sampler2D'
 // from http://forum.unity3d.com/threads/68402-Making-a-2D-game-for-iPhone-iPad-and-need-better-performance
 
@@ -96,6 +96,7 @@ Properties {
                     // modded:
                     // reduces the magnitude of the distortion effect; this can get out of hand 
                     // in larger rooms otherwise; copy&paste from DeepWater shader;
+                    // I probably can just use _LevelTex_TexelSize instead of 1/level_texture_size.
                     float2 level_texture_size = float2((_spriteRect.z - _spriteRect.x) * _screenSize.x, (_spriteRect.w - _spriteRect.y) * _screenSize.y);
                     float2 distortion = float2(lerp(-0.002, 0.002, rbcol) * lerp(1, 20, pow(i.uv.y, 200)) * 1400 / level_texture_size.x, -0.02 * pow(i.uv.y, 8) * 800 / level_texture_size.y);
 

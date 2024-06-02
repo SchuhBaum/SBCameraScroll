@@ -552,7 +552,8 @@ public static class RoomCameraMod {
             snow_texture.height = level_texture.height;
         }
 
-        if (room_camera.room == null) {
+        Attached_Fields room_camera_fields = room_camera.Get_Attached_Fields();
+        if (room_camera.room is not Room room) {
             if (is_changing_room) {
                 Debug.Log("SBCameraScroll: The current room is blacklisted.");
             }
@@ -563,40 +564,54 @@ public static class RoomCameraMod {
             // I would also not be able to check blacklisted_rooms;
             // blacklisting the room is just a guess at this point;
 
-            Attached_Fields attached_fields = room_camera.Get_Attached_Fields();
-            attached_fields.is_room_blacklisted = true;
-            attached_fields.is_camera_scroll_enabled = false;
+            room_camera_fields.is_room_blacklisted = true;
+            room_camera_fields.is_camera_scroll_enabled = false;
 
             // uses currentCameraPosition and is_room_blacklisted;
             ResetCameraPosition(room_camera);
             return;
         }
 
+        AbstractRoomMod.Attached_Fields abstract_room_fields = room.abstractRoom.Get_Attached_Fields();
+        if (room.cameraPositions.Length > 30 || (level_texture.width <= 1400 && level_texture.height <= 800)) {
+            Shader.SetGlobalInt(TextureOffsetArrayLength, 0);
+            Shader.SetGlobalVectorArray(TextureOffsetArray, new Vector4[30]);
+        } else {
+            Vector2 texture_offset = abstract_room_fields.texture_offset;
+            Vector4[] texture_offset_array = new Vector4[30];
+
+            for (int camera_index = 0; camera_index < room.cameraPositions.Length; ++camera_index) {
+                texture_offset_array[camera_index] = (Vector4)(room.cameraPositions[camera_index] - texture_offset);
+            }
+
+            Shader.SetGlobalInt(TextureOffsetArrayLength, room.cameraPositions.Length);
+            Shader.SetGlobalVectorArray(TextureOffsetArray, texture_offset_array);
+        }
+
         // if I blacklist too early then the camera might jump in the current room;
-        string room_name = room_camera.room.abstractRoom.name;
+        string room_name = room.abstractRoom.name;
 
         // CRS (Custom-Region-Support) can replace rooms now; I need to check this; 
         // otherwise I might blacklist the wrong room;
-        if (room_camera.room.abstractRoom.Get_Attached_Fields().name_when_replaced_by_crs is string new_room_name) {
+        if (abstract_room_fields.name_when_replaced_by_crs is string new_room_name) {
             room_name = new_room_name;
         }
 
-        if (blacklisted_rooms.Contains(room_name) || !File.Exists(WorldLoader.FindRoomFile(room_name, false, "_0.png")) && room_camera.room.cameraPositions.Length > 1) {
+        if (blacklisted_rooms.Contains(room_name) || !File.Exists(WorldLoader.FindRoomFile(room_name, false, "_0.png")) && room.cameraPositions.Length > 1) {
             if (is_changing_room) {
                 Debug.Log("SBCameraScroll: The room " + room_name + " is blacklisted.");
             }
 
-            Attached_Fields attached_fields = room_camera.Get_Attached_Fields();
-            attached_fields.is_room_blacklisted = true;
-            attached_fields.is_camera_scroll_enabled = false;
+            room_camera_fields.is_room_blacklisted = true;
+            room_camera_fields.is_camera_scroll_enabled = false;
 
             // uses currentCameraPosition and is_room_blacklisted;
             ResetCameraPosition(room_camera);
             return;
         }
 
-        room_camera.Get_Attached_Fields().is_room_blacklisted = false;
-        room_camera.Get_Attached_Fields().is_camera_scroll_enabled = room_camera.room.cameraPositions.Length > 1 || Option_ScrollOneScreenRooms;
+        room_camera_fields.is_room_blacklisted = false;
+        room_camera_fields.is_camera_scroll_enabled = room.cameraPositions.Length > 1 || Option_ScrollOneScreenRooms;
 
         // uses currentCameraPosition and is_room_blacklisted;
         ResetCameraPosition(room_camera);

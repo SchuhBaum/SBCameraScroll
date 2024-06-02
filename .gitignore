@@ -1,4 +1,4 @@
-.gitignore
+# .gitignore
 
 SourceCode/bin
 SourceCode/obj
@@ -12,7 +12,7 @@ SBCameraScroll/plugins/
 SBCameraScroll/previously_active_mods.json
 SBCameraScroll.zip
 steam_description.txt
-build.ps1
+# build.ps1
 
 **/*.meta
 .vscode
