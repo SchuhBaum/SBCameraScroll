@@ -174,9 +174,7 @@ Shader "SBCameraScroll/DeepWater" {
                                     grabColor = half4(0,0,0,0);
                                 } else {
                                     grad = 6.0/30.0;
-                                    #if Gutter
                                     // grad += pulse(0.7,.3,1-noisemix)+garbagemask*.4;
-                                    #endif
                                     grabColor *= lerp(tex2D(_PalTex, float2(5.5/32.0, 7.5/8.0)), half4(1,1,1,1), 0.75);
                                     plrLightDst = 1;
                                 }

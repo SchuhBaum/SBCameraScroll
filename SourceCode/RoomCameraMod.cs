@@ -396,9 +396,18 @@ public static class RoomCameraMod {
                     return;
                 }
 
-                // the offset here is reached after calculation;
-                // screen_offset = camera_zoom * Half_Inverse_Camera_Zoom_XY * sSize.x / sSize.x;
-                // same with y;
+                // When zooming out the screen gets smaller. The offset is to
+                // center the sprite rectangle. If your screen is 0.25 times as
+                // big then you want to move 1.5 small screens towards bottom-left.
+                // (There fit 4 small screens in total, so left margin is 1.5
+                // small screens and right one as well.) If you plug that into
+                // the Shader.SetGlobalVector() formula below and simplify then
+                // you get the zoomed and scaled version:
+                //
+                // screen_offset
+                // = camera_zoom * (Half_Inverse_Camera_Zoom_XY * sSize.x) / sSize.x
+                // = camera_zoom * Half_Inverse_Camera_Zoom_XY
+                // = 0.25f       * 1.5f // in the example
                 float screen_offset = 0.5f * (1f - camera_zoom);
 
                 // room_camera.levelGraphic.x = textureOffset.x - cameraPosition.x;
