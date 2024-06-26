@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 2.8.4
+###### Version: 2.8.5
 This is a mod for Rain World v1.9.
 
 ### Description
@@ -23,7 +23,7 @@ This mod includes additional cameras:
 
 ### Installation
 0. Update Rain World to version 1.9 if needed.
-1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.8.4).
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.8.5).
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
@@ -38,6 +38,9 @@ See the file LICENSE-MIT.
 
 ### Changelog
 #### (Rain World v1.9)
+v2.8.5:
+- Fixed a bug where the water sprite would not reach to the bottom.
+
 v2.8.4:
 - (camera zoom) Fixed a vanilla bug where the water sprite would not scroll and possibly flip. This can be noticed when the camera is zoomed out.
 

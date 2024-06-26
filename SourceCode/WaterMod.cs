@@ -36,11 +36,14 @@ internal static class WaterMod {
             // Pop might be a better choice compared to RemoveRange() because it
             // leaves label targets intact.
             // cursor.Emit(OpCodes.Pop); // pop vanilla -10f
+            cursor.Emit(OpCodes.Ldarg, 2);
             cursor.Emit(OpCodes.Ldarg, 4);
 
-            cursor.EmitDelegate<Func<float, Vector2, float>>(
-                (y_local, camera_pos) => {
-                    return y_local - camera_pos.y; // modded
+            cursor.EmitDelegate<Func<float, RoomCamera, Vector2, float>>(
+                (y_local, room_camera, camera_pos) => {
+                    if (room_camera.Is_Type_Camera_Not_Used()) return y_local;
+                    if (room_camera.room is not Room room) return y_local;
+                    return y_local + room.abstractRoom.Get_Attached_Fields().texture_offset.y - camera_pos.y; // modded
                 });
         } else {
             if (can_log_il_hooks) {
@@ -59,10 +62,14 @@ internal static class WaterMod {
             }
 
             cursor.Goto(cursor.Index + 2);
+            cursor.Emit(OpCodes.Ldarg, 2);
             cursor.Emit(OpCodes.Ldarg, 4);
-            cursor.EmitDelegate<Func<float, Vector2, float>>(
-                (y_local, camera_pos) => {
-                    return y_local - camera_pos.y; // modded
+
+            cursor.EmitDelegate<Func<float, RoomCamera, Vector2, float>>(
+                (y_local, room_camera, camera_pos) => {
+                    if (room_camera.Is_Type_Camera_Not_Used()) return y_local;
+                    if (room_camera.room is not Room room) return y_local;
+                    return y_local + room.abstractRoom.Get_Attached_Fields().texture_offset.y - camera_pos.y; // modded
                 });
         } else {
             if (can_log_il_hooks) {

@@ -14,6 +14,12 @@ using static SBCameraScroll.SplitScreenCoopMod;
 namespace SBCameraScroll;
 
 public static class RoomCameraMod {
+    // Maybe I can use this for debugging purposes more often.
+    // public static FSprite sprite_0 = new("Futile_White");
+    // public static FSprite sprite_1 = new("Futile_White");
+    // public static DebugSprite debug_sprite_0 = new(new(), sprite_0, null);
+    // public static DebugSprite debug_sprite_1 = new(new(), sprite_1, null);
+
     //
     // parameters
     //
@@ -227,8 +233,8 @@ public static class RoomCameraMod {
 
             // shortcuts get only updated every 3 frames => calculate exact position here // in CoopTweaks it can also be 2 frames in order to remove slowdown, i.e. compensate for the mushroom effect
             position += Vector2.Lerp(current_position, next_in_shortcut_position, room_camera.game.updateShortCut / number_of_frames_per_shortcut_udpate);
-        } else // use the center (of mass(?)) instead // makes rolls more predictable // use lower y such that crouching does not move camera
-          {
+        } else {
+            // use the center (of mass(?)) instead // makes rolls more predictable // use lower y such that crouching does not move camera
             position += GetCreaturePosition(creature);
         }
 
