@@ -18,6 +18,8 @@ public static class AbstractRoomMod {
     public static readonly int maximum_texture_height = 16384;
     public static bool HasCopyTextureSupport => SystemInfo.copyTextureSupport >= UnityEngine.Rendering.CopyTextureSupport.TextureToRT;
 
+    public static ComputeShader? fill_empty_spaces_compute_shader = null;
+
     //
     // variables
     //
@@ -27,6 +29,7 @@ public static class AbstractRoomMod {
 
     public static readonly Dictionary<string, Vector2> texture_offset_modifier = new();
 
+    public static RenderTexture? compute_shader_texture = null;
     public static RenderTexture? merged_render_texture = null;
     public static readonly Texture2D merged_texture = new(1, 1, TextureFormat.RGB24, false);
     public static readonly Texture2D camera_texture = new(1, 1, TextureFormat.RGB24, false);
@@ -307,7 +310,15 @@ public static class AbstractRoomMod {
 
                 // clears the active;
                 // and fills it with non-transparent black (dark grey);
-                GL.Clear(true, true, new Color(1f / 255f, 0.0f, 0.0f, 1f));
+                Color default_color = new Color(1f / 255f, 0.0f, 0.0f, 1f);
+                if (Option_FillEmptySpaces && fill_empty_spaces_compute_shader != null) {
+                    // Magenta is probably fine as well. The textures are mostly
+                    // black, red and shades of blue. When it is purple it is
+                    // probably not fully opague. I have not seen green so far
+                    // so use that instead.
+                    default_color = Color.green;
+                }
+                GL.Clear(true, true, default_color);
             } else {
                 NativeArray<byte> colors = merged_texture.GetRawTextureData<byte>();
                 for (int color_index = 0; color_index < colors.Length; ++color_index) {
@@ -328,6 +339,38 @@ public static class AbstractRoomMod {
             }
 
             if (HasCopyTextureSupport && merged_render_texture != null) {
+                if (Option_FillEmptySpaces && fill_empty_spaces_compute_shader != null) {
+                    Debug.Log(mod_id + ": Fill empty spaces with pre-rendered content.");
+                    merged_render_texture.enableRandomWrite = true;
+                    Color default_color = Color.green;
+
+                    // Shader colors are RBGA format only.
+                    fill_empty_spaces_compute_shader.SetVector("defaultColor", new Vector4(default_color.r, default_color.g, default_color.b, default_color.a));
+                    fill_empty_spaces_compute_shader.SetInt("width", merged_render_texture.width);
+                    fill_empty_spaces_compute_shader.SetInt("height", merged_render_texture.height);
+
+                    // Using the merged_render_texture as ResultTexture directly
+                    // does not work for some reason. Maybe only using one texture
+                    // with read-write access would work. But then the order of
+                    // execution would matter, i.e. which pixels are set first.
+                    // Leave it as is.
+                    fill_empty_spaces_compute_shader.SetTexture(0, "SourceTexture", merged_render_texture);
+                    // fill_empty_spaces.SetTexture(0, "ResultTexture", merged_render_texture);
+
+                    compute_shader_texture = new(merged_render_texture.width, merged_render_texture.height, 24, RenderTextureFormat.ARGB32);
+                    compute_shader_texture.enableRandomWrite = true;
+                    compute_shader_texture.Create();
+                    fill_empty_spaces_compute_shader.SetTexture(0, "ResultTexture", compute_shader_texture);
+
+                    int threadGroupsX = Mathf.CeilToInt((float)merged_render_texture.width / 8.0f);
+                    int threadGroupsY = Mathf.CeilToInt((float)merged_render_texture.height / 8.0f);
+                    fill_empty_spaces_compute_shader.Dispatch(0, threadGroupsX, threadGroupsY, 1);
+
+                    // This would not be required if I could use merged_render_texture
+                    // as ResultTexture.
+                    Graphics.Blit(compute_shader_texture, merged_render_texture);
+                    compute_shader_texture.Release();
+                }
                 merged_texture.ReadPixels(new Rect(0.0f, 0.0f, merged_render_texture.width, merged_render_texture.height), 0, 0);
             }
 

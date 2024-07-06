@@ -1,0 +1,92 @@
+﻿#pragma kernel FillEmptySpaces
+
+RWTexture2D<float4> ResultTexture;
+Texture2D<float4> SourceTexture;
+
+float4 defaultColor;
+int width;
+int height;
+
+bool AreVectorsEqual(float4 vec1, float4 vec2) {
+    return (vec1.x == vec2.x) && (vec1.y == vec2.y) && (vec1.z == vec2.z) && (vec1.w == vec2.w);
+}
+
+[numthreads(8,8,1)]
+void FillEmptySpaces (uint3 id : SV_DispatchThreadID) {
+    int2 pixelPos = int2(id.xy);
+    if (pixelPos.x >= width || pixelPos.y >= height) return;
+    float4 pixel = SourceTexture.Load(int3(pixelPos, 0));
+
+    if (AreVectorsEqual(pixel, defaultColor)) {
+        float minDist = width+height;
+        float4 nearestPixel = defaultColor;
+
+        // Search north
+        for (int dy = 1; dy <= pixelPos.y; ++dy) {
+            float4 neighborPixel = SourceTexture.Load(int3(pixelPos.x, pixelPos.y - dy, 0));
+            if (!AreVectorsEqual(neighborPixel, defaultColor)) {
+                if (abs(dy) < minDist) {
+                    minDist = abs(dy);
+                    nearestPixel = neighborPixel;
+                }
+                break;
+            }
+        }
+
+        // Search south
+        for (dy = 1; dy < height - pixelPos.y; ++dy) {
+            float4 neighborPixel = SourceTexture.Load(int3(pixelPos.x, pixelPos.y + dy, 0));
+            if (!AreVectorsEqual(neighborPixel, defaultColor)) {
+                if (abs(dy) < minDist) {
+                    minDist = abs(dy);
+                    nearestPixel = neighborPixel;
+                }
+                break; // Found a non-default pixel, break the loop
+            }
+        }
+
+        // The problem is that whole screens can be unknown. From below you might
+        // have some chimneys that would extend straigt up. When using the closest
+        // pixel you get a triangular cutoff (see cc_sump01_0).
+        // On the other hand in vertical rooms preferring the vertical pixels might
+        // create artifacts. Like some pipe from below creating a border along the
+        // whole screen vertically. It is probably fine since the edges tend to be
+        // fuzzy and black anyways.
+        // Having details stretched looks pretty bad. It looks worse when it happens
+        // horizontally and vertically. See ds_gutter03_0 as an example.
+        if (minDist < width+height) {
+            ResultTexture[pixelPos] = nearestPixel;
+            return;
+        }
+
+        // Search west
+        for (int dx = 1; dx <= pixelPos.x; ++dx) {
+            float4 neighborPixel = SourceTexture.Load(int3(pixelPos.x - dx, pixelPos.y, 0));
+            if (!AreVectorsEqual(neighborPixel, defaultColor)) {
+                if (abs(dx) < minDist) {
+                    minDist = abs(dx);
+                    nearestPixel = neighborPixel;
+                }
+                break; // Found a non-default pixel, break the loop
+            }
+        }
+
+        // Search east
+        for (dx = 1; dx < width - pixelPos.x; ++dx) {
+            float4 neighborPixel = SourceTexture.Load(int3(pixelPos.x + dx, pixelPos.y, 0));
+            if (!AreVectorsEqual(neighborPixel, defaultColor)) {
+                if (abs(dx) < minDist) {
+                    minDist = abs(dx);
+                    nearestPixel = neighborPixel;
+                }
+                break; // Found a non-default pixel, break the loop
+            }
+        }
+        ResultTexture[pixelPos] = nearestPixel;
+    }
+    else
+    {
+        ResultTexture[pixelPos] = pixel;
+    }
+}
+

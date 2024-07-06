@@ -6,6 +6,8 @@ using System.IO;
 using System.Reflection;
 using System.Security.Permissions;
 using UnityEngine;
+
+using static SBCameraScroll.AbstractRoomMod;
 using static SBCameraScroll.MainModOptions;
 using static SBCameraScroll.RainWorldMod;
 
@@ -16,7 +18,7 @@ using static SBCameraScroll.RainWorldMod;
 
 namespace SBCameraScroll;
 
-[BepInPlugin("SBCameraScroll", "SBCameraScroll", "2.8.5")]
+[BepInPlugin("SBCameraScroll", "SBCameraScroll", "2.8.6")]
 public class MainMod : BaseUnityPlugin {
     //
     // meta data
@@ -24,17 +26,18 @@ public class MainMod : BaseUnityPlugin {
 
     public static readonly string mod_id = "SBCameraScroll";
     public static readonly string author = "SchuhBaum";
-    public static readonly string version = "2.8.5";
+    public static readonly string version = "2.8.6";
     public static readonly string mod_directory_path = Directory.GetParent(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)).FullName + Path.DirectorySeparatorChar;
 
     //
     // options
     //
 
+    public static bool Option_FillEmptySpaces => fill_empty_spaces.Value;
     public static bool Option_FullScreenEffects => full_screen_effects.Value;
     public static bool Option_MergeWhileLoading => merge_while_loading.Value;
-    public static bool Option_RegionMods => region_mods.Value;
 
+    public static bool Option_RegionMods => region_mods.Value;
     public static bool Option_ScrollOneScreenRooms => scroll_one_screen_rooms.Value;
     public static bool Option_CameraOffset => cameraoffset_position.Value;
 
@@ -310,6 +313,7 @@ public class MainMod : BaseUnityPlugin {
         _coroutine_wrapper ??= new GameObject("SBCameraScroll").AddComponent<CoroutineWrapper>();
 
         Debug.Log("SBCameraScroll: version " + version);
+        Debug.Log("SBCameraScroll: HasCopyTextureSupport " + HasCopyTextureSupport);
         Debug.Log("SBCameraScroll: max_texture_size " + SystemInfo.maxTextureSize);
         Debug.Log("SBCameraScroll: mod_directory_path " + mod_directory_path);
 
@@ -319,10 +323,11 @@ public class MainMod : BaseUnityPlugin {
         Load_Asset_Bundle();
         rain_world.Replace_Shader("DeepWater");
         rain_world.Replace_Shader("Fog");
-
         rain_world.Replace_Shader("LevelColor");
+
         rain_world.Replace_Shader("LevelHeat");
         rain_world.Replace_Shader("UnderWaterLight");
+        fill_empty_spaces_compute_shader = Load_Compute_Shader("FillEmptySpaces");
 
         foreach (ModManager.Mod mod in ModManager.ActiveMods) {
             // if (mod.id == "crs") {

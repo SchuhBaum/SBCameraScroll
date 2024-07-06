@@ -75,7 +75,8 @@ public class MainModOptions : OptionInterface {
     //
 
     public static Configurable<int> camera_zoom_slider = main_mod_options.config.Bind("camera_zoom_slider", defaultValue: 10, new ConfigurableInfo("Works for the most part but makes some shaders glitch out more. Not used when the SplitScreen Co-op mod is active.", new ConfigAcceptableRange<int>(5, 20), "", "Camera Zoom (10)"));
-    public static Configurable<string> resolution = main_mod_options.config.Bind("resolution", "Default", new ConfigurableInfo("Overrides the current resolution. Can be used to zoom out with less\npixelation issues. Might reduce black borders on larger monitors.", null, "", "Resolution"));
+    public static Configurable<string> resolution = main_mod_options.config.Bind("resolution", "Default", new ConfigurableInfo("Overrides the current resolution. Can be used to zoom out with less\npixelation issues. Might reduce black borders on larger monitors.", null, "", "Resolution:"));
+    public static Configurable<bool> fill_empty_spaces = main_mod_options.config.Bind("fill_empty_spaces", defaultValue: false, new ConfigurableInfo("When enabled during merging, unknown pixels are set to the nearest pre-rendered pixel vertically\ninstead of defaulting to black. You might need to clear the cache before using this.", null, "", "Fill Empty Spaces"));
 
     //
     // variables
@@ -134,6 +135,7 @@ public class MainModOptions : OptionInterface {
         RoomCameraMod.camera_type = (RoomCameraMod.CameraType)Array.IndexOf(_camera_type_keys, camera_type.Value);
         Debug.Log("SBCameraScroll: cameraType " + RoomCameraMod.camera_type);
 
+        Debug.Log("SBCameraScroll: Option_FillEmptySpaces " + Option_FillEmptySpaces);
         Debug.Log("SBCameraScroll: Option_FullScreenEffects " + Option_FullScreenEffects);
         Debug.Log("SBCameraScroll: Option_MergeWhileLoading " + Option_MergeWhileLoading);
         Debug.Log("SBCameraScroll: Option_RegionMods " + Option_RegionMods);
@@ -549,6 +551,11 @@ public class MainModOptions : OptionInterface {
 
         AddNewLine();
 
+        AddCheckBox(fill_empty_spaces, (string)fill_empty_spaces.info.Tags[0]);
+        DrawCheckBoxes(ref Tabs[tab_index]);
+
+        AddNewLine();
+
         List<ListItem> resolution_item_list = new() { new("Default", "Default", 0) { desc = "Resets the screen resolution." } };
         foreach (Resolution resolution in UnityEngine.Screen.resolutions) {
             ListItem item = new(resolution.width.ToString() + " x " + resolution.height.ToString(), resolution.width) { desc = "Sets the screen resolution to " + resolution + " pixels." };
@@ -556,7 +563,8 @@ public class MainModOptions : OptionInterface {
             resolution_item_list.Add(item);
         }
         AddComboBox(resolution, resolution_item_list, (string)resolution.info.Tags[0]);
-        DrawComboBoxes(ref Tabs[tab_index]);
+        // DrawComboBoxes(ref Tabs[tab_index]);
+        DrawComboBoxes(ref Tabs[tab_index], offset_x_percent: 0f, width_label_percent: 0.2f, width_combo_box_percent: 0.8f);
 
         AddNewLine(5.25f);
 
@@ -687,20 +695,21 @@ public class MainModOptions : OptionInterface {
     }
 
     private void AddComboBox(Configurable<string> configurable, List<ListItem> list, string text, bool allow_empty = false) {
-        OpLabel op_label = new(new Vector2(), new Vector2(0.0f, _font_height), text, FLabelAlignment.Center, false);
+        OpLabel op_label = new(new Vector2(), new Vector2(0.0f, _font_height), text, FLabelAlignment.Left, false);
         _combo_boxes_text_labels.Add(op_label);
         _combo_box_configurables.Add(configurable);
         _combo_box_lists.Add(list);
         _combo_box_allow_empty.Add(allow_empty);
     }
 
-    private void DrawComboBoxes(ref OpTab tab, ushort list_height = 5) {
+    private void DrawComboBoxes(ref OpTab tab, ushort list_height = 5, float offset_x_percent = 0.1f, float width_label_percent = 0.4f, float width_combo_box_percent = 0.4f) {
         if (_combo_box_configurables.Count != _combo_boxes_text_labels.Count) return;
         if (_combo_box_configurables.Count != _combo_box_lists.Count) return;
         if (_combo_box_configurables.Count != _combo_box_allow_empty.Count) return;
 
-        float offset_x = (_margin_x.y - _margin_x.x) * 0.1f;
-        float width = (_margin_x.y - _margin_x.x) * 0.4f;
+        float offset_x        = (_margin_x.y - _margin_x.x) * offset_x_percent;
+        float width_label     = (_margin_x.y - _margin_x.x) * width_label_percent;
+        float width_combo_box = (_margin_x.y - _margin_x.x) * width_combo_box_percent;
 
         for (int combo_box_index = 0; combo_box_index < _combo_box_configurables.Count; ++combo_box_index) {
             AddNewLine(1.25f);
@@ -708,11 +717,11 @@ public class MainModOptions : OptionInterface {
 
             OpLabel op_label = _combo_boxes_text_labels[combo_box_index];
             op_label.pos = _pos;
-            op_label.size += new Vector2(width, 2f); // size.y is already set
-            _pos.x += width;
+            op_label.size += new Vector2(width_label, 2f); // size.y is already set
+            _pos.x += width_label;
 
             Configurable<string> configurable = _combo_box_configurables[combo_box_index];
-            OpComboBox combo_box = new(configurable, _pos, width, _combo_box_lists[combo_box_index]) {
+            OpComboBox combo_box = new(configurable, _pos, width_combo_box, _combo_box_lists[combo_box_index]) {
                 allowEmpty = _combo_box_allow_empty[combo_box_index],
                 description = configurable.info?.description ?? "",
                 listHeight = list_height
