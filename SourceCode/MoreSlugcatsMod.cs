@@ -1,4 +1,4 @@
-using Mono.Cecil.Cil;
+﻿using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using RWCustom;
 using System;
@@ -92,14 +92,14 @@ internal static class MoreSlugcatsMod {
         RoomCamera room_camera = snow_source.room.game.cameras[0];
         if (room_camera.Is_Type_Camera_Not_Used()) return orig(snow_source);
 
-        // this should be more consistent with vanilla; texture_offset is in most cases
-        // the camera position of the bottom left screen; level texture size would be
-        // (1400f, 800f) for one screen;
-        Vector2 texture_offset = room.abstractRoom.Get_Attached_Fields().texture_offset;
+        // this should be more consistent with vanilla; min_camera_position is in most cases
+        // the camera position of the bottom left screen (unless the max texture size is reached);
+        // level texture size would be (1400f, 800f) for one screen;
+        Vector2 min_camera_position = room.abstractRoom.Get_Attached_Fields().min_camera_position;
 
         // saves an approximation of a float (in [0, 1)) (in steps of size 1f/255f) and the remainder (times 255f for some reason) in a Vector2;
-        Vector2 approximated_position_x = Custom.EncodeFloatRG((snow_source.pos.x - texture_offset.x) / room_camera.levelTexture.width * 0.3f + 0.3f);
-        Vector2 approximated_position_y = Custom.EncodeFloatRG((snow_source.pos.y - texture_offset.y) / room_camera.levelTexture.height * 0.3f + 0.3f);
+        Vector2 approximated_position_x = Custom.EncodeFloatRG((snow_source.pos.x - min_camera_position.x) / room_camera.levelTexture.width * 0.3f + 0.3f);
+        Vector2 approximated_position_y = Custom.EncodeFloatRG((snow_source.pos.y - min_camera_position.y) / room_camera.levelTexture.height * 0.3f + 0.3f);
 
         // all snow sources being visible (prevents pop ins); for some reason there
         // is too much snow; this is a workaround such that snow sources have less

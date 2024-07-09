@@ -6,10 +6,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using UnityEngine;
+
 using static RWCustom.Custom;
 using static SBCameraScroll.AbstractRoomMod;
 using static SBCameraScroll.MainMod;
 using static SBCameraScroll.PositionTypeCamera;
+using static SBCameraScroll.ProcessManagerMod;
 using static SBCameraScroll.RoomCameraMod;
 using static SBCameraScroll.VanillaTypeCamera;
 using static SlugcatStats.Name;
@@ -49,6 +51,7 @@ public class MainModOptions : OptionInterface {
 
     public static Configurable<bool> merge_while_loading = main_mod_options.config.Bind("mergeWhileLoading", defaultValue: true, new ConfigurableInfo("When enabled, the camera textures for each room are merged when the region gets loaded.\nWhen disabled, camera textures are merged for each room on demand. Merging happens only once and might take a while.", null, "", "Merge While Loading")); //Merging happens only once and the files are stored inside the folder \"Mods/SBCameraScroll/\".\nThis process can take a while. Merging all rooms in Deserted Wastelands took me around three minutes.
     public static Configurable<bool> full_screen_effects = main_mod_options.config.Bind("fullScreenEffects", defaultValue: true, new ConfigurableInfo("When disabled, full screen effects like fog, bloom and melt are removed.", null, "", "Full Screen Effects"));
+    public static Configurable<bool> jit_merging = main_mod_options.config.Bind("jit_merging", defaultValue: false, new ConfigurableInfo("When enabled, merges textures just-in-time on the GPU. Does not use the cache. Might reduce memory consumption.", null, "", "Just-In-Time Merging"));
     public static Configurable<bool> region_mods = main_mod_options.config.Bind("regionMods", defaultValue: true, new ConfigurableInfo("When enabled, the corresponding cached room textures get cleared when new region mods are detected or updated directly during gameplay when the room size changed. The load order matters if multiple mods change the same room.", null, "", "Region Mods"));
     public static Configurable<bool> scroll_one_screen_rooms = main_mod_options.config.Bind("scrollOneScreenRooms", defaultValue: false, new ConfigurableInfo("When disabled, the camera does not scroll in rooms with only one screen.", null, "", "One Screen Rooms")); // Automatically enabled when using SplitScreenMod.
 
@@ -76,7 +79,7 @@ public class MainModOptions : OptionInterface {
 
     public static Configurable<int> camera_zoom_slider = main_mod_options.config.Bind("camera_zoom_slider", defaultValue: 10, new ConfigurableInfo("Works for the most part but makes some shaders glitch out more. Not used when the SplitScreen Co-op mod is active.", new ConfigAcceptableRange<int>(5, 20), "", "Camera Zoom (10)"));
     public static Configurable<string> resolution = main_mod_options.config.Bind("resolution", "Default", new ConfigurableInfo("Overrides the current resolution. Can be used to zoom out with less\npixelation issues. Might reduce black borders on larger monitors.", null, "", "Resolution:"));
-    public static Configurable<bool> fill_empty_spaces = main_mod_options.config.Bind("fill_empty_spaces", defaultValue: false, new ConfigurableInfo("When enabled during merging, unknown pixels are set to the nearest pre-rendered pixel vertically\ninstead of defaulting to black. You might need to clear the cache before using this.", null, "", "Fill Empty Spaces"));
+    public static Configurable<bool> fill_empty_spaces = main_mod_options.config.Bind("fill_empty_spaces", defaultValue: false, new ConfigurableInfo("When enabled during merging, unknown pixels are set to the nearest pre-rendered pixel vertically\ninstead of defaulting to black. You might need to clear the cache before using this. Requires the option `Just-In-Time Merging` to be disabled.", null, "", "Fill Empty Spaces"));
 
     //
     // variables
@@ -137,6 +140,7 @@ public class MainModOptions : OptionInterface {
 
         Debug.Log("SBCameraScroll: Option_FillEmptySpaces " + Option_FillEmptySpaces);
         Debug.Log("SBCameraScroll: Option_FullScreenEffects " + Option_FullScreenEffects);
+        Debug.Log("SBCameraScroll: Option_JIT_Merging " + Option_JIT_Merging);
         Debug.Log("SBCameraScroll: Option_MergeWhileLoading " + Option_MergeWhileLoading);
         Debug.Log("SBCameraScroll: Option_RegionMods " + Option_RegionMods);
         Debug.Log("SBCameraScroll: Option_ScrollOneScreenRooms " + Option_ScrollOneScreenRooms);
@@ -552,6 +556,7 @@ public class MainModOptions : OptionInterface {
         AddNewLine();
 
         AddCheckBox(fill_empty_spaces, (string)fill_empty_spaces.info.Tags[0]);
+        AddCheckBox(jit_merging, (string)jit_merging.info.Tags[0]);
         DrawCheckBoxes(ref Tabs[tab_index]);
 
         AddNewLine();
@@ -618,7 +623,7 @@ public class MainModOptions : OptionInterface {
         orig(option_interface);
         if (option_interface != main_mod_options) return;
         Debug.Log("SBCameraScroll: Save_Config_File.");
-        main_mod_options.Apply_And_Log_All_Options();
+        Initialize_Option_Specific_Hooks();
     }
 
     //

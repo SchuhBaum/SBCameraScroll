@@ -1,16 +1,16 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace SBCameraScroll;
 
 internal static class RainWorldGameMod {
     internal static void OnEnable() {
         On.RainWorldGame.ctor += RainWorldGame_Ctor;
-        On.RainWorldGame.ShutDownProcess += RainWorldGame_ShutDownProcess; // should be good practice to free all important stuff when shutting down
+        On.RainWorldGame.ShutDownProcess += RainWorldGame_ShutDownProcess;
     }
 
-    // ----------------- //
-    // private functions //
-    // ----------------- //
+    //
+    // private
+    //
 
     private static void RainWorldGame_Ctor(On.RainWorldGame.orig_ctor orig, RainWorldGame game, ProcessManager manager) {
         AbstractRoomMod._all_attached_fields.Clear();

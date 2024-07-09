@@ -8,8 +8,12 @@ using static SBCameraScroll.MainMod;
 namespace SBCameraScroll;
 
 internal static class WorldMod {
-    internal static void OnEnable() {
-        On.World.LoadWorld += World_LoadWorld;
+    internal static void On_Config_Changed() {
+        On.World.LoadWorld -= World_LoadWorld;
+
+        if (!Option_JIT_Merging) {
+            On.World.LoadWorld += World_LoadWorld;
+        }
     }
 
     //

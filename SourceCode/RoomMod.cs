@@ -1,13 +1,21 @@
-using UnityEngine;
+﻿using UnityEngine;
 using static SBCameraScroll.AbstractRoomMod;
+using static SBCameraScroll.MainMod;
 using static SBCameraScroll.RoomCameraMod;
 
 namespace SBCameraScroll;
 
 public static class RoomMod {
+    internal static void On_Config_Changed() {
+        On.Room.LoadFromDataString -= Room_LoadFromDataString;
+
+        if (!Option_JIT_Merging) {
+            On.Room.LoadFromDataString += Room_LoadFromDataString;
+        }
+    }
+
     internal static void OnEnable() {
         On.Room.Loaded += Room_Loaded; // removes DeathFallFocus objects (which create fall focal points);
-        On.Room.LoadFromDataString += Room_LoadFromDataString;
     }
 
     //
@@ -50,10 +58,12 @@ public static class RoomMod {
 
         if (room?.game == null) return;
         if (room.abstractRoom is not AbstractRoom abstract_room) return;
-        if (blacklisted_rooms.Contains(abstract_room.name)) return;
 
-        CheckCameraPositions(ref room.cameraPositions);
-        UpdateTextureOffset(abstract_room, room.cameraPositions); // update for one-screen rooms as well
+        // This is now done for every room when they are created.
+        // CheckCameraPositions(ref room.cameraPositions);
+        // InitializeAttachedFields(abstract_room, room.cameraPositions); // update for one-screen rooms as well
+
+        if (blacklisted_rooms.Contains(abstract_room.name)) return;
         MergeCameraTextures(abstract_room, room.abstractRoom.world?.regionState?.regionName, room.cameraPositions); // warping might mess with world or region state => check for nulls // regionState is a function and needs game != null
     }
 }

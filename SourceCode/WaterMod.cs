@@ -43,7 +43,7 @@ internal static class WaterMod {
                 (y_local, room_camera, camera_pos) => {
                     if (room_camera.Is_Type_Camera_Not_Used()) return y_local;
                     if (room_camera.room is not Room room) return y_local;
-                    return y_local + room.abstractRoom.Get_Attached_Fields().texture_offset.y - camera_pos.y; // modded
+                    return y_local + room.abstractRoom.Get_Attached_Fields().min_camera_position.y - camera_pos.y; // modded
                 });
         } else {
             if (can_log_il_hooks) {
@@ -69,7 +69,7 @@ internal static class WaterMod {
                 (y_local, room_camera, camera_pos) => {
                     if (room_camera.Is_Type_Camera_Not_Used()) return y_local;
                     if (room_camera.room is not Room room) return y_local;
-                    return y_local + room.abstractRoom.Get_Attached_Fields().texture_offset.y - camera_pos.y; // modded
+                    return y_local + room.abstractRoom.Get_Attached_Fields().min_camera_position.y - camera_pos.y; // modded
                 });
         } else {
             if (can_log_il_hooks) {

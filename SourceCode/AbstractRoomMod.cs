@@ -27,7 +27,7 @@ public static class AbstractRoomMod {
     internal static readonly Dictionary<AbstractRoom, Attached_Fields> _all_attached_fields = new();
     public static Attached_Fields Get_Attached_Fields(this AbstractRoom abstract_room) => _all_attached_fields[abstract_room];
 
-    public static readonly Dictionary<string, Vector2> texture_offset_modifier = new();
+    public static readonly Dictionary<string, Vector2> min_camera_position_modifier = new();
 
     public static RenderTexture? compute_shader_texture = null;
     public static RenderTexture? merged_render_texture = null;
@@ -47,8 +47,8 @@ public static class AbstractRoomMod {
     // public functions //
     // ---------------- //
 
-    public static void AddCameraTexture(int camera_index, string room_file_path, in Vector2[] camera_positions, in Vector2 base_texture_offset) {
-        Vector2 texture_offset = camera_positions[camera_index] - base_texture_offset; // already contains the offsetModifier
+    public static void AddCameraTexture(int camera_index, string room_file_path, in Vector2[] camera_positions, in Vector2 min_camera_position) {
+        Vector2 texture_offset = camera_positions[camera_index] - min_camera_position; // already contains the offsetModifier
         camera_texture.LoadImage(File.ReadAllBytes(room_file_path)); // resizes if needed // calls Apply() as well
 
         int x = (int)texture_offset.x;
@@ -214,28 +214,14 @@ public static class AbstractRoomMod {
         }
         if (camera_positions.Length <= 1) return; // skip one screen rooms
 
-        CheckCameraPositions(ref camera_positions);
-        UpdateTextureOffset(abstract_room, camera_positions);
-
-        Vector2 base_texture_offset = abstract_room.Get_Attached_Fields().texture_offset;
-        int max_width = 0;
-        int max_height = 0;
+        Attached_Fields attached_fields = abstract_room.Get_Attached_Fields();
+        Vector2 min_camera_position = abstract_room.Get_Attached_Fields().min_camera_position;
+        int max_width = attached_fields.total_width;
+        int max_height = attached_fields.total_height;
 
         Vector2 offset_modifier = new();
-        if (texture_offset_modifier.ContainsKey(room_name)) {
-            offset_modifier = texture_offset_modifier[room_name];
-        }
-
-        foreach (Vector2 camera_position in camera_positions) {
-            Vector2 texture_offset = offset_modifier + camera_position - base_texture_offset; // remove the effect of offsetModifier // baseTextureOffset already contains the offsetModifier
-            max_width = Mathf.Max(max_width, (int)texture_offset.x + 1400);
-            max_height = Mathf.Max(max_height, (int)texture_offset.y + 800);
-        }
-
-        if (max_width > maximum_texture_width || max_height > maximum_texture_height) {
-            Debug.Log("SBCameraScroll: Warning! Merged texture width or height is too large. Setting to the maximum and hoping for the best.");
-            max_width = Mathf.Min(max_width, maximum_texture_width);
-            max_height = Mathf.Min(max_height, maximum_texture_height);
+        if (min_camera_position_modifier.ContainsKey(room_name)) {
+            offset_modifier = min_camera_position_modifier[room_name];
         }
 
         if (max_width > SystemInfo.maxTextureSize || max_height > SystemInfo.maxTextureSize) {
@@ -271,7 +257,7 @@ public static class AbstractRoomMod {
             }
         }
 
-        if (texture_offset_modifier.ContainsKey(room_name)) {
+        if (min_camera_position_modifier.ContainsKey(room_name)) {
             Debug.Log("SBCameraScroll: Cutting edges by modifying the texture offset.");
             Debug.Log("SBCameraScroll: offsetModifier " + offset_modifier);
         }
@@ -298,7 +284,9 @@ public static class AbstractRoomMod {
                 // uses GPU instead of CPU;
                 // I can't really tell the difference in speed;
                 // but using this makes memory consumption during merging basically zero;
-                merged_render_texture = new(max_width, max_height, 24, RenderTextureFormat.ARGB32);
+                merged_render_texture = new(max_width, max_height, 24, RenderTextureFormat.ARGB32) {
+                    enableRandomWrite = true
+                };
                 Graphics.SetRenderTarget(merged_render_texture); // sets RenderTexture.active
 
                 if (merged_render_texture.width != max_width || merged_render_texture.height != max_height) {
@@ -329,7 +317,7 @@ public static class AbstractRoomMod {
             for (int camera_index = 0; camera_index < camera_positions.Length; ++camera_index) {
                 string room_file_path = WorldLoader.FindRoomFile(room_name, false, "_" + (camera_index + 1) + ".png");
                 if (File.Exists(room_file_path)) {
-                    AddCameraTexture(camera_index, room_file_path, camera_positions, base_texture_offset); // changes cameraTexture and mergedTexture
+                    AddCameraTexture(camera_index, room_file_path, camera_positions, min_camera_position); // changes cameraTexture and mergedTexture
                 } else {
                     Debug.Log("SBCameraScroll: Could not find or load texture with path " + room_file_path + ". Blacklist " + room_name + ".");
                     blacklisted_rooms.Add(room_name);
@@ -341,7 +329,6 @@ public static class AbstractRoomMod {
             if (HasCopyTextureSupport && merged_render_texture != null) {
                 if (Option_FillEmptySpaces && fill_empty_spaces_compute_shader != null) {
                     Debug.Log(mod_id + ": Fill empty spaces with pre-rendered content.");
-                    merged_render_texture.enableRandomWrite = true;
                     Color default_color = Color.green;
 
                     // Shader colors are RBGA format only.
@@ -357,8 +344,9 @@ public static class AbstractRoomMod {
                     fill_empty_spaces_compute_shader.SetTexture(0, "SourceTexture", merged_render_texture);
                     // fill_empty_spaces.SetTexture(0, "ResultTexture", merged_render_texture);
 
-                    compute_shader_texture = new(merged_render_texture.width, merged_render_texture.height, 24, RenderTextureFormat.ARGB32);
-                    compute_shader_texture.enableRandomWrite = true;
+                    compute_shader_texture = new(merged_render_texture.width, merged_render_texture.height, 24, RenderTextureFormat.ARGB32) {
+                        enableRandomWrite = true
+                    };
                     compute_shader_texture.Create();
                     fill_empty_spaces_compute_shader.SetTexture(0, "ResultTexture", compute_shader_texture);
 
@@ -409,37 +397,68 @@ public static class AbstractRoomMod {
         // GC.Collect();
     }
 
+    [Obsolete("Use InitializeAttachedFields(...) instead.")]
     public static void UpdateTextureOffset(AbstractRoom abstract_room, in Vector2[]? camera_positions) {
+        InitializeAttachedFields(abstract_room, camera_positions);
+    }
+
+    public static void InitializeAttachedFields(AbstractRoom abstract_room, in Vector2[]? camera_positions) {
         Attached_Fields attached_fields = abstract_room.Get_Attached_Fields();
         if (attached_fields.is_initialized) return;
+        attached_fields.is_initialized = true;
+        string room_name = abstract_room.name;
 
         if (camera_positions == null || camera_positions.Length == 0) {
-            Debug.Log("SBCameraScroll: Failed to initiate textureOffset properly. Setting as new Vector2()."); // automatically set
-            attached_fields.is_initialized = true;
+            Debug.Log(mod_id + ": Failed to initialize attached_fields for room " + room_name + ".");
             return;
         }
 
-        attached_fields.texture_offset = camera_positions[0];
+        int total_width = 0;
+        int total_height = 0;
+        attached_fields.min_camera_position = camera_positions[0];
+
         foreach (Vector2 camera_position in camera_positions) {
-            attached_fields.texture_offset.x = Mathf.Min(attached_fields.texture_offset.x, camera_position.x);
-            attached_fields.texture_offset.y = Mathf.Min(attached_fields.texture_offset.y, camera_position.y);
+            attached_fields.min_camera_position.x = Mathf.Min(attached_fields.min_camera_position.x, camera_position.x);
+            attached_fields.min_camera_position.y = Mathf.Min(attached_fields.min_camera_position.y, camera_position.y);
+            total_width = Mathf.Max(total_width, (int)camera_position.x + 1400);
+            total_height = Mathf.Max(total_height, (int)camera_position.y + 800);
         }
 
-        string room_name = abstract_room.name;
-        if (texture_offset_modifier.ContainsKey(room_name)) {
-            attached_fields.texture_offset += texture_offset_modifier[room_name];
+        // Ignore the effect of any position modifiers here.
+        total_width -= (int)attached_fields.min_camera_position.x;
+        total_height -= (int)attached_fields.min_camera_position.y;
+
+        if (total_width > maximum_texture_width || total_height > maximum_texture_height) {
+            Debug.Log("SBCameraScroll: Warning! Merged texture width or height is too large. Setting to the maximum and hoping for the best.");
+            total_width = Mathf.Min(total_width, maximum_texture_width);
+            total_height = Mathf.Min(total_height, maximum_texture_height);
         }
-        attached_fields.is_initialized = true;
+
+        attached_fields.total_width = total_width;
+        attached_fields.total_height = total_height;
+
+        if (min_camera_position_modifier.ContainsKey(room_name)) {
+            // In the current version this is not used. The old Unity had a limit
+            // for the texture size of ~8kx8k. In that case it was necessary to cut
+            // specific rooms. The texture offset was modified to center the image.
+            attached_fields.min_camera_position += min_camera_position_modifier[room_name];
+        }
+        // Debug.Log(mod_id + ": Initialized attached_fields for room " + room_name + ".");
     }
 
     //
     // private
     //
 
-    private static void AbstractRoom_Ctor(On.AbstractRoom.orig_ctor orig, AbstractRoom abstract_room, string name, int[] connections, int index, int swarm_room_index, int shelter_index, int gate_index) {
-        orig(abstract_room, name, connections, index, swarm_room_index, shelter_index, gate_index);
+    private static void AbstractRoom_Ctor(On.AbstractRoom.orig_ctor orig, AbstractRoom abstract_room, string room_name, int[] connections, int index, int swarm_room_index, int shelter_index, int gate_index) {
+        orig(abstract_room, room_name, connections, index, swarm_room_index, shelter_index, gate_index);
         if (_all_attached_fields.ContainsKey(abstract_room)) return;
         _all_attached_fields.Add(abstract_room, new Attached_Fields());
+
+        Vector2[]? camera_positions = LoadCameraPositions(room_name);
+        if (camera_positions == null) return;
+        CheckCameraPositions(ref camera_positions);
+        InitializeAttachedFields(abstract_room, camera_positions);
     }
 
     private static void AbstractRoom_Abstractize(On.AbstractRoom.orig_Abstractize orig, AbstractRoom abstract_room) {
@@ -453,8 +472,14 @@ public static class AbstractRoomMod {
 
     public sealed class Attached_Fields {
         public bool is_initialized = false;
+        public int total_width = 1400;
+        public int total_height = 800;
         public string? name_when_replaced_by_crs = null;
-        public Vector2 texture_offset = new();
+
+        [Obsolete("Use min_camera_position instead.")]
+        public Vector2 texture_offset => min_camera_position;
+
+        public Vector2 min_camera_position = new();
         public WormGrass? worm_grass = null;
     }
 }

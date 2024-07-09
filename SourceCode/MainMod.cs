@@ -18,7 +18,7 @@ using static SBCameraScroll.RainWorldMod;
 
 namespace SBCameraScroll;
 
-[BepInPlugin("SBCameraScroll", "SBCameraScroll", "2.8.6")]
+[BepInPlugin("SBCameraScroll", "SBCameraScroll", "2.8.7")]
 public class MainMod : BaseUnityPlugin {
     //
     // meta data
@@ -26,12 +26,14 @@ public class MainMod : BaseUnityPlugin {
 
     public static readonly string mod_id = "SBCameraScroll";
     public static readonly string author = "SchuhBaum";
-    public static readonly string version = "2.8.6";
+    public static readonly string version = "2.8.7";
     public static readonly string mod_directory_path = Directory.GetParent(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)).FullName + Path.DirectorySeparatorChar;
 
     //
     // options
     //
+
+    public static bool Option_JIT_Merging => jit_merging.Value && HasCopyTextureSupport;
 
     public static bool Option_FillEmptySpaces => fill_empty_spaces.Value;
     public static bool Option_FullScreenEffects => full_screen_effects.Value;
@@ -376,16 +378,14 @@ public class MainMod : BaseUnityPlugin {
 
         ProcessManagerMod.OnEnable();
         RainWorldGameMod.OnEnable();
-        RegionGateMod.OnEnable();
         RoomCameraMod.OnEnable();
-
         RoomMod.OnEnable();
+
         SuperStructureProjectorMod.OnEnable();
         WaterMod.OnEnable();
         WorldLoaderMod.OnEnable();
-
-        WorldMod.OnEnable();
         WormGrassPatchMod.OnEnable();
+
         WormGrassMod.OnEnable();
         can_log_il_hooks = false;
     }

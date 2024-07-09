@@ -1,12 +1,17 @@
 ﻿using Expedition;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
+using MonoMod.RuntimeDetour;
 using RWCustom;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using UnityEngine;
+
+using static SBCameraScroll.AbstractRoomMod;
 using static SBCameraScroll.MainMod;
+using static SBCameraScroll.RainWorldMod;
 using static SBCameraScroll.RoomMod;
 using static SBCameraScroll.ShortcutHandlerMod;
 using static SBCameraScroll.SplitScreenCoopMod;
@@ -47,9 +52,102 @@ public static class RoomCameraMod {
 
     public static string? next_text_prompt_message = null;
 
+    public static Hook? hook_RoomCamera_LevelTexture = null;
+
+    // The variable new(10) does not allocate memory yet. As soon as the first
+    // element is added it will reserve memory for the other 9 spots.
+    public static List<Texture2D>[] level_texture_lists = {new(10), new(10), new(10), new(10)};
+    public static List<string>[] level_texture_room_name_lists = {new(10), new(10), new(10), new(10)};
+    public static Texture2D? Get_Level_Texture(int camera_number, int camera_index) {
+        if (camera_number < 0 || camera_number > 3) return null;
+        while (camera_index >= level_texture_lists[camera_number].Count) {
+            Texture2D level_texture = new Texture2D(1400, 800, TextureFormat.ARGB32, mipChain: false);
+            level_texture.anisoLevel = 0;
+            level_texture.filterMode = FilterMode.Point;
+            level_texture.wrapMode = TextureWrapMode.Clamp;
+            level_texture_lists[camera_number].Add(level_texture);
+        }
+        return level_texture_lists[camera_number][camera_index];
+    }
+    public static string? Get_Level_Texture_Room_Name(int camera_number, int camera_index) {
+        if (camera_number < 0 || camera_number > 3) return null;
+        while (camera_index >= level_texture_room_name_lists[camera_number].Count) {
+            level_texture_room_name_lists[camera_number].Add("");
+        }
+        return level_texture_room_name_lists[camera_number][camera_index];
+    }
+    public static void Set_Level_Texture_Room_Name(string room_name, int camera_number, int camera_index) {
+        if (camera_number < 0 || camera_number > 3) return;
+        while (camera_index >= level_texture_room_name_lists[camera_number].Count) {
+            level_texture_room_name_lists[camera_number].Add("");
+        }
+        level_texture_room_name_lists[camera_number][camera_index] = room_name;
+    }
+
+    public static RenderTexture?[] render_texture_array = {null, null, null, null};
+    public static RenderTexture? Render_Texture(this RoomCamera room_camera) {
+        if (room_camera.cameraNumber < 0 || room_camera.cameraNumber > 3) return null;
+        return render_texture_array[room_camera.cameraNumber];
+    }
+
     //
     //
     //
+
+    internal static void On_Config_Changed() {
+        hook_RoomCamera_LevelTexture?.Dispose();
+        hook_RoomCamera_LevelTexture = null;
+
+        IL.RoomCamera.ApplyPositionChange -= IL_RoomCamera_ApplyPositionChange;
+        On.RoomCamera.MoveCamera_Room_int -= RoomCamera_MoveCamera_Room;
+        On.RoomCamera.UpdateSnowLight -= RoomCamera_UpdateSnowLight;
+
+        if (Option_JIT_Merging) {
+            // Trying to hook On.PersistentData.ctor does not work. The mod is
+            // not loaded when that function is called.
+            for (int camera_number = 0; camera_number < render_texture_array.Length; ++camera_number) {
+                RenderTexture render_texture = new RenderTexture(1, 1, 0, RenderTextureFormat.ARGB32) {
+                    anisoLevel = 0,
+                    filterMode = FilterMode.Point,
+                    wrapMode = TextureWrapMode.Clamp,
+                    useMipMap = false,
+                };
+                render_texture_array[camera_number] = render_texture;
+                Replace_Or_Add_Atlas("LevelTexture" + ((camera_number == 0) ? "" : camera_number.ToString()), render_texture);
+            }
+
+            if (Type.GetType("RoomCamera, Assembly-CSharp") is Type RoomCamera) {
+                try {
+                    hook_RoomCamera_LevelTexture = new Hook(RoomCamera.GetMethod("get_levelTexture", BindingFlags.NonPublic | BindingFlags.Instance), typeof(RoomCameraMod).GetMethod("RoomCamera_LevelTexture"));
+                } catch (Exception exception) {
+                    Debug.Log(mod_id + ": " + exception);
+                }
+            }
+
+            IL.RoomCamera.ApplyPositionChange += IL_RoomCamera_ApplyPositionChange;
+            On.RoomCamera.MoveCamera_Room_int += RoomCamera_MoveCamera_Room;
+            On.RoomCamera.UpdateSnowLight += RoomCamera_UpdateSnowLight;
+        } else {
+            Texture2D[,] camera_textures = RWCustom.Custom.rainWorld.persistentData.cameraTextures;
+            for (int camera_number = 0; camera_number < camera_textures.GetLength(0); ++camera_number) {
+                Replace_Or_Add_Atlas("LevelTexture" + ((camera_number == 0) ? "" : camera_number.ToString()), camera_textures[camera_number,0]);
+
+                List<Texture2D> level_texture_list = level_texture_lists[camera_number];
+                for (int camera_index = level_texture_list.Count-1; camera_index >= 0; --camera_index) {
+                    UnityEngine.Object.Destroy(level_texture_list[camera_index]);
+                }
+                level_texture_lists[camera_number] = new(10);
+                level_texture_room_name_lists[camera_number] = new(10);
+
+                RenderTexture? render_texture = render_texture_array[camera_number];
+                render_texture_array[camera_number] = null;
+                if (render_texture != null) {
+                    render_texture.Release();
+                    UnityEngine.Object.Destroy(render_texture);
+                }
+            }
+        }
+    }
 
     internal static void OnEnable() {
         IL.RoomCamera.DrawUpdate += IL_RoomCamera_DrawUpdate;
@@ -118,7 +216,7 @@ public static class RoomCameraMod {
     public static void CheckBorders(RoomCamera room_camera, ref Vector2 position) {
         if (room_camera.room == null) return;
         Vector2 screen_size = room_camera.sSize;
-        Vector2 texture_offset = room_camera.room.abstractRoom.Get_Attached_Fields().texture_offset; // regionGate's texture offset might be unitialized => RegionGateMod
+        Vector2 min_camera_position = room_camera.room.abstractRoom.Get_Attached_Fields().min_camera_position; // regionGate's min_camera_position might be unitialized => RegionGateMod
 
         // half of the camera screen is not visible; the other half is centered; let the
         // non-visible part move past room borders;
@@ -128,8 +226,8 @@ public static class RoomCameraMod {
         // in percent; how much screen space is added left and right, top and bottom;
         // example: camera_zoom = 0.8f increases the screen size in x and y by 25% each; Half_Inverse_Camera_Zoom_XY = 0.5 * 25%;
         Vector2 screen_size_increase = Is_Camera_Zoom_Enabled ? Half_Inverse_Camera_Zoom_XY * room_camera.sSize : Vector2.zero;
-        float min_x = texture_offset.x - screen_offset.x + screen_size_increase.x;
-        float max_x = texture_offset.x + screen_offset.x - screen_size_increase.x + room_camera.levelGraphic.width - screen_size.x;
+        float min_x = min_camera_position.x - screen_offset.x + screen_size_increase.x;
+        float max_x = min_camera_position.x + screen_offset.x - screen_size_increase.x + room_camera.levelGraphic.width - screen_size.x;
 
         if (min_x < max_x) {
             // stop position at room texture borders;
@@ -142,8 +240,8 @@ public static class RoomCameraMod {
         // not sure why I have to decrease max_y by a constant;
         // I picked 18f bc room_camera.seekPos.y gets changed by 18f in Update();
         // seems to work, i.e. I don't see black bars;
-        float min_y = texture_offset.y - screen_offset.y + screen_size_increase.y;
-        float max_y = texture_offset.y + screen_offset.y - screen_size_increase.y + room_camera.levelGraphic.height - screen_size.y - 18f;
+        float min_y = min_camera_position.y - screen_offset.y + screen_size_increase.y;
+        float max_y = min_camera_position.y + screen_offset.y - screen_size_increase.y + room_camera.levelGraphic.height - screen_size.y - 18f;
 
         if (min_y < max_y) {
             position.y = Mathf.Clamp(position.y, min_y, max_y);
@@ -177,6 +275,39 @@ public static class RoomCameraMod {
         return creature.mainBodyChunk.pos;
     }
 
+    public static void Load_Image(string room_name, int camera_number, int camera_index, byte[]? byte_array) {
+        if (byte_array == null) return;
+        if (byte_array.Length == 0) return;
+        Get_Level_Texture(camera_number, camera_index)?.LoadImage(byte_array, markNonReadable: false);
+        Set_Level_Texture_Room_Name(room_name, camera_number, camera_index);
+    }
+
+    public static void Merge_All_Camera_Textures_On_GPU(RoomCamera room_camera, RenderTexture render_texture) {
+        int camera_number = room_camera.cameraNumber;
+        if (room_camera.room is not Room room || room.cameraPositions.Length < 2 || room_camera.Is_Type_Camera_Not_Used()) {
+            Graphics.Blit(Get_Level_Texture(camera_number, room_camera.currentCameraPosition), render_texture);
+            return;
+        }
+
+        for (int camera_index = 0; camera_index < room.cameraPositions.Length; ++camera_index) {
+            Vector2 texture_offset = room.cameraPositions[camera_index] - room.abstractRoom.Get_Attached_Fields().min_camera_position; // already contains the offsetModifier
+
+            int x = (int)texture_offset.x;
+            int y = (int)texture_offset.y;
+            int cutoff_x = 0;
+            int cutoff_y = 0;
+
+            if (x < 0) cutoff_x = -x;
+            if (y < 0) cutoff_y = -y;
+
+            if (x < maximum_texture_width && y < maximum_texture_height) {
+                int width = Math.Min(1400 - cutoff_x, maximum_texture_width - x);
+                int height = Math.Min(800 - cutoff_y, maximum_texture_height - y);
+                Graphics.CopyTexture(Get_Level_Texture(camera_number, camera_index), 0, 0, cutoff_x, cutoff_y, width, height, render_texture, 0, 0, Mathf.Max(x, 0), Mathf.Max(y, 0));
+            }
+        }
+    }
+
     public static void ResetCameraPosition(RoomCamera room_camera) {
         // vanilla copy & paste stuff
         if (room_camera.Is_Type_Camera_Not_Used()) {
@@ -203,6 +334,14 @@ public static class RoomCameraMod {
             sprite_layer.SetPosition(Vector2.zero);
             sprite_layer.ScaleAroundPointRelative(Vector2.zero, 1f, 1f);
         }
+    }
+
+    // This functions needs to be public. Otherwise, the hook creation fails.
+    public static Texture2D RoomCamera_LevelTexture(Func<RoomCamera,Texture2D> orig, RoomCamera room_camera) { // Option_JIT_Merging
+        if (Get_Level_Texture(room_camera.cameraNumber, room_camera.currentCameraPosition) is not Texture2D texture) {
+            return orig(room_camera);
+        }
+        return texture;
     }
 
     public static void Send_TextPrompt_Message(RoomCamera room_camera) {
@@ -246,6 +385,17 @@ public static class RoomCameraMod {
     //
     // private
     //
+
+    private static void IL_RoomCamera_ApplyPositionChange(ILContext context) {
+		// LogAllInstructions(context);
+
+        // Remove the vanilla call to LoadImage(). This is done in before
+        // calling orig() in ApplyPositionChange() when Option_JIT_Merging is
+        // enabled.
+		ILCursor cursor = new(context);
+		cursor.RemoveRange(7);
+		// LogAllInstructions(context);
+	}
 
     private static void IL_RoomCamera_DrawUpdate(ILContext context) {
         // LogAllInstructions(context);
@@ -370,9 +520,9 @@ public static class RoomCameraMod {
 
                 // not sure what this does // seems to visually darken stuff (apply shader or something) when offscreen
                 // I think that textureOffset is only needed(?) for compatibility reasons with room.cameraPositions
-                Vector2 texture_offset = room_camera.room.abstractRoom.Get_Attached_Fields().texture_offset;
-                room_camera.levelGraphic.SetPosition(texture_offset - camera_position);
-                room_camera.backgroundGraphic.SetPosition(texture_offset - camera_position);
+                Vector2 min_camera_position = room_camera.room.abstractRoom.Get_Attached_Fields().min_camera_position;
+                room_camera.levelGraphic.SetPosition(min_camera_position - camera_position);
+                room_camera.backgroundGraphic.SetPosition(min_camera_position - camera_position);
             });
         } else {
             if (can_log_il_hooks) {
@@ -518,17 +668,156 @@ public static class RoomCameraMod {
     }
 
     private static void RoomCamera_ApplyPositionChange(On.RoomCamera.orig_ApplyPositionChange orig, RoomCamera room_camera) {
-        // don't log on every screen change; only log when the room changes;
-        bool is_changing_room = room_camera.loadingRoom != null;
+        RenderTexture? render_texture = room_camera.Render_Texture();
+        Attached_Fields room_camera_fields = room_camera.Get_Attached_Fields();
 
-        // updates currentCameraPosition;
-        // updates room_camera.room if needed;
-        // updates room_camera.loadingRoom;
+        // Always load the room when Option_JIT_Merging is enabled -- even
+        // one-screen and blacklisted rooms. Since even in that case, the vanilla
+        // call to LoadImage() is removed.
+        if (Option_JIT_Merging) {
+            if (room_camera_fields.is_pre_loading_whole_room && room_camera.loadingRoom is Room loading_room) {
+                // Case 1: The whole room gets pre-loaded.
+                //
+                //         The function MoveCamera2() uses pre_loaded_camera_index
+                //         implicitly.
+                //
+                //         The variable pre_loaded_camera_index is similar to the
+                //         variable loadingCameraPos. But it is only used to loop
+                //         all screen that need to be merged. This way this is the
+                //         only thing that changes. De-couples it from the other
+                //         logic in the functions MoveCamera_Room() -> MoveCamera2().
+                //
+                //         MoveCamera2() only loads the texture. If it would only be
+                //         that function then both could be the same.
+                string loading_room_name = loading_room.abstractRoom.name;
+                Load_Image(loading_room_name, room_camera.cameraNumber, room_camera_fields.pre_loaded_camera_index, room_camera.preLoadedTexture);
+
+                for (int camera_index = room_camera_fields.pre_loaded_camera_index+1; camera_index < loading_room.cameraPositions.Length; ++camera_index) {
+                    if (Get_Level_Texture_Room_Name(room_camera.cameraNumber, camera_index) == loading_room_name) continue;
+                    room_camera_fields.pre_loaded_camera_index = camera_index;
+                    room_camera.MoveCamera2(loading_room_name, room_camera.loadingCameraPos);
+                    return;
+                }
+            } else {
+                // Case 2: Room is blacklisted.
+                //
+                //         In this case, this function can be called when moving
+                //         inside the same room as well (i.e., loadingRoom is null).
+                string? current_room_name = null;
+                if (room_camera.loadingRoom != null) {
+                    current_room_name = room_camera.loadingRoom.abstractRoom.name;
+                } else {
+                    current_room_name = room_camera.room?.abstractRoom.name;
+                }
+
+                int camera_index = room_camera.loadingCameraPos;
+                if (camera_index == -1) {
+                    // Should never happen.
+                    camera_index = room_camera.currentCameraPosition;
+                }
+
+                if (current_room_name != null) {
+                    Load_Image(current_room_name, room_camera.cameraNumber, camera_index, room_camera.preLoadedTexture);
+                }
+            }
+        }
+
+        room_camera_fields.is_pre_loading_whole_room = false;
+        room_camera_fields.pre_loaded_camera_index = 0;
+
+        // INFO: updates currentCameraPosition;
+        //       updates room_camera.room if needed;
+        //       updates room_camera.loadingRoom;
         //
         // resizes the levelTexture automatically (and the corresponding atlas texture);
         // constantly resizing might be a problem (memory fragmentation?)
         // what is the purpose of an atlas?; collecting sprites?;
+        bool is_changing_room = room_camera.loadingRoom != null;
         orig(room_camera);
+
+        // The memory address changes in most cases. Iirc Windows caches them so
+        // going back and forth might reuse them and not create a new byte array.
+        // This block requires this function to me marked with unsafe and in
+        // csproj AllowUnsafeBlocks must be set to true.
+        // Still, this might create garbage, so I am unsure how much the just-in-
+        // time merging can achieve.
+        // IntPtr current_address;
+        // if (pre_loaded_texture_lists[room_camera.cameraNumber].Count > 1) {
+        //     // fixed (byte* ptr = room_camera.preLoadedTexture) {
+        //     fixed (byte* ptr = pre_loaded_texture_lists[room_camera.cameraNumber][1]) {
+        //         current_address = (IntPtr)ptr;
+        //         Debug.Log(mod_id + ": memory address " + current_address);
+        //     }
+        // }
+
+        if (room_camera.room is not Room room) {
+            if (is_changing_room) {
+                Debug.Log("SBCameraScroll: The current room is blacklisted.");
+            }
+
+            // this case should never happen since ApplyPositionChange() calls ChangeRoom() 
+            // and should always update room_camera.room;
+            // if it would happen then I am blind to how many cameraPositions this room has;
+            // I would also not be able to check blacklisted_rooms;
+            // blacklisting the room is just a guess at this point;
+
+            room_camera_fields.is_room_blacklisted = true;
+            room_camera_fields.is_camera_scroll_enabled = false;
+
+            // uses currentCameraPosition and is_room_blacklisted;
+            ResetCameraPosition(room_camera);
+            return;
+        }
+
+        // If I blacklist too early then the camera might jump in the current
+        // room. Do it after calling orig() / ChangeRoom().
+        AbstractRoomMod.Attached_Fields abstract_room_fields = room.abstractRoom.Get_Attached_Fields();
+        string room_name = room.abstractRoom.name;
+
+        // CRS (Custom-Region-Support) can replace rooms now; I need to check this; 
+        // otherwise I might blacklist the wrong room;
+        if (abstract_room_fields.name_when_replaced_by_crs is string new_room_name) {
+            room_name = new_room_name;
+        }
+
+        if (blacklisted_rooms.Contains(room_name) || !Option_JIT_Merging && !File.Exists(WorldLoader.FindRoomFile(room_name, false, "_0.png")) && room.cameraPositions.Length > 1) {
+            if (is_changing_room) {
+                Debug.Log("SBCameraScroll: The room " + room_name + " is blacklisted.");
+            }
+
+            room_camera_fields.is_room_blacklisted = true;
+            room_camera_fields.is_camera_scroll_enabled = false;
+        } else {
+            room_camera_fields.is_room_blacklisted = false;
+            room_camera_fields.is_camera_scroll_enabled = room.cameraPositions.Length > 1 || Option_ScrollOneScreenRooms;
+        }
+
+        // Do this even when the room is not changing. In that case, Graphics.Blit()
+        // needs to be called.
+        if (Option_JIT_Merging && render_texture != null) {
+            // Uses Is_Type_Camera_Not_Used(). Needs to be placed after the
+            // variables is_room_blacklisted etc. are updated.
+            if (room_camera.Is_Type_Camera_Not_Used()) {
+                if (render_texture.width != 1400 || render_texture.height != 800) {
+                    render_texture.Release();
+                    render_texture.width = 1400;
+                    render_texture.height = 800;
+                }
+            } else {
+                int total_width = abstract_room_fields.total_width;
+                int total_height = abstract_room_fields.total_height;
+                if (render_texture.width != total_width || render_texture.height != total_height) {
+                    render_texture.Release();
+                    render_texture.width = total_width;
+                    render_texture.height = total_height;
+                }
+            }
+
+            // SetGlobalTexture needs to happen here. Otherwise, this can mess up
+            // shaders if it is set only before the resizing (and merging?) happened.
+            Merge_All_Camera_Textures_On_GPU(room_camera, render_texture);
+            Shader.SetGlobalTexture(RainWorld.ShadPropLevelTex, render_texture);
+        }
 
         // www has a texture too;
         // not sure what exactly happens when www.LoadImageIntoTexture(room_camera.levelTexture) is called in orig();
@@ -550,10 +839,10 @@ public static class RoomCameraMod {
 
         // resizes levelGraphic such that the levelTexture fits and is not squashed
         // holy moly don't use room_camera.www.texture.width, etc. // "WWW.texture property allocates a new Texture2D every time"
-        Texture2D level_texture = room_camera.levelTexture;
+
+        Texture level_texture = room_camera.levelGraphic._atlas.texture;
         room_camera.levelGraphic.width = level_texture.width;
         room_camera.levelGraphic.height = level_texture.height;
-
         room_camera.backgroundGraphic.width = room_camera.backgroundTexture.width;
         room_camera.backgroundGraphic.height = room_camera.backgroundTexture.height;
 
@@ -561,72 +850,30 @@ public static class RoomCameraMod {
             // Graphics.Blit() creates this texture again; but only when UpdateSnowLight() is called;
             // this is forced for example when the room is changed in orig(); therefore, only do
             // this when this happens;
+
             RenderTexture snow_texture = room_camera.SnowTexture;
             snow_texture.Release();
             snow_texture.width = level_texture.width;
             snow_texture.height = level_texture.height;
         }
 
-        Attached_Fields room_camera_fields = room_camera.Get_Attached_Fields();
-        if (room_camera.room is not Room room) {
-            if (is_changing_room) {
-                Debug.Log("SBCameraScroll: The current room is blacklisted.");
-            }
-
-            // this case should never happen since ApplyPositionChange() calls ChangeRoom() 
-            // and should always update room_camera.room;
-            // if it would happen then I am blind to how many cameraPositions this room has;
-            // I would also not be able to check blacklisted_rooms;
-            // blacklisting the room is just a guess at this point;
-
-            room_camera_fields.is_room_blacklisted = true;
-            room_camera_fields.is_camera_scroll_enabled = false;
-
-            // uses currentCameraPosition and is_room_blacklisted;
-            ResetCameraPosition(room_camera);
-            return;
-        }
-
-        AbstractRoomMod.Attached_Fields abstract_room_fields = room.abstractRoom.Get_Attached_Fields();
-        if (room.cameraPositions.Length > 30 || (level_texture.width <= 1400 && level_texture.height <= 800)) {
+        // This is needed for some shader. The camera textures contain additional
+        // color information (palette pixels). The offsets are used to find them 
+        // again inside the shader.
+        if (room.cameraPositions.Length > 30 || level_texture.width <= 1400 && level_texture.height <= 800) {
             Shader.SetGlobalInt(TextureOffsetArrayLength, 0);
             Shader.SetGlobalVectorArray(TextureOffsetArray, new Vector4[30]);
         } else {
-            Vector2 texture_offset = abstract_room_fields.texture_offset;
+            Vector2 min_camera_position = abstract_room_fields.min_camera_position;
             Vector4[] texture_offset_array = new Vector4[30];
 
             for (int camera_index = 0; camera_index < room.cameraPositions.Length; ++camera_index) {
-                texture_offset_array[camera_index] = (Vector4)(room.cameraPositions[camera_index] - texture_offset);
+                texture_offset_array[camera_index] = (Vector4)(room.cameraPositions[camera_index] - min_camera_position);
             }
 
             Shader.SetGlobalInt(TextureOffsetArrayLength, room.cameraPositions.Length);
             Shader.SetGlobalVectorArray(TextureOffsetArray, texture_offset_array);
         }
-
-        // if I blacklist too early then the camera might jump in the current room;
-        string room_name = room.abstractRoom.name;
-
-        // CRS (Custom-Region-Support) can replace rooms now; I need to check this; 
-        // otherwise I might blacklist the wrong room;
-        if (abstract_room_fields.name_when_replaced_by_crs is string new_room_name) {
-            room_name = new_room_name;
-        }
-
-        if (blacklisted_rooms.Contains(room_name) || !File.Exists(WorldLoader.FindRoomFile(room_name, false, "_0.png")) && room.cameraPositions.Length > 1) {
-            if (is_changing_room) {
-                Debug.Log("SBCameraScroll: The room " + room_name + " is blacklisted.");
-            }
-
-            room_camera_fields.is_room_blacklisted = true;
-            room_camera_fields.is_camera_scroll_enabled = false;
-
-            // uses currentCameraPosition and is_room_blacklisted;
-            ResetCameraPosition(room_camera);
-            return;
-        }
-
-        room_camera_fields.is_room_blacklisted = false;
-        room_camera_fields.is_camera_scroll_enabled = room.cameraPositions.Length > 1 || Option_ScrollOneScreenRooms;
 
         // uses currentCameraPosition and is_room_blacklisted;
         ResetCameraPosition(room_camera);
@@ -642,7 +889,16 @@ public static class RoomCameraMod {
         // similar to RoomCamera_PixelColorAtCoordinate();
         if (room_camera.Is_Type_Camera_Not_Used()) return orig(room_camera, position);
         if (room_camera.room is not Room room) return orig(room_camera, position);
-        return orig(room_camera, position + room_camera.CamPos(room_camera.currentCameraPosition) - room.abstractRoom.Get_Attached_Fields().texture_offset);
+
+        if (Option_JIT_Merging) {
+            int current_camera_index = room_camera.currentCameraPosition;
+            room_camera.currentCameraPosition = CameraViewingPoint(room, position);
+            float result = orig(room_camera, position);
+            room_camera.currentCameraPosition = current_camera_index;
+            return result;
+        }
+
+        return orig(room_camera, position + room_camera.CamPos(room_camera.currentCameraPosition) - room.abstractRoom.Get_Attached_Fields().min_camera_position);
     }
 
     private static bool RoomCamera_IsViewedByCameraPosition(On.RoomCamera.orig_IsViewedByCameraPosition orig, RoomCamera room_camera, int camera_position_index, Vector2 test_position) {
@@ -677,20 +933,45 @@ public static class RoomCameraMod {
         // if the ID changed then do a smooth transition instead 
         // the logic for that is done in UpdateCameraPosition()
 
-        if (room_camera.Is_Type_Camera_Not_Used() || room_camera.followAbstractCreature == null) {
+        if (room_camera.Is_Type_Camera_Not_Used()) {
             orig(room_camera, camera_position_index);
             return;
         }
 
         room_camera.currentCameraPosition = camera_position_index;
-        if (room_camera.Get_Attached_Fields().type_camera is VanillaTypeCamera vanilla_type_camera && vanilla_type_camera.are_vanilla_positions_used && vanilla_type_camera.follow_abstract_creature_id == room_camera.followAbstractCreature.ID) // camera moves otherwise after vanilla transition since variables are not reset // ignore reset during a smooth transition
-        {
+        if (room_camera.followAbstractCreature != null && room_camera.Get_Attached_Fields().type_camera is VanillaTypeCamera vanilla_type_camera && vanilla_type_camera.are_vanilla_positions_used && vanilla_type_camera.follow_abstract_creature_id == room_camera.followAbstractCreature.ID) {
+            // Otherwise, the camera moves after a vanilla transition. But
+            // ignore is during a smooth transition, i.e. when follow_abstract_creature_id
+            // is set to null (kinda ugly to not have a separate variable for that).
             ResetCameraPosition(room_camera);
         }
     }
 
+    private static void RoomCamera_MoveCamera_Room(On.RoomCamera.orig_MoveCamera_Room_int orig, RoomCamera room_camera, Room loading_room, int loading_camera_index) {
+        // Why does the orig() function change the shader and stuff. The room is not changed yet and
+        // there is a bug where these things are loaded before the room actually switched.
+        // Why is this not done in ChangeRoom() instead?
+        if (room_camera.Get_Attached_Fields() is not Attached_Fields attached_fields) {
+            orig(room_camera, loading_room, loading_camera_index);
+            return;
+        }
+
+        // The ShortcutHandler might be too trigger-happy and call this again
+        // while the room is pre-loading => return early.
+        // The function RoomCamera.ChangeCameraToPlayer() throws a null ref
+        // exception. Probably by the same cause.
+        if (attached_fields.is_pre_loading_whole_room) return;
+        attached_fields.is_pre_loading_whole_room = true;
+
+        // At the very least the screen with camera index equal to zero needs to
+        // be loaded again. When you back to larger rooms some of the screens with
+        // larger camera index values might still be loaded / cached.
+        attached_fields.pre_loaded_camera_index = 0;
+        orig(room_camera, loading_room, loading_camera_index);
+    }
+
     // preloads textures // RoomCamera.ApplyPositionChange() is called when they are ready
-    private static void RoomCamera_MoveCamera2(On.RoomCamera.orig_MoveCamera2 orig, RoomCamera room_camera, string room_name, int camera_position_index) {
+    private static void RoomCamera_MoveCamera2(On.RoomCamera.orig_MoveCamera2 orig, RoomCamera room_camera, string room_name, int loading_camera_index) {
         // // room is not updated yet;
         // // gets updated in ApplyPositionChange();
         // // although ChangeRoom() has a non-null check;
@@ -705,32 +986,57 @@ public static class RoomCameraMod {
         //     return;
         // }
 
+        if (room_camera.Get_Attached_Fields() is not Attached_Fields attached_fields) {
+            orig(room_camera, room_name, loading_camera_index);
+            return;
+        }
+
         // this is consistent with what CRS is doing in this function when it replaces a
         // room;
         if (room_camera.loadingRoom?.abstractRoom.Get_Attached_Fields().name_when_replaced_by_crs is string new_room_name) {
             room_name = new_room_name;
         }
 
-        // is_room_blacklisted is not updated yet;
-        // needs to be updated in ApplyPositionChange();
-        // I need to check for blacklisted room anyway 
-        // since for example "RM_AI" can be merged but is incompatible;
-        if (blacklisted_rooms.Contains(room_name) || !File.Exists(WorldLoader.FindRoomFile(room_name, false, "_0.png"))) {
-            orig(room_camera, room_name, camera_position_index);
+        // The variable is_room_blacklisted is not updated yet. Since the loading
+        // might not be completed instantly it needs to be updated in the function
+        // ApplyPositionChange() instead. But in any case, I need to check for
+        // blacklisted rooms here since for example "RM_AI" can be merged but is
+        // incompatible.
+        if (blacklisted_rooms.Contains(room_name)) {
+            attached_fields.is_pre_loading_whole_room = false;
+            orig(room_camera, room_name, loading_camera_index);
             return;
         }
-        orig(room_camera, room_name, -1);
+
+        if (!Option_JIT_Merging && File.Exists(WorldLoader.FindRoomFile(room_name, false, "_0.png"))) {
+            orig(room_camera, room_name, -1);
+            return;
+        }
+
+        if (Option_JIT_Merging && attached_fields.is_pre_loading_whole_room) {
+            orig(room_camera, room_name, attached_fields.pre_loaded_camera_index);
+            return;
+        }
+        orig(room_camera, room_name, loading_camera_index);
     }
 
     private static Color RoomCamera_PixelColorAtCoordinate(On.RoomCamera.orig_PixelColorAtCoordinate orig, RoomCamera room_camera, Vector2 position) {
         if (room_camera.Is_Type_Camera_Not_Used()) return orig(room_camera, position);
         if (room_camera.room is not Room room) return orig(room_camera, position);
 
+        if (Option_JIT_Merging) {
+            int current_camera_index = room_camera.currentCameraPosition;
+            room_camera.currentCameraPosition = CameraViewingPoint(room, position);
+            Color result = orig(room_camera, position);
+            room_camera.currentCameraPosition = current_camera_index;
+            return result;
+        }
+
         // cancel the effect of the function CamPos() inside the function orig(); otherwise,
         // the color of lights might "jump"; the texture_offset is used to translate room
         // coordinates to level_texture coordinates; these are needed since level_texture.
         // GetPixel() is called;
-        return orig(room_camera, position + room_camera.CamPos(room_camera.currentCameraPosition) - room.abstractRoom.Get_Attached_Fields().texture_offset);
+        return orig(room_camera, position + room_camera.CamPos(room_camera.currentCameraPosition) - room.abstractRoom.Get_Attached_Fields().min_camera_position);
     }
 
     // use room_camera.pos as reference instead of camPos(..) // seems to be important for unloading graphics and maybe other things
@@ -795,6 +1101,12 @@ public static class RoomCameraMod {
         orig(room_camera, source_position, bump, shake);
     }
 
+    private static void RoomCamera_UpdateSnowLight(On.RoomCamera.orig_UpdateSnowLight orig, RoomCamera room_camera) { // Option_JIT_Merging
+        orig(room_camera);
+        if (room_camera.Render_Texture() is not RenderTexture render_texture) return;
+        Graphics.Blit(render_texture, room_camera.SnowTexture, new Material(room_camera.game.rainWorld.Shaders["LevelSnowShader"].shader));
+    }
+
     //
     //
     //
@@ -803,6 +1115,9 @@ public static class RoomCameraMod {
         public bool is_camera_scroll_enabled = true;
         public bool is_camera_scroll_forced_by_split_screen = false;
         public bool is_room_blacklisted = false;
+        public bool is_pre_loading_whole_room = false;
+
+        public int pre_loaded_camera_index = 0;
 
         public Vector2 last_on_screen_position = new();
         public Vector2 on_screen_position = new();
