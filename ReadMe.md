@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 2.8.7
+###### Version: 2.8.8
 This is a mod for Rain World v1.9.
 
 ### Description
@@ -23,7 +23,7 @@ This mod includes additional cameras:
 
 ### Installation
 0. Update Rain World to version 1.9 if needed.
-1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.8.7).
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.8.8).
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
@@ -38,9 +38,12 @@ See the file LICENSE-MIT.
 
 ### Changelog
 #### (Rain World v1.9)
+v2.8.8:
+- (just-in-time merging) Fixed two vanilla exceptions. They happened when the rooms loaded too slowly.
+
 v2.8.7:
-- (experimental: just-in-time merging)
-  Added this option (disabled by default). When enabled, the GPU merges the camera textures just-in-time. The cache is not used. Rooms might load slightly slower.
+- (experimental: just-in-time merging)  
+  Added this option (disabled by default). When enabled, the GPU merges the camera textures just-in-time. The cache is not used. Rooms might load slightly slower.  
   Every camera texture is loaded normally and saved. Then, they are send to the GPU. Resizing the merged texture on the CPU would re-allocate memory. The camera textures have constant size. I hoped that this would fix the memory issues. It seems that it does not improve memory consumption.
 
 v2.8.6:

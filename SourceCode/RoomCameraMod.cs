@@ -99,8 +99,14 @@ public static class RoomCameraMod {
         hook_RoomCamera_LevelTexture = null;
 
         IL.RoomCamera.ApplyPositionChange -= IL_RoomCamera_ApplyPositionChange;
+        IL.RoomCamera.Update -= IL_RoomCamera_Update;
+
+        On.RoomCamera.ChangeCameraToPlayer -= RoomCamera_ChangeCameraToPlayer;
         On.RoomCamera.MoveCamera_Room_int -= RoomCamera_MoveCamera_Room;
         On.RoomCamera.UpdateSnowLight -= RoomCamera_UpdateSnowLight;
+
+        // Contains an Option_JIT_Merging-specific part.
+        IL.RoomCamera.Update += IL_RoomCamera_Update;
 
         if (Option_JIT_Merging) {
             // Trying to hook On.PersistentData.ctor does not work. The mod is
@@ -125,6 +131,7 @@ public static class RoomCameraMod {
             }
 
             IL.RoomCamera.ApplyPositionChange += IL_RoomCamera_ApplyPositionChange;
+            On.RoomCamera.ChangeCameraToPlayer += RoomCamera_ChangeCameraToPlayer;
             On.RoomCamera.MoveCamera_Room_int += RoomCamera_MoveCamera_Room;
             On.RoomCamera.UpdateSnowLight += RoomCamera_UpdateSnowLight;
         } else {
@@ -151,7 +158,6 @@ public static class RoomCameraMod {
 
     internal static void OnEnable() {
         IL.RoomCamera.DrawUpdate += IL_RoomCamera_DrawUpdate;
-        IL.RoomCamera.Update += IL_RoomCamera_Update;
 
         On.RoomCamera.ApplyDepth += RoomCamera_ApplyDepth;
         On.RoomCamera.ApplyPalette += RoomCamera_ApplyPalette;
@@ -587,8 +593,8 @@ public static class RoomCameraMod {
     }
 
     private static void IL_RoomCamera_Update(ILContext context) {
-        ILCursor cursor = new(context);
         // LogAllInstructions(context);
+        ILCursor cursor = new(context);
 
         cursor.Emit(OpCodes.Ldarg_0);
         cursor.EmitDelegate<Action<RoomCamera>>(room_camera => {
@@ -618,6 +624,28 @@ public static class RoomCameraMod {
         } else {
             if (can_log_il_hooks) {
                 Debug.Log("SBCameraScroll: IL_RoomCamera_Update failed.");
+            }
+            return;
+        }
+
+        if (cursor.TryGotoNext(instruction => instruction.MatchLdfld("HUD.HUD", "owner"))) {
+            cursor.Goto(cursor.Index + 2);
+
+            if (can_log_il_hooks) {
+                Debug.Log(mod_id + ": IL_RoomCamera_Update: Index " + cursor.Index);
+            }
+
+            if (Option_JIT_Merging) {
+                // The hud owner can be null when the room loads too slowly. Add
+                // missing null check.
+                cursor.Next.OpCode = OpCodes.Brtrue;
+                cursor.EmitDelegate<Func<HUD.IOwnAHUD?, Player, bool>>((hud_owner, player) => {
+                    return hud_owner == null || hud_owner == player;
+                });
+            }
+        } else {
+            if (can_log_il_hooks) {
+                Debug.Log(mod_id + ": IL_RoomCamera_Update failed.");
             }
             return;
         }
@@ -877,6 +905,12 @@ public static class RoomCameraMod {
 
         // uses currentCameraPosition and is_room_blacklisted;
         ResetCameraPosition(room_camera);
+    }
+
+    private static void RoomCamera_ChangeCameraToPlayer(On.RoomCamera.orig_ChangeCameraToPlayer orig, RoomCamera room_camera, AbstractCreature camera_target) { // Option_JIT_Merging
+        // The room can be null when it loads too slowly. Add missing null check.
+        if (room_camera.room == null) return;
+        orig(room_camera, camera_target);
     }
 
     private static void RoomCamera_Ctor(On.RoomCamera.orig_ctor orig, RoomCamera room_camera, RainWorldGame game, int camera_number) {
