@@ -1,4 +1,4 @@
-
+﻿
 //from http://forum.unity3d.com/threads/68402-Making-a-2D-game-for-iPhone-iPad-and-need-better-performance
 
 //Unlit Transparent Vertex Colored Additive 
@@ -155,10 +155,21 @@ Shader "SBCameraScroll/LevelHeat" {
                             green -= 8;
                         }
 
-                        half shadow = tex2D(_NoiseTex, float2((i.uv.x*0.5) + (_RAIN*0.1*_cloudsSpeed) - (0.003*fmod(red, 30.0)), 1 - (i.uv.y*0.5) + (_RAIN*0.2*_cloudsSpeed) - (0.003*fmod(red, 30.0)))).x;
-                        shadow = 0.5 + sin(fmod(shadow + (_RAIN*0.1*_cloudsSpeed) - i.uv.y, 1)*3.14 * 2)*0.5;
-                        shadow = clamp(((shadow - 0.5) * 6) + 0.5 - (_light * 4), 0, 1);
+                        // vanilla:
+                        // half shadow = tex2D(_NoiseTex, float2((i.uv.x*0.5) + (_RAIN*0.1*_cloudsSpeed) - (0.003*fmod(red, 30.0)), 1-(i.uv.y*0.5) + (_RAIN*0.2*_cloudsSpeed) - (0.003*fmod(red, 30.0)))).x;
+                        // shadow = 0.5 + sin(fmod(shadow+(_RAIN*0.1*_cloudsSpeed)-i.uv.y, 1)*3.14*2)*0.5;
 
+                        // modded:
+                        // The clouds light mask can be stretched. The mask is
+                        // applied to the full level texture. Merged level
+                        // textures contain multiple screens.
+                        float number_of_screens_x = _spriteRect.z - _spriteRect.x;
+                        float number_of_screens_y = _spriteRect.w - _spriteRect.y;
+                        half shadow = tex2D(_NoiseTex, float2(((number_of_screens_x*i.uv.x*0.5) + (_RAIN*0.1*_cloudsSpeed) - (0.003*fmod(red, 30.0))), (1-(number_of_screens_y*i.uv.y*0.5) + (_RAIN*0.2*_cloudsSpeed) - (0.003*fmod(red, 30.0))))).x;
+                        shadow = 0.5 + sin(fmod(shadow+(_RAIN*0.1*_cloudsSpeed)-number_of_screens_y*i.uv.y, 1)*3.14*2)*0.5;
+
+                        // vanilla:
+                        shadow = clamp(((shadow - 0.5) * 6) + 0.5 - (_light * 4), 0, 1);
                         if (red > 90) {
                             red -= 90;
                         } else {
@@ -276,7 +287,7 @@ Shader "SBCameraScroll/LevelHeat" {
                     setColor.rgb += _brightness;
                     return setColor;
                 }
-            ENDCG
+                ENDCG
             }
         }
     }

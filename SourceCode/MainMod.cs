@@ -18,7 +18,7 @@ using static SBCameraScroll.RainWorldMod;
 
 namespace SBCameraScroll;
 
-[BepInPlugin("SBCameraScroll", "SBCameraScroll", "2.8.8")]
+[BepInPlugin("SBCameraScroll", "SBCameraScroll", "2.8.9")]
 public class MainMod : BaseUnityPlugin {
     //
     // meta data
@@ -26,7 +26,7 @@ public class MainMod : BaseUnityPlugin {
 
     public static readonly string mod_id = "SBCameraScroll";
     public static readonly string author = "SchuhBaum";
-    public static readonly string version = "2.8.8";
+    public static readonly string version = "2.8.9";
     public static readonly string mod_directory_path = Directory.GetParent(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)).FullName + Path.DirectorySeparatorChar;
 
     //
@@ -323,11 +323,14 @@ public class MainMod : BaseUnityPlugin {
         CreateDirectory(mod_directory_path + "world");
 
         Load_Asset_Bundle();
+        rain_world.Replace_Shader("Decal");
         rain_world.Replace_Shader("DeepWater");
+        rain_world.Replace_Shader("DisplaySnowShader");
         rain_world.Replace_Shader("Fog");
-        rain_world.Replace_Shader("LevelColor");
 
+        rain_world.Replace_Shader("LevelColor");
         rain_world.Replace_Shader("LevelHeat");
+        rain_world.Replace_Shader("SporesSnow");
         rain_world.Replace_Shader("UnderWaterLight");
         fill_empty_spaces_compute_shader = Load_Compute_Shader("FillEmptySpaces");
 
