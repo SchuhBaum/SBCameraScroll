@@ -399,14 +399,22 @@ public static class AbstractRoomMod {
 
     [Obsolete("Use InitializeAttachedFields(...) instead.")]
     public static void UpdateTextureOffset(AbstractRoom abstract_room, in Vector2[]? camera_positions) {
-        InitializeAttachedFields(abstract_room, camera_positions);
+        UpdateAttachedFields(abstract_room);
     }
 
-    public static void InitializeAttachedFields(AbstractRoom abstract_room, in Vector2[]? camera_positions) {
+    // I need to initialize the fields again if CRS changes the room name.
+    // Otherwise, the camera textures are misaligned or not merged.
+    public static void UpdateAttachedFields(AbstractRoom abstract_room) {
         Attached_Fields attached_fields = abstract_room.Get_Attached_Fields();
-        if (attached_fields.is_initialized) return;
-        attached_fields.is_initialized = true;
+
         string room_name = abstract_room.name;
+        if (abstract_room.Get_Attached_Fields().name_when_replaced_by_crs is string new_room_name) {
+            room_name = new_room_name;
+        }
+
+        Vector2[]? camera_positions = LoadCameraPositions(room_name);
+        if (camera_positions == null) return;
+        CheckCameraPositions(ref camera_positions);
 
         if (camera_positions == null || camera_positions.Length == 0) {
             Debug.Log(mod_id + ": Failed to initialize attached_fields for room " + room_name + ".");
@@ -454,11 +462,7 @@ public static class AbstractRoomMod {
         orig(abstract_room, room_name, connections, index, swarm_room_index, shelter_index, gate_index);
         if (_all_attached_fields.ContainsKey(abstract_room)) return;
         _all_attached_fields.Add(abstract_room, new Attached_Fields());
-
-        Vector2[]? camera_positions = LoadCameraPositions(room_name);
-        if (camera_positions == null) return;
-        CheckCameraPositions(ref camera_positions);
-        InitializeAttachedFields(abstract_room, camera_positions);
+        UpdateAttachedFields(abstract_room);
     }
 
     private static void AbstractRoom_Abstractize(On.AbstractRoom.orig_Abstractize orig, AbstractRoom abstract_room) {
@@ -471,7 +475,6 @@ public static class AbstractRoomMod {
     //
 
     public sealed class Attached_Fields {
-        public bool is_initialized = false;
         public int total_width = 1400;
         public int total_height = 800;
         public string? name_when_replaced_by_crs = null;
