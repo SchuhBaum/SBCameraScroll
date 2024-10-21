@@ -925,11 +925,15 @@ public static class RoomCameraMod {
         if (room_camera.room is not Room room) return orig(room_camera, position);
 
         if (Option_JIT_Merging) {
-            int current_camera_index = room_camera.currentCameraPosition;
-            room_camera.currentCameraPosition = CameraViewingPoint(room, position);
-            float result = orig(room_camera, position);
-            room_camera.currentCameraPosition = current_camera_index;
-            return result;
+            int camera_index = CameraViewingPoint(room, position);
+            if (camera_index != -1) {
+                int current_camera_index = room_camera.currentCameraPosition;
+                room_camera.currentCameraPosition = camera_index;
+                float result = orig(room_camera, position);
+                room_camera.currentCameraPosition = current_camera_index;
+                return result;
+            }
+            return orig(room_camera, position);
         }
 
         return orig(room_camera, position + room_camera.CamPos(room_camera.currentCameraPosition) - room.abstractRoom.Get_Attached_Fields().min_camera_position);
@@ -1059,11 +1063,15 @@ public static class RoomCameraMod {
         if (room_camera.room is not Room room) return orig(room_camera, position);
 
         if (Option_JIT_Merging) {
-            int current_camera_index = room_camera.currentCameraPosition;
-            room_camera.currentCameraPosition = CameraViewingPoint(room, position);
-            Color result = orig(room_camera, position);
-            room_camera.currentCameraPosition = current_camera_index;
-            return result;
+            int camera_index = CameraViewingPoint(room, position);
+            if (camera_index != -1) {
+                int current_camera_index = room_camera.currentCameraPosition;
+                room_camera.currentCameraPosition = camera_index;
+                Color result = orig(room_camera, position);
+                room_camera.currentCameraPosition = current_camera_index;
+                return result;
+            }
+            return orig(room_camera, position);
         }
 
         // cancel the effect of the function CamPos() inside the function orig(); otherwise,
