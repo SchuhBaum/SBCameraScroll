@@ -1,5 +1,7 @@
 # .gitignore
 
+.git/
+
 SourceCode/bin
 SourceCode/obj
 SBCameraScroll/levels
@@ -16,3 +18,5 @@ steam_description.txt
 
 **/*.meta
 .vscode
+
+tags

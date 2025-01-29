@@ -112,14 +112,20 @@ public static class RoomCameraMod {
             // Trying to hook On.PersistentData.ctor does not work. The mod is
             // not loaded when that function is called.
             for (int camera_number = 0; camera_number < render_texture_array.Length; ++camera_number) {
-                RenderTexture render_texture = new RenderTexture(1, 1, 0, RenderTextureFormat.ARGB32) {
-                    anisoLevel = 0,
-                    filterMode = FilterMode.Point,
-                    wrapMode = TextureWrapMode.Clamp,
-                    useMipMap = false,
-                };
-                render_texture_array[camera_number] = render_texture;
-                Replace_Or_Add_Atlas("LevelTexture" + ((camera_number == 0) ? "" : camera_number.ToString()), render_texture);
+                RenderTexture? render_texture = render_texture_array[camera_number];
+                if (render_texture == null) {
+                    render_texture = new RenderTexture(1, 1, 0, RenderTextureFormat.ARGB32) {
+                        anisoLevel = 0,
+                        filterMode = FilterMode.Point,
+                        wrapMode = TextureWrapMode.Clamp,
+                        useMipMap = false,
+                    };
+                    render_texture_array[camera_number] = render_texture;
+                }
+                Replace_Or_Add_Atlas(
+                    "LevelTexture" + ((camera_number == 0) ? "" : camera_number.ToString()),
+                    render_texture
+                );
             }
 
             if (Type.GetType("RoomCamera, Assembly-CSharp") is Type RoomCamera) {
@@ -286,6 +292,10 @@ public static class RoomCameraMod {
         if (byte_array.Length == 0) return;
         Get_Level_Texture(camera_number, camera_index)?.LoadImage(byte_array, markNonReadable: false);
         Set_Level_Texture_Room_Name(room_name, camera_number, camera_index);
+
+        // This is too slow. For past Unity versions, this might have helped
+        // with memory leaks from calling LoadImage().
+		// Resources.UnloadUnusedAssets();
     }
 
     public static void Merge_All_Camera_Textures_On_GPU(RoomCamera room_camera, RenderTexture render_texture) {

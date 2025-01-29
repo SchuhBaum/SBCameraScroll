@@ -77,7 +77,7 @@ public class MainModOptions : OptionInterface {
     //
     //
 
-    public static Configurable<int> camera_zoom_slider = main_mod_options.config.Bind("camera_zoom_slider", defaultValue: 10, new ConfigurableInfo("Works for the most part but makes some shaders glitch out more. Not used when the SplitScreen Co-op mod is active.", new ConfigAcceptableRange<int>(5, 20), "", "Camera Zoom (10)"));
+    public static Configurable<int> camera_zoom_slider = main_mod_options.config.Bind("camera_zoom_slider", defaultValue: 10, new ConfigurableInfo("Works for the most part but makes some shaders glitch out more. Not used when the SplitScreen Co-op mod is active.", new ConfigAcceptableRange<int>(5, 40), "", "Camera Zoom (10)"));
     public static Configurable<string> resolution = main_mod_options.config.Bind("resolution", "Default", new ConfigurableInfo("Overrides the current resolution. Can be used to zoom out with less\npixelation issues. Might reduce black borders on larger monitors.", null, "", "Resolution:"));
     public static Configurable<bool> fill_empty_spaces = main_mod_options.config.Bind("fill_empty_spaces", defaultValue: false, new ConfigurableInfo("When enabled during merging, unknown pixels are set to the nearest pre-rendered pixel vertically\ninstead of defaulting to black. You might need to clear the cache before using this. Requires the option `Just-In-Time Merging` to be disabled.", null, "", "Fill Empty Spaces"));
 
@@ -335,13 +335,14 @@ public class MainModOptions : OptionInterface {
         }
 
         Reset_Resolution(apply_immediately: false);
-        Options options = rainWorld.options;
+        Options options        = rainWorld.options;
         saved_resolution_index = options.resolution;
-        saved_resolution = Options.screenResolutions[(int)saved_resolution_index];
+        saved_resolution       = Options.screenResolutions[(int)saved_resolution_index];
 
         // the second screen does not get initialized correctly in split screen coop 
         // when the height is larger than 768f; the zoom does not match;
         Options.screenResolutions[(int)saved_resolution_index] = is_split_screen_coop_enabled ? new(resolution_width, 768f) : new(resolution_width, resolution_height);
+
         ReInitialize_Futile();
         rainWorld.options.OnLoadFinished();
     }
@@ -550,7 +551,7 @@ public class MainModOptions : OptionInterface {
 
         AddNewLine();
 
-        AddSlider(camera_zoom_slider, (string)camera_zoom_slider.info.Tags[0], "50%", "200%");
+        AddSlider(camera_zoom_slider, (string)camera_zoom_slider.info.Tags[0], "50%", "400%");
         DrawSliders(ref Tabs[tab_index]);
 
         AddNewLine();
