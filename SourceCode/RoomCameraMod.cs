@@ -706,6 +706,13 @@ public static class RoomCameraMod {
     }
 
     private static void RoomCamera_ApplyPositionChange(On.RoomCamera.orig_ApplyPositionChange orig, RoomCamera room_camera) {
+        // The mod Rain Meadow in the current version assumes that
+        // room_camera.room is set as soon as possible. Do not wait when
+        // Just-in-Time merging is used.
+        if (room_camera.loadingRoom != null) {
+            room_camera.ChangeRoom(room_camera.loadingRoom, room_camera.loadingCameraPos);
+        }
+
         RenderTexture? render_texture = room_camera.Render_Texture();
         Attached_Fields room_camera_fields = room_camera.Get_Attached_Fields();
 
