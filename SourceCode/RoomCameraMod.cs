@@ -706,6 +706,19 @@ public static class RoomCameraMod {
     }
 
     private static void RoomCamera_ApplyPositionChange(On.RoomCamera.orig_ApplyPositionChange orig, RoomCamera room_camera) {
+        // The mod `Rain Meadow` in the current version assumes that
+        // room_camera.room is not null. Do not wait when Just-in-Time merging
+        // is used.
+        //
+        // This is bad. I use loadingRoom myself to determine if we need to
+        // keep loading screens or not. Do not change this! room_camera.room
+        // can be null, so you need to account for it. Not my problem.
+        // if (room_camera.loadingRoom != null) {
+        //     // Calling this too early changes the camera position and the camera
+        //     // has to scroll back. You also get visual bugs and pop-ins.
+        //     // room_camera.ChangeRoom(room_camera.loadingRoom, room_camera.loadingCameraPos);
+        // }
+
         RenderTexture? render_texture = room_camera.Render_Texture();
         Attached_Fields room_camera_fields = room_camera.Get_Attached_Fields();
 
