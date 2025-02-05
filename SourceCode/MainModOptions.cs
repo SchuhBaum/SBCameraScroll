@@ -79,6 +79,7 @@ public class MainModOptions : OptionInterface {
 
     public static Configurable<int> camera_zoom_slider = main_mod_options.config.Bind("camera_zoom_slider", defaultValue: 10, new ConfigurableInfo("Works for the most part but makes some shaders glitch out more. Not used when the SplitScreen Co-op mod is active.", new ConfigAcceptableRange<int>(5, 40), "", "Camera Zoom (10)"));
     public static Configurable<string> resolution = main_mod_options.config.Bind("resolution", "Default", new ConfigurableInfo("Overrides the current resolution. Can be used to zoom out with less\npixelation issues. Might reduce black borders on larger monitors.", null, "", "Resolution:"));
+    public static Configurable<string> custom_resolution = main_mod_options.config.Bind("customResolution", "", new ConfigurableInfo("Requires the format \"WIDTHxHEIGHT\". Invalid values are ignored.\nFirst, you need to select \"Custom\" in the Resolution combo box.", null, "", "Custom Resolution:"));
     public static Configurable<bool> fill_empty_spaces = main_mod_options.config.Bind("fill_empty_spaces", defaultValue: false, new ConfigurableInfo("When enabled during merging, unknown pixels are set to the nearest pre-rendered pixel vertically\ninstead of defaulting to black. You might need to clear the cache before using this. Requires the option `Just-In-Time Merging` to be disabled.", null, "", "Fill Empty Spaces"));
 
     //
@@ -99,6 +100,9 @@ public class MainModOptions : OptionInterface {
     private OpComboBox? _camera_type_combo_box = null;
     private int _last_camera_type = 0;
 
+    private OpComboBox? _resolution_combo_box      = null;
+    private OpTextBox? _custom_resolution_text_box = null;
+
     // the buttons are properly initialized later;
     private OpSimpleButton _clear_cache_button = new(new(), new());
     private OpSimpleButton _create_cache_button = new(new(), new());
@@ -112,6 +116,9 @@ public class MainModOptions : OptionInterface {
     private readonly List<string> _slider_main_text_labels = new();
     private readonly List<OpLabel> _slider_text_labels_left = new();
     private readonly List<OpLabel> _slider_text_labels_right = new();
+
+    private readonly List<Configurable<string>> _text_box_configurables = new();
+    private readonly List<OpLabel> _text_box_labels = new();
 
     private readonly List<OpLabel> _text_labels = new();
 
@@ -317,6 +324,10 @@ public class MainModOptions : OptionInterface {
     }
 
     public void Set_Resolution(string resolution_string) {
+        if (resolution_string == "Custom") {
+            resolution_string = custom_resolution.Value;
+        }
+
         // there are some visual bugs and menues are misplaced; like the main menu 
         // for example is stuck at the bottom; the jollycoop menu is stuck at the 
         // top; you can move and zoom the game objects; but doing that on the main
@@ -334,10 +345,39 @@ public class MainModOptions : OptionInterface {
             return;
         }
 
+        if (resolution_width <= 0 || resolution_height <= 0) {
+            Reset_Resolution();
+            return;
+        }
+
         Reset_Resolution(apply_immediately: false);
         Options options        = rainWorld.options;
         saved_resolution_index = options.resolution;
         saved_resolution       = Options.screenResolutions[(int)saved_resolution_index];
+
+        // I am confused. I assumed that the height is hardcoded. But it is not.
+        //
+        // Observations:
+        // Let (width_old, height_old) := (1368, 768) and (monitor_width,
+        // monitor_height) := (1920, 1200).
+        //
+        // 16/10 but width_new < width_old (1229x768):
+        //     This is the default in vanilla. It just zooms in. But no black
+        //     borders anymore.
+        // 16/10 but height_new > height_old (1368x855):
+        // no 16/10 and height_new = monitor_height (1368x1200):
+        // no 16/10 and width_new > width_old (1600x768):
+        //     This is fine. It just zooms out.
+        // no 16/10 and height_new > monitor_height (1368x1800):
+        // no 16/10 and width_new > monitor_width (2880x768):
+        //     This distorts the sprites. The sprites are squashed. But so far,
+        //     they are still aligned. No missing sprites.
+        // 16/10 but width_new > monitor_width and height_new > monitor_height (2880x1800):
+        //     This is fine. But it is extremely zoomed out.
+        //
+        // Conclusion:
+        //     You neither need 16/9 nor 16/10, nor be within the bounds of the monitor
+        //     resolution.
 
         // the second screen does not get initialized correctly in split screen coop 
         // when the height is larger than 768f; the zoom does not match;
@@ -562,15 +602,22 @@ public class MainModOptions : OptionInterface {
 
         AddNewLine();
 
-        List<ListItem> resolution_item_list = new() { new("Default", "Default", 0) { desc = "Resets the screen resolution." } };
+        AddTextBox(custom_resolution, (string)custom_resolution.info.Tags[0]);
+        DrawTextBoxes(ref Tabs[tab_index], offset_x_percent: 0f, width_label_percent: 0.3f, width_text_box_percent: 0.7f);
+
+        AddNewLine();
+
+        List<ListItem> resolution_item_list = new() { new ListItem("Default", "Default", 0) { desc = "Resets the screen resolution." } };
         foreach (Resolution resolution in UnityEngine.Screen.resolutions) {
             ListItem item = new(resolution.width.ToString() + " x " + resolution.height.ToString(), resolution.width) { desc = "Sets the screen resolution to " + resolution + " pixels." };
             if (resolution_item_list.Contains(item)) continue;
             resolution_item_list.Add(item);
         }
+        resolution_item_list.Add(new ListItem("Custom", "Custom", 9999) { desc = "Uses the resolution from the text box `" + (string)custom_resolution.info.Tags[0] + "`." });
+
         AddComboBox(resolution, resolution_item_list, (string)resolution.info.Tags[0]);
         // DrawComboBoxes(ref Tabs[tab_index]);
-        DrawComboBoxes(ref Tabs[tab_index], offset_x_percent: 0f, width_label_percent: 0.2f, width_combo_box_percent: 0.8f);
+        DrawComboBoxes(ref Tabs[tab_index], offset_x_percent: 0f, width_label_percent: 0.3f, width_combo_box_percent: 0.7f);
 
         AddNewLine(5.25f);
 
@@ -581,9 +628,17 @@ public class MainModOptions : OptionInterface {
         //
 
         // save UI elements in variables for Update() function
-        foreach (UIelement ui_element in Tabs[0].items) {
-            if (ui_element is OpComboBox op_combo_box && op_combo_box.Key == "cameraType") {
-                _camera_type_combo_box = op_combo_box;
+        foreach (OpTab tab in Tabs) {
+            foreach (UIelement ui_element in tab.items) {
+                if (ui_element is OpComboBox op_combo_box) {
+                    if (op_combo_box.Key == "cameraType") {
+                        _camera_type_combo_box = op_combo_box;
+                    } else if (op_combo_box.Key == "resolution") {
+                        _resolution_combo_box = op_combo_box;
+                    }
+                } else if (ui_element is OpTextBox op_text_box && op_text_box.Key == "customResolution") {
+                    _custom_resolution_text_box = op_text_box;
+                }
             }
         }
     }
@@ -600,12 +655,17 @@ public class MainModOptions : OptionInterface {
 
     public override void Update() {
         base.Update();
+
         if (_camera_type_combo_box != null) {
             int camera_type = Array.IndexOf(_camera_type_keys, _camera_type_combo_box.value);
             if (_last_camera_type != camera_type) {
                 _last_camera_type = camera_type;
                 _camera_type_combo_box.description = _camera_type_descriptions[camera_type];
             }
+        }
+
+        if (_resolution_combo_box is OpComboBox rcb && _custom_resolution_text_box is OpTextBox rtb) {
+            rtb.greyedOut = rcb.value != "Custom";
         }
     }
 
@@ -796,6 +856,47 @@ public class MainModOptions : OptionInterface {
         _slider_main_text_labels.Clear();
         _slider_text_labels_left.Clear();
         _slider_text_labels_right.Clear();
+    }
+
+    private void AddTextBox(Configurable<string> configurable, string text) {
+        OpLabel op_label = new OpLabel(new Vector2(), new Vector2(0.0f, _font_height), text, FLabelAlignment.Left, false);
+        _text_box_labels.Add(op_label);
+        _text_box_configurables.Add(configurable);
+    }
+
+    private void DrawTextBoxes(ref OpTab tab, ushort list_height = 5, float offset_x_percent = 0.1f, float width_label_percent = 0.4f, float width_text_box_percent = 0.4f) {
+        if (_text_box_configurables.Count != _text_box_labels.Count) return;
+
+        float offset_x       = (_margin_x.y - _margin_x.x) * offset_x_percent;
+        float width_label    = (_margin_x.y - _margin_x.x) * width_label_percent;
+        float width_text_box = (_margin_x.y - _margin_x.x) * width_text_box_percent;
+
+        for (int i = 0; i < _text_box_configurables.Count; ++i) {
+            AddNewLine(1.25f);
+            _pos.x += offset_x;
+
+            OpLabel op_label = _text_box_labels[i];
+            op_label.pos = _pos;
+            op_label.size += new Vector2(width_label, 2f); // size.y is already set
+            _pos.x += width_label;
+
+            Configurable<string> c = _text_box_configurables[i];
+            OpTextBox tb = new OpTextBox(c, _pos, width_text_box) {
+                // accept = OpTextBox.Accept.Int,
+                allowSpace = false,
+                description = c.info?.description ?? ""
+            };
+            tab.AddItems(op_label, tb);
+
+            // don't add a new line on the last element
+            if (i < _text_box_configurables.Count - 1) {
+                AddNewLine();
+                _pos.x = _margin_x.x;
+            }
+        }
+
+        _text_box_labels.Clear();
+        _text_box_configurables.Clear();
     }
 
     private void AddTextLabel(string text, FLabelAlignment alignment = FLabelAlignment.Center, bool big_text = false) {
