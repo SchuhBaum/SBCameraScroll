@@ -79,7 +79,7 @@ public class MainModOptions : OptionInterface {
 
     public static Configurable<int> camera_zoom_slider = main_mod_options.config.Bind("camera_zoom_slider", defaultValue: 10, new ConfigurableInfo("Works for the most part but makes some shaders glitch out more. Not used when the SplitScreen Co-op mod is active.", new ConfigAcceptableRange<int>(5, 40), "", "Camera Zoom (10)"));
     public static Configurable<string> resolution = main_mod_options.config.Bind("resolution", "Default", new ConfigurableInfo("Overrides the current resolution. Can be used to zoom out with less\npixelation issues. Might reduce black borders on larger monitors.", null, "", "Resolution:"));
-    public static Configurable<string> custom_resolution = main_mod_options.config.Bind("customResolution", "", new ConfigurableInfo("Requires the format \"WIDTHxHEIGHT\". Invalid values are ignored.\nFirst, you need to select \"Custom\" in the Resolution combo box.", null, "", "Custom Resolution:"));
+    public static Configurable<string> custom_resolution = main_mod_options.config.Bind("customResolution", "", new ConfigurableInfo("Requires the format \"WIDTHxHEIGHT\". Needs to be at least 960x540.\nFirst, you need to select \"Custom\" in the Resolution combo box.", null, "", "Custom Resolution:"));
     public static Configurable<bool> fill_empty_spaces = main_mod_options.config.Bind("fill_empty_spaces", defaultValue: false, new ConfigurableInfo("When enabled during merging, unknown pixels are set to the nearest pre-rendered pixel vertically\ninstead of defaulting to black. You might need to clear the cache before using this. Requires the option `Just-In-Time Merging` to be disabled.", null, "", "Fill Empty Spaces"));
 
     //
@@ -345,7 +345,7 @@ public class MainModOptions : OptionInterface {
             return;
         }
 
-        if (resolution_width <= 0 || resolution_height <= 0) {
+        if (resolution_width < 960 || resolution_height < 540) {
             Reset_Resolution();
             return;
         }

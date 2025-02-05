@@ -3,6 +3,13 @@
 # This uses my rain_world_uploader for Linux.
 # Link: https://github.com/SchuhBaum/rain_world_uploader/
 
+read -p "Upload mod? (yes/NO) $ " ready
+
+if ! [ "$ready" == "yes" ]; then
+    echo "Exiting."
+    exit 0
+fi
+
 mod_id="2928752589"
 mod_name="SBCameraScroll"
 
