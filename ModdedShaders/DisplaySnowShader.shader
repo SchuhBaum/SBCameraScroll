@@ -1,4 +1,4 @@
-﻿Shader "Futile/DisplaySnowShader" {
+﻿Shader "SBCameraScroll/DisplaySnowShader" {
     Properties {
         _MainTex ("Texture", 2D) = "white" {}
     }

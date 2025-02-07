@@ -6,7 +6,7 @@
 //from http://forum.unity3d.com/threads/68402-Making-a-2D-game-for-iPhone-iPad-and-need-better-performance
 
 //Unlit Transparent Vertex Colored Additive 
-Shader "Futile/SporesSnow" {
+Shader "SBCameraScroll/SporesSnow" {
     Properties {
         _MainTex ("Base (RGB) Trans (A)", 2D) = "white" {}
     }
