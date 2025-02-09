@@ -78,6 +78,7 @@ public class MainModOptions : OptionInterface {
     //
 
     public static Configurable<int> camera_zoom_slider = main_mod_options.config.Bind("camera_zoom_slider", defaultValue: 10, new ConfigurableInfo("Works for the most part but makes some shaders glitch out more. Not used when the SplitScreen Co-op mod is active.", new ConfigAcceptableRange<int>(5, 40), "", "Camera Zoom (10)"));
+    public static Configurable<bool> dynamic_zoom = main_mod_options.config.Bind("dynamicZoom", defaultValue: false, new ConfigurableInfo("When enabled, the camera zoom is adjusted dynamically per room. This removes any black borders\nwhen using custom resolutions. Enables scrolling in one-screen rooms.", null, "", "Dynamic Zoom"));
     public static Configurable<string> resolution = main_mod_options.config.Bind("resolution", "Default", new ConfigurableInfo("Overrides the current resolution. Can be used to zoom out with less\npixelation issues. Might reduce black borders on larger monitors.", null, "", "Resolution:"));
     public static Configurable<string> custom_resolution = main_mod_options.config.Bind("customResolution", "", new ConfigurableInfo("Requires the format \"WIDTHxHEIGHT\". Needs to be at least 960x540.\nFirst, you need to select \"Custom\" in the Resolution combo box.", null, "", "Custom Resolution:"));
     public static Configurable<bool> fill_empty_spaces = main_mod_options.config.Bind("fill_empty_spaces", defaultValue: false, new ConfigurableInfo("When enabled during merging, unknown pixels are set to the nearest pre-rendered pixel vertically\ninstead of defaulting to black. You might need to clear the cache before using this. Requires the option `Just-In-Time Merging` to be disabled.", null, "", "Fill Empty Spaces"));
@@ -98,24 +99,27 @@ public class MainModOptions : OptionInterface {
     private readonly List<OpLabel> _check_boxes_text_labels = new();
 
     private OpComboBox? _camera_type_combo_box = null;
-    private int _last_camera_type = 0;
+    private int _last_camera_type              = 0;
 
     private OpComboBox? _resolution_combo_box      = null;
     private OpTextBox? _custom_resolution_text_box = null;
+
+    private OpSlider?   _zoom_slider  = null;
+    private OpCheckBox? _dynamic_zoom = null;
 
     // the buttons are properly initialized later;
     private OpSimpleButton _clear_cache_button = new(new(), new());
     private OpSimpleButton _create_cache_button = new(new(), new());
 
     private readonly List<Configurable<string>> _combo_box_configurables = new();
-    private readonly List<List<ListItem>> _combo_box_lists = new();
-    private readonly List<bool> _combo_box_allow_empty = new();
-    private readonly List<OpLabel> _combo_boxes_text_labels = new();
+    private readonly List<List<ListItem>> _combo_box_lists               = new();
+    private readonly List<bool> _combo_box_allow_empty                   = new();
+    private readonly List<OpLabel> _combo_boxes_text_labels              = new();
 
     private readonly List<Configurable<int>> _slider_configurables = new();
-    private readonly List<string> _slider_main_text_labels = new();
-    private readonly List<OpLabel> _slider_text_labels_left = new();
-    private readonly List<OpLabel> _slider_text_labels_right = new();
+    private readonly List<string> _slider_main_text_labels         = new();
+    private readonly List<OpLabel> _slider_text_labels_left        = new();
+    private readonly List<OpLabel> _slider_text_labels_right       = new();
 
     private readonly List<Configurable<string>> _text_box_configurables = new();
     private readonly List<OpLabel> _text_box_labels = new();
@@ -596,6 +600,7 @@ public class MainModOptions : OptionInterface {
 
         AddNewLine();
 
+        AddCheckBox(dynamic_zoom, (string)dynamic_zoom.info.Tags[0]);
         AddCheckBox(fill_empty_spaces, (string)fill_empty_spaces.info.Tags[0]);
         AddCheckBox(jit_merging, (string)jit_merging.info.Tags[0]);
         DrawCheckBoxes(ref Tabs[tab_index]);
@@ -638,6 +643,10 @@ public class MainModOptions : OptionInterface {
                     }
                 } else if (ui_element is OpTextBox op_text_box && op_text_box.Key == "customResolution") {
                     _custom_resolution_text_box = op_text_box;
+                } else if (ui_element is OpCheckBox op_check_box && op_check_box.Key == "dynamicZoom") {
+                    _dynamic_zoom = op_check_box;
+                } else if (ui_element is OpSlider op_slider && op_slider.Key == "camera_zoom_slider") {
+                    _zoom_slider = op_slider;
                 }
             }
         }
@@ -666,6 +675,10 @@ public class MainModOptions : OptionInterface {
 
         if (_resolution_combo_box is OpComboBox rcb && _custom_resolution_text_box is OpTextBox rtb) {
             rtb.greyedOut = rcb.value != "Custom";
+        }
+
+        if (_zoom_slider != null && _dynamic_zoom != null) {
+            _zoom_slider.greyedOut = _dynamic_zoom.value == "true";
         }
     }
 

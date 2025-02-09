@@ -18,7 +18,7 @@ using static SBCameraScroll.RainWorldMod;
 
 namespace SBCameraScroll;
 
-[BepInPlugin("SBCameraScroll", "SBCameraScroll", "2.9.5")]
+[BepInPlugin("SBCameraScroll", "SBCameraScroll", "2.9.6")]
 public class MainMod : BaseUnityPlugin {
     //
     // meta data
@@ -26,7 +26,7 @@ public class MainMod : BaseUnityPlugin {
 
     public static readonly string mod_id = "SBCameraScroll";
     public static readonly string author = "SchuhBaum";
-    public static readonly string version = "2.9.5";
+    public static readonly string version = "2.9.6";
     public static readonly string mod_directory_path = Directory.GetParent(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)).FullName + Path.DirectorySeparatorChar;
 
     //
@@ -35,7 +35,8 @@ public class MainMod : BaseUnityPlugin {
 
     public static bool Option_JIT_Merging => jit_merging.Value && HasCopyTextureSupport;
 
-    public static bool Option_FillEmptySpaces => fill_empty_spaces.Value;
+    public static bool Option_DynamicZoom       => dynamic_zoom.Value;
+    public static bool Option_FillEmptySpaces   => fill_empty_spaces.Value;
     public static bool Option_FullScreenEffects => full_screen_effects.Value;
     public static bool Option_MergeWhileLoading => merge_while_loading.Value;
 

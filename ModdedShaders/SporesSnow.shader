@@ -41,7 +41,7 @@ Shader "SBCameraScroll/SporesSnow" {
                 #pragma fragment frag
                 #pragma multi_compile __ HR
                 #include "UnityCG.cginc"
-                #include "_ShaderFix.cginc"
+                // #include "_ShaderFix.cginc"
 
                 //#pragma profileoption NumTemps=64
                 //#pragma profileoption NumInstructionSlots=2048

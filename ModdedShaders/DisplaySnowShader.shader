@@ -29,7 +29,7 @@
             #pragma multi_compile __ HR
             #pragma exclude_renderers OpenGL
             #include "UnityCG.cginc"
-            #include "_ShaderFix.cginc"
+            // #include "_ShaderFix.cginc"
 
             struct appdata {
                 float4 vertex : POSITION;

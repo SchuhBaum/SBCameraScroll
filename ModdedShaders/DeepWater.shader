@@ -38,7 +38,7 @@ Shader "SBCameraScroll/DeepWater" {
                 #pragma exclude_renderers OpenGL
 
                 #include "UnityCG.cginc"
-                #include "_ShaderFix.cginc"
+                // #include "_ShaderFix.cginc"
 
                 #pragma multi_compile __ Gutter
 

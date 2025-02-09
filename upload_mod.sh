@@ -9,6 +9,8 @@ cur_wd="$(cd $cur_wd_relative && pwd)"
 
 ./build_linux.sh
 zip -r SBCameraScroll.zip ./SBCameraScroll/
+rm $HOME/downloads/SBCameraScroll.zip
+mv ./SBCameraScroll.zip $HOME/downloads/SBCameraScroll.zip
 
 cd "$prev_wd"
 

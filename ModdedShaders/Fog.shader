@@ -40,7 +40,7 @@ Properties {
                 #pragma fragment frag
                 #pragma multi_compile SNOW_ON SNOW_OFF
                 #include "UnityCG.cginc"
-                #include "_ShaderFix.cginc"
+                // #include "_ShaderFix.cginc"
 
                 //#pragma profileoption NumTemps=64
                 //#pragma profileoption NumInstructionSlots=2048

@@ -36,7 +36,7 @@ Properties {
                 #pragma vertex vert
                 #pragma fragment frag
                 #include "UnityCG.cginc"
-                #include "_ShaderFix.cginc"
+                // #include "_ShaderFix.cginc"
 
                 //#pragma profileoption NumTemps=64
                 //#pragma profileoption NumInstructionSlots=2048

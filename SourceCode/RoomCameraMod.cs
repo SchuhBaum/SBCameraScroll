@@ -776,6 +776,27 @@ public static class RoomCameraMod {
         room_camera_fields.is_pre_loading_whole_room = false;
         room_camera_fields.pre_loaded_camera_index = 0;
 
+        if (Option_DynamicZoom && room_camera.loadingRoom != null) {
+            AbstractRoomMod.Attached_Fields loading_room_fields = room_camera.loadingRoom.abstractRoom.Get_Attached_Fields();
+            float dynamic_zoom_x = room_camera.sSize.x / loading_room_fields.total_width;
+            if (dynamic_zoom_x < 1f)
+                dynamic_zoom_x = 1f;
+            float dynamic_zoom_y = room_camera.sSize.y / loading_room_fields.total_height;
+            if (dynamic_zoom_y < 1f)
+                dynamic_zoom_y = 1f;
+            camera_zoom = Mathf.Max(dynamic_zoom_x, dynamic_zoom_y);
+
+            // Bug:
+            //     When switching from zoomed to not zoomed, the texture and
+            //     sprites will not match. The sprites are way more zoomed in
+            //     than they should. This misaligns them and they are mostly
+            //     back shadows.
+            //
+            // This is a workaround.
+            if (camera_zoom == 1f)
+                camera_zoom += 0.01f;
+        }
+
         // INFO: updates currentCameraPosition;
         //       updates room_camera.room if needed;
         //       updates room_camera.loadingRoom;
@@ -840,7 +861,10 @@ public static class RoomCameraMod {
             room_camera_fields.is_camera_scroll_enabled = false;
         } else {
             room_camera_fields.is_room_blacklisted = false;
-            room_camera_fields.is_camera_scroll_enabled = room.cameraPositions.Length > 1 || Option_ScrollOneScreenRooms;
+
+            // The dynamic zoom requires that the camera scroll is enabled for
+            // one-screen rooms. This is not great.
+            room_camera_fields.is_camera_scroll_enabled = room.cameraPositions.Length > 1 || Option_ScrollOneScreenRooms || Option_DynamicZoom;
         }
 
         // Do this even when the room is not changing. In that case, Graphics.Blit()

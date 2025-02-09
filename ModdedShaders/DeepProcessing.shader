@@ -44,7 +44,11 @@ CGPROGRAM
 #pragma vertex vert
 #pragma fragment frag
 #include "UnityCG.cginc"
-#include "_ShaderFix.cginc"
+
+// This is basically just an empty file in vanilla with some stuff commented
+// out. Unity might fail to correctly build the asset bundles if this is
+// missing.
+// #include "_ShaderFix.cginc"
 
 //#pragma profileoption NumTemps=64
 //#pragma profileoption NumInstructionSlots=2048
@@ -125,6 +129,17 @@ half2 dsplace = (half2(i.scrPos.x, 1.0-i.scrPos.y) - half2(0.5, 0.5)) * 0.06 * d
 
 // modded:
 // Is this shader used in non-square rooms?
+//
+// The variable sizeModifier is resolution dependent. It is the number of
+// screen widths that fit into the merged level texture. But honestly it looks
+// better if it is not too small. There are two cases,
+//     1) you can zoom out by increasing the resolution and
+//     2) you can fit the content on a larger monitor by increasing the
+//     resolution and countering the zoom by changing the camera_zoom as well.
+// In case 2, I expect this to be too large. But in case 1, you get the same
+// size as before, i.e. the grid gets larger but you also zoom out. I leave it
+// as is. The resolution is intended to be used to zoom out and not to support
+// larger monitors.
 float sizeModifier = _spriteRect.z - _spriteRect.x;
 half gridSize = lerp(10, 6, dp) / sizeModifier;
 
