@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 2.9.6
+###### Version: 2.9.7
 This is a mod for Rain World v1.9.
 
 ### Description
@@ -23,7 +23,7 @@ This mod includes additional cameras:
 
 ### Installation
 0. Update Rain World to version 1.9 if needed.
-1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.9.6).
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.9.7).
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
@@ -38,6 +38,10 @@ See the file LICENSE-MIT.
 
 ### Changelog
 #### (Rain World v1.9)
+v2.9.7:
+- (dynamic zoom) Fixed a bug when resetting the camera zoom. Removed the workaround.
+- No camera scroll does no blacklist the room anymore. This had side effects. Some mod settings would not work unless camera scroll in one-screen rooms was enabled.
+
 v2.9.6:
 - (dynamic zoom) Added this option. When enabled, each room is zoomed as needed to avoid black borders when using custom resolutions.
 
