@@ -41,6 +41,7 @@ public static class RoomCameraMod {
     public static float camera_zoom = 1f;
     public static float Half_Inverse_Camera_Zoom_XY => 0.5f * (1f / camera_zoom - 1f);
     public static bool Is_Camera_Zoom_Enabled => !is_split_screen_coop_enabled && camera_zoom != 1f;
+    public static bool Is_Dynamic_Zoom_Enabled => !is_split_screen_coop_enabled && Option_DynamicZoom;
 
     //
     // variables
@@ -191,7 +192,11 @@ public static class RoomCameraMod {
     //
 
     public static void Apply_Camera_Zoom(RoomCamera room_camera) {
-        if (!Is_Camera_Zoom_Enabled) {
+        // The screens overlap if you mess with the zoom when SplitScreen Coop
+        // is enabled.
+        if (is_split_screen_coop_enabled)
+            return;
+        if (camera_zoom == 1f) {
             Reset_Camera_Zoom(room_camera);
             return;
         }
@@ -347,6 +352,10 @@ public static class RoomCameraMod {
     }
 
     public static void Reset_Camera_Zoom(RoomCamera room_camera) {
+        // The screens overlap if you mess with the zoom when SplitScreen Coop
+        // is enabled.
+        if (is_split_screen_coop_enabled)
+            return;
         // Reset to vanilla values.
         for (int sprite_layer_index = 0; sprite_layer_index < 11; ++sprite_layer_index) {
             FContainer sprite_layer = room_camera.SpriteLayers[sprite_layer_index];
@@ -796,7 +805,7 @@ public static class RoomCameraMod {
         room_camera_fields.is_pre_loading_whole_room = false;
         room_camera_fields.pre_loaded_camera_index = 0;
 
-        if (Option_DynamicZoom && room_camera.loadingRoom != null) {
+        if (Is_Dynamic_Zoom_Enabled && room_camera.loadingRoom != null) {
             AbstractRoomMod.Attached_Fields loading_room_fields = room_camera.loadingRoom.abstractRoom.Get_Attached_Fields();
             float dynamic_zoom_x = room_camera.sSize.x / loading_room_fields.total_width;
             if (dynamic_zoom_x < 1f)
