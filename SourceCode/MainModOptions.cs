@@ -49,13 +49,13 @@ public class MainModOptions : OptionInterface {
 
     public static Configurable<string> camera_type = main_mod_options.config.Bind("cameraType", _camera_type_keys[0], new ConfigurableInfo(_camera_type_descriptions[0], null, "", "Camera Type"));
 
-    public static Configurable<bool> merge_while_loading = main_mod_options.config.Bind("mergeWhileLoading", defaultValue: true, new ConfigurableInfo("When enabled, the camera textures for each room are merged when the region gets loaded.\nWhen disabled, camera textures are merged for each room on demand. Merging happens only once and might take a while.", null, "", "Merge While Loading")); //Merging happens only once and the files are stored inside the folder \"Mods/SBCameraScroll/\".\nThis process can take a while. Merging all rooms in Deserted Wastelands took me around three minutes.
     public static Configurable<bool> full_screen_effects = main_mod_options.config.Bind("fullScreenEffects", defaultValue: true, new ConfigurableInfo("When disabled, full screen effects like fog, bloom and melt are removed.", null, "", "Full Screen Effects"));
-    public static Configurable<bool> jit_merging = main_mod_options.config.Bind("jit_merging", defaultValue: false, new ConfigurableInfo("When enabled, merges textures just-in-time on the GPU. Does not use the cache. Might reduce memory consumption.", null, "", "Just-In-Time Merging"));
-    public static Configurable<bool> region_mods = main_mod_options.config.Bind("regionMods", defaultValue: true, new ConfigurableInfo("When enabled, the corresponding cached room textures get cleared when new region mods are detected or updated directly during gameplay when the room size changed. The load order matters if multiple mods change the same room.", null, "", "Region Mods"));
     public static Configurable<bool> scroll_one_screen_rooms = main_mod_options.config.Bind("scrollOneScreenRooms", defaultValue: false, new ConfigurableInfo("When disabled, the camera does not scroll in rooms with only one screen.", null, "", "One Screen Rooms")); // Automatically enabled when using SplitScreenMod.
-
     public static Configurable<int> smoothing_factor_slider = main_mod_options.config.Bind("smoothing_factor_slider", defaultValue: 8, new ConfigurableInfo("Determines how much of the distance is covered per frame. This is used when switching cameras as well to ensure a smooth transition.", new ConfigAcceptableRange<int>(0, 35), "", "Smoothing Factor (8)"));
+
+    public static Configurable<bool> jit_merging = main_mod_options.config.Bind("jit_merging", defaultValue: true, new ConfigurableInfo("When enabled, textures are merged just-in-time on the GPU. The cache is not used. Rooms load slightly slower.", null, "", "Just-In-Time Merging"));
+    public static Configurable<bool> merge_while_loading = main_mod_options.config.Bind("mergeWhileLoading", defaultValue: true, new ConfigurableInfo("When enabled, the camera textures for each room are merged when the region gets loaded.\nWhen disabled, camera textures are merged for each room on demand. Merging happens only once and might take a while.", null, "", "Merge While Loading")); //Merging happens only once and the files are stored inside the folder \"Mods/SBCameraScroll/\".\nThis process can take a while. Merging all rooms in Deserted Wastelands took me around three minutes.
+    public static Configurable<bool> region_mods = main_mod_options.config.Bind("regionMods", defaultValue: true, new ConfigurableInfo("When enabled, merged textures are checked for modded rooms. If the cache is invalid\nthen the merged texture is deleted automatically.", null, "", "Region Mods"));
 
     //
     //
@@ -95,21 +95,11 @@ public class MainModOptions : OptionInterface {
 
     private readonly List<float> _box_end_positions = new();
 
+    //
+    //
+
     private readonly List<Configurable<bool>> _check_box_configurables = new();
     private readonly List<OpLabel> _check_boxes_text_labels = new();
-
-    private OpComboBox? _camera_type_combo_box = null;
-    private int _last_camera_type              = 0;
-
-    private OpComboBox? _resolution_combo_box      = null;
-    private OpTextBox? _custom_resolution_text_box = null;
-
-    private OpSlider?   _zoom_slider  = null;
-    private OpCheckBox? _dynamic_zoom = null;
-
-    // the buttons are properly initialized later;
-    private OpSimpleButton _clear_cache_button = new(new(), new());
-    private OpSimpleButton _create_cache_button = new(new(), new());
 
     private readonly List<Configurable<string>> _combo_box_configurables = new();
     private readonly List<List<ListItem>> _combo_box_lists               = new();
@@ -125,6 +115,28 @@ public class MainModOptions : OptionInterface {
     private readonly List<OpLabel> _text_box_labels = new();
 
     private readonly List<OpLabel> _text_labels = new();
+
+    //
+    //
+
+    private OpComboBox? _camera_type_combo_box = null;
+    private int _last_camera_type              = 0;
+
+    private OpCheckBox? _jit_merging         = null;
+    private OpCheckBox? _merge_while_loading = null;
+
+    // the buttons are properly initialized later;
+    private OpSimpleButton _clear_cache_button = new OpSimpleButton(new(), new());
+    private OpSimpleButton _create_cache_button = new OpSimpleButton(new(), new());
+
+    private OpComboBox? _resolution_combo_box      = null;
+    private OpTextBox? _custom_resolution_text_box = null;
+
+    private OpSlider?   _zoom_slider  = null;
+    private OpCheckBox? _dynamic_zoom = null;
+
+    //
+    //
 
     //
     // main
@@ -439,8 +451,6 @@ public class MainModOptions : OptionInterface {
         AddNewLine(3f);
 
         AddCheckBox(full_screen_effects, (string)full_screen_effects.info.Tags[0]);
-        AddCheckBox(merge_while_loading, (string)merge_while_loading.info.Tags[0]);
-        AddCheckBox(region_mods, (string)region_mods.info.Tags[0]);
         AddCheckBox(scroll_one_screen_rooms, (string)scroll_one_screen_rooms.info.Tags[0]);
         DrawCheckBoxes(ref Tabs[tab_index]);
 
@@ -448,6 +458,13 @@ public class MainModOptions : OptionInterface {
 
         AddSlider(smoothing_factor_slider, (string)smoothing_factor_slider.info.Tags[0], "0%", "70%");
         DrawSliders(ref Tabs[tab_index]);
+
+        AddNewLine(2f);
+
+        AddCheckBox(jit_merging, (string)jit_merging.info.Tags[0]);
+        AddCheckBox(merge_while_loading, (string)merge_while_loading.info.Tags[0]);
+        AddCheckBox(region_mods, (string)region_mods.info.Tags[0]);
+        DrawCheckBoxes(ref Tabs[tab_index]);
 
         AddNewLine(3f);
 
@@ -602,7 +619,6 @@ public class MainModOptions : OptionInterface {
 
         AddCheckBox(dynamic_zoom, (string)dynamic_zoom.info.Tags[0]);
         AddCheckBox(fill_empty_spaces, (string)fill_empty_spaces.info.Tags[0]);
-        AddCheckBox(jit_merging, (string)jit_merging.info.Tags[0]);
         DrawCheckBoxes(ref Tabs[tab_index]);
 
         AddNewLine();
@@ -643,8 +659,10 @@ public class MainModOptions : OptionInterface {
                     }
                 } else if (ui_element is OpTextBox op_text_box && op_text_box.Key == "customResolution") {
                     _custom_resolution_text_box = op_text_box;
-                } else if (ui_element is OpCheckBox op_check_box && op_check_box.Key == "dynamicZoom") {
-                    _dynamic_zoom = op_check_box;
+                } else if (ui_element is OpCheckBox op_check_box) {
+                    if (op_check_box.Key == "dynamicZoom") _dynamic_zoom = op_check_box;
+                    else if (op_check_box.Key == "jit_merging") _jit_merging = op_check_box;
+                    else if (op_check_box.Key == "mergeWhileLoading") _merge_while_loading = op_check_box;
                 } else if (ui_element is OpSlider op_slider && op_slider.Key == "camera_zoom_slider") {
                     _zoom_slider = op_slider;
                 }
@@ -679,6 +697,11 @@ public class MainModOptions : OptionInterface {
 
         if (_zoom_slider != null && _dynamic_zoom != null) {
             _zoom_slider.greyedOut = _dynamic_zoom.value == "true";
+        }
+
+        if (_jit_merging != null) {
+            if (_merge_while_loading != null) _merge_while_loading.greyedOut = _jit_merging.value == "true";
+            if (_create_cache_button != null) _create_cache_button.greyedOut = _jit_merging.value == "true";
         }
     }
 

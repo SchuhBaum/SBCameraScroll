@@ -194,8 +194,10 @@ public static class RoomCameraMod {
     public static void Apply_Camera_Zoom(RoomCamera room_camera) {
         // The screens overlap if you mess with the zoom when SplitScreen Coop
         // is enabled.
-        if (is_split_screen_coop_enabled)
+        if (is_split_screen_coop_enabled) {
             return;
+        }
+
         if (camera_zoom == 1f) {
             Reset_Camera_Zoom(room_camera);
             return;
@@ -354,8 +356,16 @@ public static class RoomCameraMod {
     public static void Reset_Camera_Zoom(RoomCamera room_camera) {
         // The screens overlap if you mess with the zoom when SplitScreen Coop
         // is enabled.
-        if (is_split_screen_coop_enabled)
+        if (is_split_screen_coop_enabled) {
             return;
+        }
+
+        // I need to be careful. There might be mod conflicts that I am
+        // unaware of. Only apply / reset zoom when needed.
+        if (!Is_Dynamic_Zoom_Enabled && camera_zoom == 1f) {
+            return;
+        }
+
         // Reset to vanilla values.
         for (int sprite_layer_index = 0; sprite_layer_index < 11; ++sprite_layer_index) {
             FContainer sprite_layer = room_camera.SpriteLayers[sprite_layer_index];

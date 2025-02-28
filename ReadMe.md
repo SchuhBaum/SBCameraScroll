@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 2.9.8
+###### Version: 2.9.9
 This is a mod for Rain World v1.9.
 
 ### Description
@@ -23,7 +23,7 @@ This mod includes additional cameras:
 
 ### Installation
 0. Update Rain World to version 1.9 if needed.
-1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.9.8).
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v2.9.9).
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
@@ -38,6 +38,9 @@ See the file LICENSE-MIT.
 
 ### Changelog
 #### (Rain World v1.9)
+v2.9.9:
+- (just-in-time merging) Now, enabled by default. Even without fixing memory issues, this is better than the need to build a giant cache. But it slightly increases the loading times for rooms. I did not find this noticable though.
+
 v2.9.8:
 - (camera zoom) Fixed a bug where camera zoom was used while SplitScreen Co-op was enabled. This can cause screens to overlap.
 
