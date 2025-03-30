@@ -273,6 +273,88 @@ public static class RoomCameraMod {
         }
     }
 
+    public static Vector2 DrawUpdate_GetCameraPosition(RoomCamera room_camera, Vector2 camera_position) {
+        if (room_camera.Is_Type_Camera_Not_Used()) {
+            // This is called instead of `CamPos(currentCameraPosition)` inside
+            // functions like this:
+            //   Mathf.Clamp(vector.x, CamPos(currentCameraPosition).x + hDisplace + 8f - 20f, CamPos(currentCameraPosition).x + hDisplace + 8f + 20f);
+            return room_camera.CamPos(room_camera.currentCameraPosition);
+        }
+
+        // Given the place where this is called, we need to undo adding
+        // hDisplace. We don't want offsets. We just want to skip the clamping.
+        camera_position.x -= room_camera.hDisplace;
+        return camera_position;
+    }
+
+    public static void DrawUpdate_UpdateLevelTextureGameObject(RoomCamera room_camera, Vector2 camera_position) {
+        if (room_camera.Is_Type_Camera_Not_Used()) {
+            room_camera.levelGraphic.x = room_camera.CamPos(room_camera.currentCameraPosition).x - camera_position.x;
+            room_camera.levelGraphic.y = room_camera.CamPos(room_camera.currentCameraPosition).y - camera_position.y;
+            room_camera.backgroundGraphic.x = room_camera.CamPos(room_camera.currentCameraPosition).x - camera_position.x;
+            room_camera.backgroundGraphic.y = room_camera.CamPos(room_camera.currentCameraPosition).y - camera_position.y;
+            return;
+        }
+
+        // not sure what this does // seems to visually darken stuff (apply shader or something) when offscreen
+        // I think that textureOffset is only needed(?) for compatibility reasons with room.cameraPositions
+        Vector2 min_camera_position = room_camera.room.abstractRoom.Get_Attached_Fields().min_camera_position;
+        room_camera.levelGraphic.SetPosition(min_camera_position - camera_position);
+        room_camera.backgroundGraphic.SetPosition(min_camera_position - camera_position);
+    }
+
+    public static void DrawUpdate_UpdateShadPropSpriteRect(RoomCamera room_camera, Vector2 camera_position) {
+        if (room_camera.Is_Type_Camera_Not_Used()) {
+            Vector4 sprite_rect = new Vector4(
+                    (-camera_position.x - 0.5f + room_camera.CamPos(room_camera.currentCameraPosition).x) / room_camera.sSize.x,
+                    (-camera_position.y + 0.5f + room_camera.CamPos(room_camera.currentCameraPosition).y) / room_camera.sSize.y,
+                    (-camera_position.x - 0.5f + room_camera.levelGraphic.width + room_camera.CamPos(room_camera.currentCameraPosition).x) / room_camera.sSize.x,
+                    (-camera_position.y + 0.5f + room_camera.levelGraphic.height + room_camera.CamPos(room_camera.currentCameraPosition).y) / room_camera.sSize.y
+                    );
+            Shader.SetGlobalVector(RainWorld.ShadPropSpriteRect, sprite_rect);
+
+        } else if (!Is_Camera_Zoom_Enabled) {
+            Vector4 sprite_rect = new Vector4(
+                    (room_camera.levelGraphic.x - 0.5f) / room_camera.sSize.x,
+                    (room_camera.levelGraphic.y + 0.5f) / room_camera.sSize.y,
+                    (room_camera.levelGraphic.x + room_camera.levelGraphic.width - 0.5f) / room_camera.sSize.x,
+                    (room_camera.levelGraphic.y + room_camera.levelGraphic.height + 0.5f) / room_camera.sSize.y
+                    );
+            Shader.SetGlobalVector(RainWorld.ShadPropSpriteRect, sprite_rect);
+
+        } else {
+            // When zooming out the screen gets smaller. The offset is to
+            // center the sprite rectangle. If your screen is 0.25 times as
+            // big then you want to move 1.5 small screens towards bottom-left.
+            // (There fit 4 small screens in total, so left margin is 1.5
+            // small screens and right one as well.) If you plug that into
+            // the Shader.SetGlobalVector() formula below and simplify then
+            // you get the zoomed and scaled version:
+            //
+            // screen_offset
+            // = camera_zoom * (Half_Inverse_Camera_Zoom_XY * sSize.x) / sSize.x
+            // = camera_zoom * Half_Inverse_Camera_Zoom_XY
+            // = 0.25f       * 1.5f // in the example
+            float screen_offset = 0.5f * (1f - camera_zoom);
+
+            // room_camera.levelGraphic.x = textureOffset.x - cameraPosition.x;
+            // same for y;
+            // 
+            // there seem to be rounding errors when zooming;
+            // in some instances you see a black outline;
+            // but not in others; depends on the camera position;
+            //
+            // if the 0.5f is missing then you get black outlines;
+            // even without zoom;
+            Vector4 sprite_rect = new Vector4(
+                    screen_offset + (camera_zoom * room_camera.levelGraphic.x - 0.5f) / room_camera.sSize.x,
+                    screen_offset + (camera_zoom * room_camera.levelGraphic.y + 0.5f) / room_camera.sSize.y,
+                    screen_offset + (camera_zoom * (room_camera.levelGraphic.x + room_camera.levelGraphic.width) - 0.5f) / room_camera.sSize.x, screen_offset + (camera_zoom * (room_camera.levelGraphic.y + room_camera.levelGraphic.height) + 0.5f) / room_camera.sSize.y
+                    );
+            Shader.SetGlobalVector(RainWorld.ShadPropSpriteRect, sprite_rect);
+        }
+    }
+
     public static Vector2 GetCreaturePosition(Creature creature) {
         if (creature is Player player) {
             // reduce movement when "rolling" in place in ZeroG;
@@ -426,14 +508,28 @@ public static class RoomCameraMod {
     // private
     //
 
-    private static void IL_RoomCamera_ApplyPositionChange(ILContext context) {
+    private static void IL_RoomCamera_ApplyPositionChange(ILContext context) { // Option_JIT_Merging
 		// LogAllInstructions(context);
-
-        // Remove the vanilla call to LoadImage(). This is done in before
-        // calling orig() in ApplyPositionChange() when Option_JIT_Merging is
-        // enabled.
 		ILCursor cursor = new(context);
-		cursor.RemoveRange(7);
+
+        if (cursor.TryGotoNext(instruction => instruction.MatchLdfld("RoomCamera", "preLoadedTexture"))) {
+            if (can_log_il_hooks) {
+                Debug.Log("SBCameraScroll: IL_RoomCamera_ApplyPositionChange: Index " + cursor.Index);
+            }
+
+            // Remove the vanilla call to LoadImage(). Otherwise, the last
+            // screen texture will be loaded for the current screen position. We
+            // handle the loading ourselves in RoomCamera_ApplyPositionChange().
+            cursor.Index -= 3;
+            cursor.RemoveRange(7);
+
+        } else {
+            if (can_log_il_hooks) {
+                Debug.Log("SBCameraScroll: IL_RoomCamera_ApplyPositionChange failed.");
+            }
+            return;
+        }
+
 		// LogAllInstructions(context);
 	}
 
@@ -446,21 +542,14 @@ public static class RoomCameraMod {
                 Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate: Index " + cursor.Index); // 100 
             }
 
+            // Vanilla only uses CamPos(currentCameraPosition). Remove it and
+            // call a function that handles both -- vanilla and modded -- cases.
+            // This needs to be done 4 times in total. This is the first time.
             cursor.Goto(cursor.Index - 2);
-            cursor.RemoveRange(3); // remove CamPos(currentCameraPosition)
-
+            cursor.RemoveRange(3);
             cursor.Emit(OpCodes.Ldloc_1);
-            cursor.EmitDelegate<Func<RoomCamera, Vector2, Vector2>>((room_camera, camera_position) => {
-                if (room_camera.Is_Type_Camera_Not_Used()) {
-                    // Mathf.Clamp(vector.x, CamPos(currentCameraPosition).x + hDisplace + 8f - 20f, CamPos(currentCameraPosition).x + hDisplace + 8f + 20f);
-                    return room_camera.CamPos(room_camera.currentCameraPosition);
-                }
+            cursor.EmitDelegate<Func<RoomCamera, Vector2, Vector2>>(DrawUpdate_GetCameraPosition);
 
-                // hDisplace gives a straight offset when using non-default screen resolutions;
-                // we don't want offsets; we just want to skip the clamping;
-                camera_position.x -= room_camera.hDisplace;
-                return camera_position;
-            });
         } else {
             if (can_log_il_hooks) {
                 Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate failed.");
@@ -473,18 +562,12 @@ public static class RoomCameraMod {
                 Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate: Index " + cursor.Index); // 112 
             }
 
+            // Second.
             cursor.Goto(cursor.Index - 2);
             cursor.RemoveRange(3);
-
             cursor.Emit(OpCodes.Ldloc_1);
-            cursor.EmitDelegate<Func<RoomCamera, Vector2, Vector2>>((room_camera, camera_position) => {
-                if (room_camera.Is_Type_Camera_Not_Used()) {
-                    return room_camera.CamPos(room_camera.currentCameraPosition);
-                }
+            cursor.EmitDelegate<Func<RoomCamera, Vector2, Vector2>>(DrawUpdate_GetCameraPosition);
 
-                camera_position.x -= room_camera.hDisplace;
-                return camera_position;
-            });
         } else {
             if (can_log_il_hooks) {
                 Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate failed.");
@@ -497,16 +580,12 @@ public static class RoomCameraMod {
                 Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate: Index " + cursor.Index); // 129 
             }
 
+            // Third.
             cursor.Goto(cursor.Index - 2);
             cursor.RemoveRange(3);
-
             cursor.Emit(OpCodes.Ldloc_1);
-            cursor.EmitDelegate<Func<RoomCamera, Vector2, Vector2>>((room_camera, camera_position) => {
-                if (room_camera.Is_Type_Camera_Not_Used()) {
-                    return room_camera.CamPos(room_camera.currentCameraPosition);
-                }
-                return camera_position;
-            });
+            cursor.EmitDelegate<Func<RoomCamera, Vector2, Vector2>>(DrawUpdate_GetCameraPosition);
+
         } else {
             if (can_log_il_hooks) {
                 Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate failed.");
@@ -519,16 +598,12 @@ public static class RoomCameraMod {
                 Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate: Index " + cursor.Index); // 145 
             }
 
+            // Fourth.
             cursor.Goto(cursor.Index - 2);
             cursor.RemoveRange(3);
-
             cursor.Emit(OpCodes.Ldloc_1);
-            cursor.EmitDelegate<Func<RoomCamera, Vector2, Vector2>>((room_camera, camera_position) => {
-                if (room_camera.Is_Type_Camera_Not_Used()) {
-                    return room_camera.CamPos(room_camera.currentCameraPosition);
-                }
-                return camera_position;
-            });
+            cursor.EmitDelegate<Func<RoomCamera, Vector2, Vector2>>(DrawUpdate_GetCameraPosition);
+
         } else {
             if (can_log_il_hooks) {
                 Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate failed.");
@@ -536,7 +611,6 @@ public static class RoomCameraMod {
             return;
         }
 
-        //
         //
         //
 
@@ -545,25 +619,18 @@ public static class RoomCameraMod {
                 Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate: Index " + cursor.Index); // 321
             }
 
+            //
+            // The LevelTexture is bundled to the GameObject(?) levelGraphic.
+            // You can use levelGraphic to squeeze or stretch the texture. We
+            // want it to have original size.
+            //
+
+            // Leave the RoomCamera argument unchanged.
             cursor.Goto(cursor.Index - 4);
             cursor.RemoveRange(43); // 317-359
 
-            cursor.Emit(OpCodes.Ldloc_1);
-            cursor.EmitDelegate<Action<RoomCamera, Vector2>>((room_camera, camera_position) => {
-                if (room_camera.Is_Type_Camera_Not_Used()) {
-                    room_camera.levelGraphic.x = room_camera.CamPos(room_camera.currentCameraPosition).x - camera_position.x;
-                    room_camera.levelGraphic.y = room_camera.CamPos(room_camera.currentCameraPosition).y - camera_position.y;
-                    room_camera.backgroundGraphic.x = room_camera.CamPos(room_camera.currentCameraPosition).x - camera_position.x;
-                    room_camera.backgroundGraphic.y = room_camera.CamPos(room_camera.currentCameraPosition).y - camera_position.y;
-                    return;
-                }
-
-                // not sure what this does // seems to visually darken stuff (apply shader or something) when offscreen
-                // I think that textureOffset is only needed(?) for compatibility reasons with room.cameraPositions
-                Vector2 min_camera_position = room_camera.room.abstractRoom.Get_Attached_Fields().min_camera_position;
-                room_camera.levelGraphic.SetPosition(min_camera_position - camera_position);
-                room_camera.backgroundGraphic.SetPosition(min_camera_position - camera_position);
-            });
+            cursor.Emit(OpCodes.Ldloc_1); // camera_position
+            cursor.EmitDelegate<Action<RoomCamera, Vector2>>(DrawUpdate_UpdateLevelTextureGameObject);
         } else {
             if (can_log_il_hooks) {
                 Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate failed.");
@@ -571,61 +638,26 @@ public static class RoomCameraMod {
             return;
         }
 
-        if (cursor.TryGotoNext(instruction => instruction.MatchCall<RoomCamera>("CamPos"))) {
+        if (cursor.TryGotoNext(instruction => instruction.MatchLdsfld("RainWorld", "ShadPropSpriteRect"))) {
             if (can_log_il_hooks) {
-                Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate: Index " + cursor.Index); // 425
+                Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate: Index " + cursor.Index);
             }
 
-            cursor.Goto(cursor.Index - 9);
-            cursor.RemoveRange(71); // 416-486
+            //
+            // Delete and replace the whole Shader.SetGlobalVector() call that
+            // sets RainWorld.ShadPropSpriteRect.
+            //
 
-            cursor.Emit(OpCodes.Ldarg_0);
-            cursor.Emit(OpCodes.Ldloc_1);
-            cursor.EmitDelegate<Action<RoomCamera, Vector2>>((room_camera, camera_position) => {
-                if (room_camera.Is_Type_Camera_Not_Used()) {
-                    Shader.SetGlobalVector(RainWorld.ShadPropSpriteRect, new Vector4((-camera_position.x - 0.5f + room_camera.CamPos(room_camera.currentCameraPosition).x) / room_camera.sSize.x, (-camera_position.y + 0.5f + room_camera.CamPos(room_camera.currentCameraPosition).y) / room_camera.sSize.y, (-camera_position.x - 0.5f + room_camera.levelGraphic.width + room_camera.CamPos(room_camera.currentCameraPosition).x) / room_camera.sSize.x, (-camera_position.y + 0.5f + room_camera.levelGraphic.height + room_camera.CamPos(room_camera.currentCameraPosition).y) / room_camera.sSize.y));
-                    return;
-                }
+            // Keep the label to the first instruction intact.
+            cursor.Index += 1;
+            cursor.Prev.OpCode = OpCodes.Ldarg_0; // room_camera
+            cursor.Prev.Operand = null;
 
-                if (!Is_Camera_Zoom_Enabled) {
-                    Shader.SetGlobalVector(RainWorld.ShadPropSpriteRect, new Vector4(
-                        (room_camera.levelGraphic.x - 0.5f) / room_camera.sSize.x,
-                        (room_camera.levelGraphic.y + 0.5f) / room_camera.sSize.y,
-                        (room_camera.levelGraphic.x + room_camera.levelGraphic.width - 0.5f) / room_camera.sSize.x,
-                        (room_camera.levelGraphic.y + room_camera.levelGraphic.height + 0.5f) / room_camera.sSize.y
-                    ));
-                    return;
-                }
+            cursor.RemoveRange(70);
 
-                // When zooming out the screen gets smaller. The offset is to
-                // center the sprite rectangle. If your screen is 0.25 times as
-                // big then you want to move 1.5 small screens towards bottom-left.
-                // (There fit 4 small screens in total, so left margin is 1.5
-                // small screens and right one as well.) If you plug that into
-                // the Shader.SetGlobalVector() formula below and simplify then
-                // you get the zoomed and scaled version:
-                //
-                // screen_offset
-                // = camera_zoom * (Half_Inverse_Camera_Zoom_XY * sSize.x) / sSize.x
-                // = camera_zoom * Half_Inverse_Camera_Zoom_XY
-                // = 0.25f       * 1.5f // in the example
-                float screen_offset = 0.5f * (1f - camera_zoom);
+            cursor.Emit(OpCodes.Ldloc_1); // camera_position
+            cursor.EmitDelegate<Action<RoomCamera, Vector2>>(DrawUpdate_UpdateShadPropSpriteRect);
 
-                // room_camera.levelGraphic.x = textureOffset.x - cameraPosition.x;
-                // same for y;
-                // 
-                // there seem to be rounding errors when zooming;
-                // in some instances you see a black outline;
-                // but not in others; depends on the camera position;
-                //
-                // if the 0.5f is missing then you get black outlines;
-                // even without zoom;
-                Shader.SetGlobalVector(RainWorld.ShadPropSpriteRect, new Vector4(
-                    screen_offset + (camera_zoom * room_camera.levelGraphic.x - 0.5f) / room_camera.sSize.x,
-                    screen_offset + (camera_zoom * room_camera.levelGraphic.y + 0.5f) / room_camera.sSize.y,
-                    screen_offset + (camera_zoom * (room_camera.levelGraphic.x + room_camera.levelGraphic.width) - 0.5f) / room_camera.sSize.x, screen_offset + (camera_zoom * (room_camera.levelGraphic.y + room_camera.levelGraphic.height) + 0.5f) / room_camera.sSize.y
-                ));
-            });
         } else {
             if (can_log_il_hooks) {
                 Debug.Log("SBCameraScroll: IL_RoomCamera_DrawUpdate failed.");

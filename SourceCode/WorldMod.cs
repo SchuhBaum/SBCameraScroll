@@ -9,10 +9,11 @@ namespace SBCameraScroll;
 
 internal static class WorldMod {
     internal static void On_Config_Changed() {
-        On.World.LoadWorld -= World_LoadWorld;
+        On.World.LoadWorld_Timeline_List1_Int32Array_Int32Array_Int32Array -= World_LoadWorld;
 
         if (!Option_JIT_Merging) {
-            On.World.LoadWorld += World_LoadWorld;
+            On.World.LoadWorld_Timeline_List1_Int32Array_Int32Array_Int32Array += World_LoadWorld;
+            // LoadWorld_Timeline_List1_Int32Array_Int32Array_Int32Array
         }
     }
 
@@ -33,13 +34,14 @@ internal static class WorldMod {
     // private
     //
 
-    private static void World_LoadWorld(On.World.orig_LoadWorld orig, World world, SlugcatStats.Name slugcat_name, List<AbstractRoom> abstract_room_list, int[] swarm_rooms, int[] shelters, int[] gates) {
+    // private static void World_LoadWorld(On.World.orig_LoadWorld orig, World world, SlugcatStats.Name slugcat_name, List<AbstractRoom> abstract_room_list, int[] swarm_rooms, int[] shelters, int[] gates) {
+    private static void World_LoadWorld(On.World.orig_LoadWorld_Timeline_List1_Int32Array_Int32Array_Int32Array orig, World world, SlugcatStats.Timeline timeline_position, List<AbstractRoom> abstract_room_list, int[] swarm_rooms, int[] shelters, int[] gates) {
         // textureOffset.Clear(); // this freezes gate transitions when using SplitScreenMod
         // cosmeticWormsOnTile.Clear(); // probably caused freezes as well // too risky to do stuff like this while rooms still being updated(?)
         // ClearAllWormGrass(); // safer but too slow // there might worm grass already been created for the (new) world
 
         // regionState is a function and needs world.game != null
-        orig(world, slugcat_name, abstract_room_list, swarm_rooms, shelters, gates);
+        orig(world, timeline_position, abstract_room_list, swarm_rooms, shelters, gates);
         if (!MainMod.Option_MergeWhileLoading) return;
         if (world.game == null) return;
         if (!world.game.IsStorySession) return;

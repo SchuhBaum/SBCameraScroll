@@ -5,9 +5,9 @@ cd "./SourceCode" || exit
 config="Release"
 dotnet build -c "$config"
 
-mod_name="SBCameraScroll"
-dll_name="$mod_name.dll"
-pdb_name="$mod_name.pdb"
+$mod_name = "SBCameraScroll"
+$dll_name = "$mod_name.dll"
+$pdb_name = "$mod_name.pdb"
 
 dest_path="../$mod_name/plugins"
 mkdir -p $dest_path

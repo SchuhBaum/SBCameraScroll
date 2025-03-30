@@ -28,11 +28,22 @@ public static class WormGrassMod {
     // ---------------- //
 
     public static void UpdatePatchTile(Attached_Fields attached_fields, WormGrass.WormGrassPatch worm_grass_patch, Room worm_grass_room, int tile_index) {
+        System.Random random = new System.Random();
+
         // in the hunter cutscene this function is called before rainworldgame.ctor
         ref List<WormGrass.Worm> cosmetic_worms_on_tile = ref attached_fields.cosmetic_worms_on_tiles[worm_grass_patch][tile_index];
         if (cosmetic_worms_on_tile.Count == 0 && worm_grass_patch.cosmeticWormPositions[tile_index].Length > 0 && worm_grass_room.ViewedByAnyCamera(worm_grass_room.MiddleOfTile(worm_grass_patch.tiles[tile_index]), margin: 200f)) {
             for (int worm_index = 0; worm_index < worm_grass_patch.cosmeticWormPositions[tile_index].Length; ++worm_index) {
-                WormGrass.Worm worm = new(worm_grass_patch.wormGrass, worm_grass_patch, worm_grass_patch.cosmeticWormPositions[tile_index][worm_index], worm_grass_patch.cosmeticWormLengths[tile_index][worm_index, 0], worm_grass_patch.sizes[tile_index, 1], worm_grass_patch.cosmeticWormLengths[tile_index][worm_index, 1], true);
+                WormGrass.Worm worm = new WormGrass.Worm(
+                    worm_grass_patch.wormGrass,
+                    worm_grass_patch,
+                    worm_grass_patch.cosmeticWormPositions[tile_index][worm_index],
+                    worm_grass_patch.cosmeticWormLengths[tile_index][worm_index, 0],
+                    worm_grass_patch.sizes[tile_index, 1],
+                    worm_grass_patch.cosmeticWormLengths[tile_index][worm_index, 1],
+                    true,
+                    random
+                );
 
                 cosmetic_worms_on_tile.Add(worm);
                 worm_grass_patch.wormGrass.room.AddObject(worm);
@@ -124,8 +135,7 @@ public static class WormGrassMod {
 
         Attached_Fields attached_fields = worm_grass.Get_Attached_Fields();
         foreach (WormGrass.WormGrassPatch worm_grass_patch in attached_fields.cosmetic_worms_on_tiles.Keys) {
-            for (int tile_index = 0; tile_index < worm_grass_patch.tiles.Count; ++tile_index) // update all tiles at once
-            {
+            for (int tile_index = 0; tile_index < worm_grass_patch.tiles.Count; ++tile_index) { // update all tiles at once
                 UpdatePatchTile(attached_fields, worm_grass_patch, worm_grass.room, tile_index);
             }
         }

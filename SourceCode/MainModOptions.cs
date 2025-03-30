@@ -14,7 +14,6 @@ using static SBCameraScroll.PositionTypeCamera;
 using static SBCameraScroll.ProcessManagerMod;
 using static SBCameraScroll.RoomCameraMod;
 using static SBCameraScroll.VanillaTypeCamera;
-using static SlugcatStats.Name;
 using static WorldLoader.LoadingContext;
 
 namespace SBCameraScroll;
@@ -228,11 +227,11 @@ public class MainModOptions : OptionInterface {
     public IEnumerator CreateCache_Coroutine() {
         if (rainWorld.processManager.currentMainLoop is not ModdingMenu modding_menu) yield break;
         _create_cache_button.text = "Please wait...";
-        Region[] all_regions = Region.LoadAllRegions(White);
+        Region[] all_regions = Region.LoadAllRegions(SlugcatStats.Timeline.White);
 
         for (int region_index = 0; region_index < all_regions.Length; ++region_index) {
             Region region = all_regions[region_index];
-            WorldLoader world_loader = new(null, White, singleRoomWorld: false, region.name, region, rainWorld.setup, FASTTRAVEL);
+            WorldLoader world_loader = new WorldLoader(null, SlugcatStats.Name.White, SlugcatStats.Timeline.White, singleRoomWorld: false, region.name, region, rainWorld.setup, FASTTRAVEL);
             world_loader.NextActivity();
 
             while (!world_loader.Finished) {
@@ -302,7 +301,7 @@ public class MainModOptions : OptionInterface {
     }
 
     public void CreateCacheButton_UpdateColor(Region[]? all_regions = null) {
-        all_regions ??= Region.LoadAllRegions(White);
+        all_regions ??= Region.LoadAllRegions(SlugcatStats.Timeline.White);
         foreach (Region region in all_regions) {
             if (Directory.Exists(mod_directory_path + "world" + Path.DirectorySeparatorChar + region.name.ToLower() + "-rooms")) continue;
             _create_cache_button.colorFill = new Color(0.0f, 1f, 0.0f, 0.5f);
