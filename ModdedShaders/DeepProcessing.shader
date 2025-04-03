@@ -44,11 +44,7 @@ CGPROGRAM
 #pragma vertex vert
 #pragma fragment frag
 #include "UnityCG.cginc"
-
-// This is basically just an empty file in vanilla with some stuff commented
-// out. Unity might fail to correctly build the asset bundles if this is
-// missing.
-// #include "_ShaderFix.cginc"
+#include "_ShaderFix.cginc"
 
 //#pragma profileoption NumTemps=64
 //#pragma profileoption NumInstructionSlots=2048

@@ -3,7 +3,10 @@ $dir = $PSScriptRoot
 $ErrorActionPreference = "Stop"
 
 $config = "Release"
-dotnet build (Join-Path -Path $dir -ChildPath "sourcecode") -c $config
+dotnet build "$dir\sourcecode" -c $config
+if ($LASTEXITCODE) {
+    exit $LASTEXITCODE
+}
 
 $mod_name = "SBCameraScroll"
 $dll_name = $mod_name + ".dll"
@@ -22,4 +25,21 @@ function copy_file($file_name) {
 
 copy_file($dll_name)
 copy_file($pdb_name)
+
+$asset_bundles_path = "$dir\$mod_name\assetbundles"
+$delete_file_paths = @(
+    "$asset_bundles_path\assetbundles",
+    "$asset_bundles_path\assetbundles.meta",
+    "$asset_bundles_path\assetbundles.manifest",
+    "$asset_bundles_path\assetbundles.manifest.meta",
+    "$asset_bundles_path\modded_shaders.meta",
+    "$asset_bundles_path\modded_shaders.manifest",
+    "$asset_bundles_path\modded_shaders.manifest.meta"
+)
+
+foreach ($file_path in $delete_file_paths) {
+    if (Test-Path $file_path) {
+        Remove-Item -Path "$file_path" -Force
+    }
+}
 

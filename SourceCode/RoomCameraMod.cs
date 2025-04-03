@@ -60,6 +60,10 @@ public static class RoomCameraMod {
     // element is added it will reserve memory for the other 9 spots.
     public static List<Texture2D>[] level_texture_lists = {new(10), new(10), new(10), new(10)};
     public static List<string>[] level_texture_room_name_lists = {new(10), new(10), new(10), new(10)};
+    // The naming is bad. Level texture can mean two different things.
+    //   1) One camera screen texture.
+    //   2) The whole room texture.
+    // In vanilla only 1) is used.
     public static Texture2D? Get_Level_Texture(int camera_number, int camera_index) {
         if (camera_number < 0 || camera_number > 3) return null;
         while (camera_index >= level_texture_lists[camera_number].Count) {
@@ -139,9 +143,12 @@ public static class RoomCameraMod {
             }
 
             IL.RoomCamera.ApplyPositionChange += IL_RoomCamera_ApplyPositionChange;
+
             On.RoomCamera.ChangeCameraToPlayer += RoomCamera_ChangeCameraToPlayer;
             On.RoomCamera.MoveCamera_Room_int += RoomCamera_MoveCamera_Room;
             On.RoomCamera.UpdateSnowLight += RoomCamera_UpdateSnowLight;
+            On.RoomCamera.WarpMoveCameraActual += RoomCamera_WarpMoveCameraActual;
+
         } else {
             Texture2D[,] camera_textures = RWCustom.Custom.rainWorld.persistentData.cameraTextures;
             for (int camera_number = 0; camera_number < camera_textures.GetLength(0); ++camera_number) {
@@ -161,6 +168,10 @@ public static class RoomCameraMod {
                     UnityEngine.Object.Destroy(render_texture);
                 }
             }
+
+            IL.RoomCamera.MoveCamera2           += IL_RoomCamera_MoveCamera2;
+            IL.RoomCamera.WarpMoveCameraPrecast += IL_RoomCamera_WarpMoveCameraPrecast;
+            On.RoomCamera.WarpMoveCameraPrecast += RoomCamera_WarpMoveCameraPrecast;
         }
     }
 
@@ -667,6 +678,31 @@ public static class RoomCameraMod {
         // LogAllInstructions(context);
     }
 
+    private static void IL_RoomCamera_MoveCamera2(ILContext context) {
+        // LogAllInstructions(context);
+        ILCursor cursor = new(context);
+
+        // 14       call          System.String WorldLoader::FindRoomFile(System.String,System.Boolean,System.String,System.Boolean)
+        if (cursor.TryGotoNext(instruction => instruction.MatchCall("WorldLoader", "FindRoomFile"))) {
+            if (can_log_il_hooks) {
+                Debug.Log("SBCameraScroll: IL_RoomCamera_MoveCamera2: Index " + cursor.Index);
+            }
+
+            cursor.Index += 1;
+            cursor.Emit(OpCodes.Ldarg_0);
+            cursor.Emit(OpCodes.Ldarg_1);
+            cursor.EmitDelegate<Func<string, RoomCamera, string, string>>(RoomCameraMod_UpdateRoomFilePath);
+
+        } else {
+            if (can_log_il_hooks) {
+                Debug.Log("SBCameraScroll: IL_RoomCamera_MoveCamera2 failed.");
+            }
+            return;
+        }
+
+        // LogAllInstructions(context);
+    }
+
     private static void IL_RoomCamera_Update(ILContext context) {
         // LogAllInstructions(context);
         ILCursor cursor = new(context);
@@ -725,8 +761,9 @@ public static class RoomCameraMod {
             return;
         }
 
-        // putting it after normal pos updates but before the screen shake effect;
-        // in the On-Hook it was after; so the screen shake did nothing;
+        // Update the modded camera after the position updates and before the
+        // screen shake effect. Previously, I did it after and the screen shake
+        // did nothing.
         if (cursor.TryGotoNext(instruction => instruction.MatchCall<RoomCamera>("get_screenShake"))) {
             if (can_log_il_hooks) {
                 Debug.Log("SBCameraScroll: IL_RoomCamera_Update: Index " + cursor.Index); // before: 916 // after: 920
@@ -744,6 +781,55 @@ public static class RoomCameraMod {
             return;
         }
         // LogAllInstructions(context);
+    }
+
+    private static void IL_RoomCamera_WarpMoveCameraPrecast(ILContext context) { // !Option_JIT_Merging
+        // LogAllInstructions(context);
+        ILCursor cursor = new(context);
+
+        if (cursor.TryGotoNext(instruction => instruction.MatchLdstr(".png"))) {
+            if (can_log_il_hooks) {
+                Debug.Log("SBCameraScroll: IL_RoomCamera_WarpMoveCameraPrecast: Index " + cursor.Index);
+            }
+
+            cursor.Index += 4;
+            cursor.Emit(OpCodes.Ldarg_0);
+            cursor.Emit(OpCodes.Ldarg_1);
+            cursor.EmitDelegate<Func<string, RoomCamera, string, string>>(RoomCameraMod_UpdateRoomFilePath);
+
+        } else {
+            if (can_log_il_hooks) {
+                Debug.Log("SBCameraScroll: IL_RoomCamera_WarpMoveCameraPrecast failed.");
+            }
+            return;
+        }
+
+        // LogAllInstructions(context);
+    }
+
+    //
+    //
+
+    private static string RoomCameraMod_UpdateRoomFilePath(string path, RoomCamera room_camera, string loading_room_name) {
+        if (room_camera.Get_Attached_Fields() is not Attached_Fields attached_fields) {
+            return path;
+        }
+
+        if (room_camera.loadingRoom?.abstractRoom.Get_Attached_Fields().name_when_replaced_by_crs is string new_room_name) {
+            loading_room_name = new_room_name;
+        }
+
+        if (blacklisted_rooms.Contains(loading_room_name)) {
+            attached_fields.is_pre_loading_whole_room = false;
+            return path;
+        }
+
+        string new_path = WorldLoader.FindRoomFile(loading_room_name, false, "_0.png");
+        if (!Option_JIT_Merging && File.Exists(new_path)) {
+            return new_path;
+        }
+
+        return path;
     }
 
     //
@@ -799,11 +885,18 @@ public static class RoomCameraMod {
                 string loading_room_name = loading_room.abstractRoom.name;
                 Load_Image(loading_room_name, room_camera.cameraNumber, room_camera_fields.pre_loaded_camera_index, room_camera.preLoadedTexture);
 
+                // Any starting camera index is fine. This is required for
+                // warping. In that case, the texture is pre-loaded before
+                // changing the room. The camera index is set later.
+                int checked_camera_positions_count = 1;
                 room_camera_fields.pre_loaded_camera_index += 1;
-                while (room_camera_fields.pre_loaded_camera_index < loading_room.cameraPositions.Length) {
-                    // Check for cached / unchanged textures.
+                room_camera_fields.pre_loaded_camera_index %= loading_room.cameraPositions.Length;
+                while (checked_camera_positions_count < loading_room.cameraPositions.Length) {
+                    // Skip cached / unchanged textures.
                     if (Get_Level_Texture_Room_Name(room_camera.cameraNumber, room_camera_fields.pre_loaded_camera_index) == loading_room_name) {
                         room_camera_fields.pre_loaded_camera_index += 1;
+                        room_camera_fields.pre_loaded_camera_index %= loading_room.cameraPositions.Length;
+                        checked_camera_positions_count += 1;
                         continue;
                     }
 
@@ -818,15 +911,12 @@ public static class RoomCameraMod {
             } else {
                 //
                 // Case 2:
-                //     Just do the normal thing.
-                //     We are moving inside the same room because it is
-                //     blacklisted. But the room gets fully loading first
-                //     anyways. You only get here when moving the camera
-                //     position without changing the room.
+                //   Just do the normal thing. The room is blacklisted (or the
+                //   loading room is null which should never happen).
                 //
 
                 string? current_room_name = null;
-                if (room_camera.loadingRoom != null) { // should be null
+                if (room_camera.loadingRoom != null) {
                     current_room_name = room_camera.loadingRoom.abstractRoom.name;
                 } else {
                     current_room_name = room_camera.room?.abstractRoom.name;
@@ -838,8 +928,12 @@ public static class RoomCameraMod {
                     camera_index = room_camera.currentCameraPosition;
                 }
 
-                if (current_room_name != null) { // should not happen
+                if (current_room_name != null) {
+                    // This is usually done in orig(). But we removed it via an
+                    // IL-Hook for Case 1.
                     Load_Image(current_room_name, room_camera.cameraNumber, camera_index, room_camera.preLoadedTexture);
+                } else {
+                    Debug.Log("SBCameraScroll: [WARNING] Cannot load the image. The room name is not found.");
                 }
             }
         }
@@ -858,12 +952,18 @@ public static class RoomCameraMod {
             camera_zoom = Mathf.Max(dynamic_zoom_x, dynamic_zoom_y);
         }
 
+        //
+        //
+
         bool is_changing_room = room_camera.loadingRoom != null;
         orig(room_camera);
 
+        //
+        //
+
         if (room_camera.room is not Room room) {
             Debug.Log("SBCameraScroll: [WARNING] Expected room_camera.room not to be null but got null.");
-            room_camera_fields.is_room_blacklisted      = true;
+            room_camera_fields.is_room_blacklisted = true;
             ResetCameraPosition(room_camera);
             return;
         }
@@ -876,6 +976,16 @@ public static class RoomCameraMod {
         string room_name = room.abstractRoom.name;
         if (abstract_room_fields.name_when_replaced_by_crs is string new_room_name) {
             room_name = new_room_name;
+        }
+
+        // Either the merged texture is not found or we loaded it before merging
+        // is triggered. This is a workaround.
+        if (room_camera_fields.is_warp_room_blacklisted) {
+            Debug.Log("SBCameraScroll: The warp room " + room_name + " is blacklisted.");
+            room_camera_fields.is_room_blacklisted = true;
+            room_camera_fields.is_warp_room_blacklisted = false;
+            ResetCameraPosition(room_camera);
+            return;
         }
 
         room_camera_fields.is_room_blacklisted = blacklisted_rooms.Contains(room_name) || !Option_JIT_Merging && !File.Exists(WorldLoader.FindRoomFile(room_name, false, "_0.png")) && room.cameraPositions.Length > 1;
@@ -910,11 +1020,31 @@ public static class RoomCameraMod {
             Shader.SetGlobalTexture(RainWorld.ShadPropLevelTex, render_texture);
         }
 
+        // The texture _atlas.texture work in both cases -- it is the render
+        // texture when Option_JIT_Merging is used and the normal Texture2D
+        // otherwise.
         Texture level_texture                = room_camera.levelGraphic._atlas.texture;
         room_camera.levelGraphic.width       = level_texture.width;
         room_camera.levelGraphic.height      = level_texture.height;
         room_camera.backgroundGraphic.width  = room_camera.backgroundTexture.width;
         room_camera.backgroundGraphic.height = room_camera.backgroundTexture.height;
+
+        // The combiner is used mainly in the Watcher campaign. It overlaps
+        // textures for custom effects. The combined texture replaces the level
+        // texture in the shaders while active.
+        //
+        // The visuals are pixelated without resizing.
+        Watcher.LevelTexCombiner combiner = room_camera.levelTexCombiner;
+        if (combiner.combinedLevelTex != null) {
+            combiner.combinedLevelTex.Release();
+            combiner.combinedLevelTex.width  = level_texture.width;
+            combiner.combinedLevelTex.height = level_texture.height;
+        }
+        if (combiner.intermediateTex != null) {
+            combiner.intermediateTex.Release();
+            combiner.intermediateTex.width  = level_texture.width;
+            combiner.intermediateTex.height = level_texture.height;
+        }
 
         if (is_changing_room) {
             // Graphics.Blit() creates this texture again; but only when UpdateSnowLight() is called;
@@ -1027,11 +1157,28 @@ public static class RoomCameraMod {
         }
     }
 
-    private static void RoomCamera_MoveCamera_Room(On.RoomCamera.orig_MoveCamera_Room_int orig, RoomCamera room_camera, Room loading_room, int loading_camera_index) {
+    private static void RoomCamera_MoveCamera_Room(On.RoomCamera.orig_MoveCamera_Room_int orig, RoomCamera room_camera, Room loading_room, int loading_camera_index) { // Option_JIT_Merging
         // Why does the orig() function change the shader and stuff. The room is not changed yet and
         // there is a bug where these things are loaded before the room actually switched.
         // Why is this not done in ChangeRoom() instead?
         if (room_camera.Get_Attached_Fields() is not Attached_Fields attached_fields) {
+            orig(room_camera, loading_room, loading_camera_index);
+            return;
+        }
+
+        if (loading_room == null) {
+            Debug.Log("SBCameraScroll: [WARNING] The currently loading room is null.");
+            orig(room_camera, loading_room, loading_camera_index);
+            return;
+        }
+
+        string loading_room_name = loading_room.abstractRoom.name;
+        if (room_camera.loadingRoom?.abstractRoom.Get_Attached_Fields().name_when_replaced_by_crs is string new_room_name) {
+            loading_room_name = new_room_name;
+        }
+
+        if (blacklisted_rooms.Contains(loading_room_name)) {
+            attached_fields.is_pre_loading_whole_room = false;
             orig(room_camera, loading_room, loading_camera_index);
             return;
         }
@@ -1046,7 +1193,11 @@ public static class RoomCameraMod {
         // At the very least the screen with camera index equal to zero needs to
         // be loaded again. When you back to larger rooms some of the screens with
         // larger camera index values might still be loaded / cached.
-        attached_fields.pre_loaded_camera_index = 0;
+        //
+        // True, but we have a different reason for starting at
+        // loading_camera_index. See the comment in ApplyPositionChange().
+        attached_fields.pre_loaded_camera_index = loading_camera_index;
+
         orig(room_camera, loading_room, loading_camera_index);
     }
 
@@ -1057,19 +1208,14 @@ public static class RoomCameraMod {
             return;
         }
 
-        // This is consistent with what Custom-Region-Support is doing in this function.
+        // This is consistent with what Custom-Region-Support is doing in this
+        // function.
         if (room_camera.loadingRoom?.abstractRoom.Get_Attached_Fields().name_when_replaced_by_crs is string new_room_name) {
             loading_room_name = new_room_name;
         }
 
         if (blacklisted_rooms.Contains(loading_room_name)) {
-            attached_fields.is_pre_loading_whole_room = false;
             orig(room_camera, loading_room_name, loading_camera_index);
-            return;
-        }
-
-        if (!Option_JIT_Merging && File.Exists(WorldLoader.FindRoomFile(loading_room_name, false, "_0.png"))) {
-            orig(room_camera, loading_room_name, -1);
             return;
         }
 
@@ -1171,6 +1317,64 @@ public static class RoomCameraMod {
         Graphics.Blit(render_texture, room_camera.SnowTexture, new Material(room_camera.game.rainWorld.Shaders["LevelSnowShader"].shader));
     }
 
+    private static void RoomCamera_WarpMoveCameraActual(On.RoomCamera.orig_WarpMoveCameraActual orig, RoomCamera room_camera, Room loading_room, int loading_camera_index) { // Option_JIT_Merging
+        if (room_camera.Get_Attached_Fields() is not Attached_Fields attached_fields) {
+            orig(room_camera, loading_room, loading_camera_index);
+            return;
+        }
+
+        if (loading_room == null) {
+            Debug.Log("SBCameraScroll: [WARNING] The currently loading room is null.");
+            orig(room_camera, loading_room, loading_camera_index);
+            return;
+        }
+
+        string loading_room_name = loading_room.abstractRoom.name;
+        if (room_camera.loadingRoom?.abstractRoom.Get_Attached_Fields().name_when_replaced_by_crs is string new_room_name) {
+            loading_room_name = new_room_name;
+        }
+
+        if (blacklisted_rooms.Contains(loading_room_name)) {
+            attached_fields.is_pre_loading_whole_room = false;
+            orig(room_camera, loading_room, loading_camera_index);
+            return;
+        }
+
+        if (attached_fields.is_pre_loading_whole_room) return;
+        attached_fields.is_pre_loading_whole_room = true;
+
+        if (loading_camera_index == -1) {
+            loading_camera_index = room_camera.loadingWarpCameraPos;
+        }
+        attached_fields.pre_loaded_camera_index = Mathf.Max(loading_camera_index, 0);
+
+        orig(room_camera, loading_room, loading_camera_index);
+    }
+
+    private static void RoomCamera_WarpMoveCameraPrecast(On.RoomCamera.orig_WarpMoveCameraPrecast orig, RoomCamera room_camera, string loading_room_name, int loading_camera_index) { // !Option_JIT_Merging
+        if (room_camera.Get_Attached_Fields() is not Attached_Fields attached_fields) {
+            orig(room_camera, loading_room_name, loading_camera_index);
+            return;
+        }
+
+        // Warping loads the texture first and the room second. Merging can
+        // happen too late. The file will not be missing later. This is a
+        // workaround. Funnily, it loads the merged texture on changing
+        // screens. You only have to move out of the current screen after
+        // warping.
+        //
+        // TODO: It should merge textures before continuing.
+        //   I might want to remove the option completely. The complexity is
+        //   increased without much benefit. The only benefit is that this does
+        //   not require modded shaders like Option_JIT_Merging does.
+        if (room_camera.loadingRoom?.abstractRoom.Get_Attached_Fields().name_when_replaced_by_crs is string new_room_name) {
+            loading_room_name = new_room_name;
+        }
+        attached_fields.is_warp_room_blacklisted = !File.Exists(WorldLoader.FindRoomFile(loading_room_name, false, "_0.png"));
+
+        orig(room_camera, loading_room_name, loading_camera_index);
+    }
+
     //
     //
     //
@@ -1179,6 +1383,7 @@ public static class RoomCameraMod {
         public bool is_camera_scroll_forced_by_split_screen = false;
         public bool is_room_blacklisted = false;
         public bool is_pre_loading_whole_room = false;
+        public bool is_warp_room_blacklisted = false;
 
         public int pre_loaded_camera_index = 0;
 

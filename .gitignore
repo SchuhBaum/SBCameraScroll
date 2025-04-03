@@ -1,21 +1,21 @@
-# .gitignore
 
 .git/
 
+ModdedShaders/*_backup.shader
 SourceCode/bin
 SourceCode/obj
-SBCameraScroll/levels
-SBCameraScroll/world
 
 levels
 world
 
-SBCameraScroll/AssetBundles/AssetBundles
+# SBCameraScroll/AssetBundles/
+SBCameraScroll/levels
+SBCameraScroll/world
 SBCameraScroll/plugins/
 SBCameraScroll/previously_active_mods.json
+
 SBCameraScroll.zip
 steam_description.txt
-# build.ps1
 
 **/*.meta
 **/*.manifest

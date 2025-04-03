@@ -19,11 +19,15 @@ internal static class ProcessManagerMod {
         // for every other mod that adds the corresponding IL hook.
 
         main_mod_options.Apply_And_Log_All_Options();
+
         Debug.Log(mod_id + ": Initialize option specific hooks.");
         can_log_il_hooks = true;
+
+        LevelTexCombinerMod.On_Config_Changed();
         RoomMod.On_Config_Changed();
         RoomCameraMod.On_Config_Changed();
         WorldMod.On_Config_Changed();
+
         can_log_il_hooks = false;
     }
 
