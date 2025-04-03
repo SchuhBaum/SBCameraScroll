@@ -1196,7 +1196,7 @@ public static class RoomCameraMod {
         //
         // True, but we have a different reason for starting at
         // loading_camera_index. See the comment in ApplyPositionChange().
-        attached_fields.pre_loaded_camera_index = loading_camera_index;
+        attached_fields.pre_loaded_camera_index = Mathf.Max(loading_camera_index, 0);
 
         orig(room_camera, loading_room, loading_camera_index);
     }

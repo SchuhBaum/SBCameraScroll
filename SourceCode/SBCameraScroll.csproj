@@ -4,7 +4,7 @@
     <TargetFramework>net48</TargetFramework>
     <Nullable>enable</Nullable>
     <LangVersion>10.0</LangVersion>
-    <Version>3.0.1</Version>
+    <Version>3.0.2</Version>
 
     <!-- Allows memory addresses to be monitored. -->
     <!-- <AllowUnsafeBlocks>true</AllowUnsafeBlocks> -->
