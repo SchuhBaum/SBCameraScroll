@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 3.0.2
+###### Version: 3.0.3
 This is a mod for Rain World v1.10.
 
 ### Description
@@ -23,7 +23,7 @@ This mod includes additional cameras:
 
 ### Installation
 0. Update Rain World to version 1.10 if needed.
-1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v3.0.2).
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v3.0.3).
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
@@ -38,6 +38,9 @@ See the file LICENSE-MIT.
 
 ### Changelog
 #### (Rain World v1.10)
+v3.0.3:
+- Fixed a bug where specific hooks were added multiple times.
+
 v3.0.2:
 - Fixed a bug when playing Jolly Co-op where the camera got stuck when switching
   to a player in a different room.

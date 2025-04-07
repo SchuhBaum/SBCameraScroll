@@ -104,15 +104,15 @@ public static class RoomCameraMod {
         hook_RoomCamera_LevelTexture?.Dispose();
         hook_RoomCamera_LevelTexture = null;
 
-        IL.RoomCamera.ApplyPositionChange -= IL_RoomCamera_ApplyPositionChange;
-        IL.RoomCamera.Update -= IL_RoomCamera_Update;
-
+        IL.RoomCamera.ApplyPositionChange  -= IL_RoomCamera_ApplyPositionChange;
         On.RoomCamera.ChangeCameraToPlayer -= RoomCamera_ChangeCameraToPlayer;
-        On.RoomCamera.MoveCamera_Room_int -= RoomCamera_MoveCamera_Room;
-        On.RoomCamera.UpdateSnowLight -= RoomCamera_UpdateSnowLight;
+        On.RoomCamera.MoveCamera_Room_int  -= RoomCamera_MoveCamera_Room;
+        On.RoomCamera.UpdateSnowLight      -= RoomCamera_UpdateSnowLight;
+        On.RoomCamera.WarpMoveCameraActual -= RoomCamera_WarpMoveCameraActual;
 
-        // Contains an Option_JIT_Merging-specific part.
-        IL.RoomCamera.Update += IL_RoomCamera_Update;
+        IL.RoomCamera.MoveCamera2           -= IL_RoomCamera_MoveCamera2;
+        IL.RoomCamera.WarpMoveCameraPrecast -= IL_RoomCamera_WarpMoveCameraPrecast;
+        On.RoomCamera.WarpMoveCameraPrecast -= RoomCamera_WarpMoveCameraPrecast;
 
         if (Option_JIT_Merging) {
             // Trying to hook On.PersistentData.ctor does not work. The mod is
@@ -142,11 +142,10 @@ public static class RoomCameraMod {
                 }
             }
 
-            IL.RoomCamera.ApplyPositionChange += IL_RoomCamera_ApplyPositionChange;
-
+            IL.RoomCamera.ApplyPositionChange  += IL_RoomCamera_ApplyPositionChange;
             On.RoomCamera.ChangeCameraToPlayer += RoomCamera_ChangeCameraToPlayer;
-            On.RoomCamera.MoveCamera_Room_int += RoomCamera_MoveCamera_Room;
-            On.RoomCamera.UpdateSnowLight += RoomCamera_UpdateSnowLight;
+            On.RoomCamera.MoveCamera_Room_int  += RoomCamera_MoveCamera_Room;
+            On.RoomCamera.UpdateSnowLight      += RoomCamera_UpdateSnowLight;
             On.RoomCamera.WarpMoveCameraActual += RoomCamera_WarpMoveCameraActual;
 
         } else {
@@ -177,6 +176,7 @@ public static class RoomCameraMod {
 
     internal static void OnEnable() {
         IL.RoomCamera.DrawUpdate += IL_RoomCamera_DrawUpdate;
+        IL.RoomCamera.Update += IL_RoomCamera_Update;
 
         On.RoomCamera.ApplyDepth += RoomCamera_ApplyDepth;
         On.RoomCamera.ApplyPalette += RoomCamera_ApplyPalette;
