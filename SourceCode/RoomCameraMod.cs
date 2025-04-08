@@ -978,19 +978,19 @@ public static class RoomCameraMod {
             room_name = new_room_name;
         }
 
-        // Either the merged texture is not found or we loaded it before merging
-        // is triggered. This is a workaround.
+        room_camera_fields.is_room_blacklisted = false;
         if (room_camera_fields.is_warp_room_blacklisted) {
-            Debug.Log("SBCameraScroll: The warp room " + room_name + " is blacklisted.");
+            // Either the merged texture is not found or we loaded it before
+            // merging can be triggered. This is a workaround.
             room_camera_fields.is_room_blacklisted = true;
             room_camera_fields.is_warp_room_blacklisted = false;
-            ResetCameraPosition(room_camera);
-            return;
-        }
-
-        room_camera_fields.is_room_blacklisted = blacklisted_rooms.Contains(room_name) || !Option_JIT_Merging && !File.Exists(WorldLoader.FindRoomFile(room_name, false, "_0.png")) && room.cameraPositions.Length > 1;
-        if (is_changing_room && room_camera_fields.is_room_blacklisted) {
-            Debug.Log("SBCameraScroll: The room " + room_name + " is blacklisted.");
+            if (is_changing_room) Debug.Log("SBCameraScroll: The warp room " + room_name + " is blacklisted (for now). Try to change screens as a workaround.");
+        } else if (blacklisted_rooms.Contains(room_name)) {
+            room_camera_fields.is_room_blacklisted = true;
+            if (is_changing_room) Debug.Log("SBCameraScroll: The room " + room_name + " is blacklisted.");
+        } else if (!Option_JIT_Merging && !File.Exists(WorldLoader.FindRoomFile(room_name, false, "_0.png")) && room.cameraPositions.Length > 1) {
+            room_camera_fields.is_room_blacklisted = true;
+            if (is_changing_room) Debug.Log("SBCameraScroll: The room " + room_name + " is blacklisted.");
         }
 
         // Do this even when the room is not changing. In that case, Graphics.Blit()
