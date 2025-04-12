@@ -18,7 +18,7 @@ using static SBCameraScroll.RainWorldMod;
 
 namespace SBCameraScroll;
 
-[BepInPlugin("SBCameraScroll", "SBCameraScroll", "3.0.4")]
+[BepInPlugin("SBCameraScroll", "SBCameraScroll", "3.0.5")]
 public class MainMod : BaseUnityPlugin {
     //
     // meta data
@@ -26,7 +26,7 @@ public class MainMod : BaseUnityPlugin {
 
     public static readonly string mod_id = "SBCameraScroll";
     public static readonly string author = "SchuhBaum";
-    public static readonly string version = "3.0.4";
+    public static readonly string version = "3.0.5";
     public static readonly string mod_directory_path = Directory.GetParent(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)).FullName + Path.DirectorySeparatorChar;
 
     //
@@ -163,7 +163,7 @@ public class MainMod : BaseUnityPlugin {
             if (!Directory.Exists(directory_path)) continue;
 
             foreach (string file_path_region_mod in Directory.GetFiles(directory_path, "*.png", SearchOption.AllDirectories)) {
-                FileInfo file_info = new(file_path_region_mod);
+                FileInfo file_info = new FileInfo(file_path_region_mod);
 
                 string region_name = file_info.Directory.Name;
                 if (region_name == "world") continue;

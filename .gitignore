@@ -21,4 +21,6 @@ steam_description.txt
 **/*.manifest
 .vscode
 
+# windows_build.ps1
+# windows_zip_mod_files.ps1
 tags

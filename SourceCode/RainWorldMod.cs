@@ -82,11 +82,32 @@ public static class RainWorldMod {
 
     public static void Replace_Shader(this RainWorld rain_world, string shader_name) {
         if (modded_shaders_bundle == null) return;
-        if (!rain_world.Shaders.ContainsKey(shader_name)) return;
+        if (!rain_world.Shaders.ContainsKey(shader_name)) {
+            Debug.Log("SBCameraScroll: Didn't find the shader '" + shader_name + "'.");
+            return;
+        }
         Shader? modded_shader = modded_shaders_bundle.LoadAsset<Shader>(shader_name);
-        if (modded_shader == null) return;
+        if (modded_shader == null) {
+            Debug.Log("SBCameraScroll: Didn't find the modded shader for '" + shader_name + "'.");
+            return;
+        }
 
-        Debug.Log("SBCameraScroll: Replaced the shader '" + shader_name + "'.");
         rain_world.Shaders[shader_name].shader = modded_shader;
+        Debug.Log("SBCameraScroll: Replaced the shader '" + shader_name + "'.");
     }
+
+    // public static void Replace_Shader_LevelBlend() {
+    //     if (modded_shaders_bundle == null) return;
+
+    //     string shader_name = "LevelBlend";
+    //     Shader? modded_shader = modded_shaders_bundle.LoadAsset<Shader>(shader_name);
+    //     if (modded_shader == null) {
+    //         Debug.Log("SBCameraScroll: Didn't find the modded shader for '" + shader_name + "'.");
+    //         return;
+    //     }
+
+    //     UnityEngine.Object.Destroy(Watcher.RippleCameraData.combinerMaterial);
+    //     Watcher.RippleCameraData.combinerMaterial = new Material(modded_shader);
+    //     Debug.Log("SBCameraScroll: Replaced the shader '" + shader_name + "'.");
+    // }
 }

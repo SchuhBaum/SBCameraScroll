@@ -21,9 +21,26 @@ $zip_path = "$downloads_path\$mod_name.zip"
 
 Push-Location $dir
 
-Remove-Item -Path "$mod_name\previously_active_mods.json" -Force
-Remove-Item -Path "$mod_name\world" -Recurse -Force
-Remove-Item -Path "$mod_name\levels" -Recurse -Force
+$item_paths = @(
+    "$mod_name\previously_active_mods.json"
+)
+
+$folder_paths = @(
+    "$mod_name\world",
+    "$mod_name\levels"
+)
+
+foreach ($item_path in $item_paths) {
+    if (Test-Path $item_path) {
+        Remove-Item -Path "$item_path" -Force
+    }
+}
+
+foreach ($folder_path in $folder_paths) {
+    if (Test-Path $folder_path) {
+        Remove-Item -Path "$folder_path" -Recurse -Force
+    }
+}
 
 7z a $zip_path "$mod_name\AssetBundles\modded_shaders" "$mod_name\plugins\$dll_name" "$mod_name\plugins\$pdb_name" "$mod_name\modinfo.json" "$mod_name\thumbnail.png" "$mod_name\workshopdata.json"
 

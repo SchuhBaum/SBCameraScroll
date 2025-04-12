@@ -75,6 +75,33 @@ public static class AbstractRoomMod {
         }
     }
 
+    public static RectInt? CalculateLevelTextureRectangle(string room_name) {
+        Vector2[]? camera_positions = LoadCameraPositions(room_name);
+        if (camera_positions == null) return null;
+
+        CheckCameraPositions(ref camera_positions);
+        if (camera_positions == null || camera_positions.Length == 0) {
+            return null;
+        }
+
+        int total_width  = 0;
+        int total_height = 0;
+        Vector2 min_camera_position = camera_positions[0];
+
+        foreach (Vector2 camera_position in camera_positions) {
+            min_camera_position.x = Mathf.Min(min_camera_position.x, camera_position.x);
+            min_camera_position.y = Mathf.Min(min_camera_position.y, camera_position.y);
+            total_width = Mathf.Max(total_width, (int)camera_position.x + 1400);
+            total_height = Mathf.Max(total_height, (int)camera_position.y + 800);
+        }
+
+        // Ignore the effect of any position modifiers here.
+        total_width  -= (int)min_camera_position.x;
+        total_height -= (int)min_camera_position.y;
+
+        return new RectInt((int)min_camera_position.x, (int)min_camera_position.y, total_width, total_height);
+    }
+
     public static void CheckCameraPositions(ref Vector2[] camera_positions) {
         bool is_faulty_camera_found = false;
         foreach (Vector2 camera_position in camera_positions) {
@@ -412,37 +439,22 @@ public static class AbstractRoomMod {
             room_name = new_room_name;
         }
 
-        Vector2[]? camera_positions = LoadCameraPositions(room_name);
-        if (camera_positions == null) return;
-        CheckCameraPositions(ref camera_positions);
-
-        if (camera_positions == null || camera_positions.Length == 0) {
+        if (CalculateLevelTextureRectangle(room_name) is not RectInt rect) {
             Debug.Log(mod_id + ": Failed to initialize attached_fields for room " + room_name + ".");
             return;
         }
 
-        int total_width = 0;
-        int total_height = 0;
-        attached_fields.min_camera_position = camera_positions[0];
-
-        foreach (Vector2 camera_position in camera_positions) {
-            attached_fields.min_camera_position.x = Mathf.Min(attached_fields.min_camera_position.x, camera_position.x);
-            attached_fields.min_camera_position.y = Mathf.Min(attached_fields.min_camera_position.y, camera_position.y);
-            total_width = Mathf.Max(total_width, (int)camera_position.x + 1400);
-            total_height = Mathf.Max(total_height, (int)camera_position.y + 800);
-        }
-
-        // Ignore the effect of any position modifiers here.
-        total_width -= (int)attached_fields.min_camera_position.x;
-        total_height -= (int)attached_fields.min_camera_position.y;
+        int total_width  = rect.width;
+        int total_height = rect.height;
+        attached_fields.min_camera_position = new Vector2(rect.x, rect.y);
 
         if (total_width > maximum_texture_width || total_height > maximum_texture_height) {
             Debug.Log("SBCameraScroll: Warning! Merged texture width or height is too large. Setting to the maximum and hoping for the best.");
-            total_width = Mathf.Min(total_width, maximum_texture_width);
+            total_width  = Mathf.Min(total_width, maximum_texture_width);
             total_height = Mathf.Min(total_height, maximum_texture_height);
         }
 
-        attached_fields.total_width = total_width;
+        attached_fields.total_width  = total_width;
         attached_fields.total_height = total_height;
 
         if (min_camera_position_modifier.ContainsKey(room_name)) {

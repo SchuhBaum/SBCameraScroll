@@ -24,6 +24,7 @@ internal static class ProcessManagerMod {
         can_log_il_hooks = true;
 
         LevelTexCombinerMod.On_Config_Changed();
+        RippleCameraDataMod.On_Config_Changed();
         RoomMod.On_Config_Changed();
         RoomCameraMod.On_Config_Changed();
         WorldMod.On_Config_Changed();
