@@ -2,6 +2,8 @@ using RWCustom;
 using System.Collections.Generic;
 using UnityEngine;
 
+using static SBCameraScroll.MainMod;
+
 namespace SBCameraScroll;
 
 public static class WormGrassMod {
@@ -67,13 +69,13 @@ public static class WormGrassMod {
         orig(worm_grass, room, tiles); // needs attachedFields for wormGrass
 
         if (worm_grass.patches.Count == 0) {
-            Debug.Log("SBCameraScroll: This worm grass for room " + room.abstractRoom.name + " has no patches. Destroy.");
+            Debug.Log($"{mod_id}: This worm grass for room {room.abstractRoom.name} has no patches. Destroy.");
             worm_grass.Destroy();
             _all_attached_fields.Remove(worm_grass);
         } else {
             AbstractRoomMod.Attached_Fields abstract_room_fields = room.abstractRoom.Get_Attached_Fields();
             if (abstract_room_fields.worm_grass is WormGrass worm_grass_) {
-                Debug.Log("SBCameraScroll: There is already worm grass in " + room.abstractRoom.name + ". Destroy the old one.");
+                Debug.Log($"{mod_id}: There is already worm grass in {room.abstractRoom.name}. Destroy the old one.");
                 worm_grass_.Destroy();
                 _all_attached_fields.Remove(worm_grass_);
             }

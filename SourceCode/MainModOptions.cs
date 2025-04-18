@@ -11,7 +11,6 @@ using static RWCustom.Custom;
 using static SBCameraScroll.AbstractRoomMod;
 using static SBCameraScroll.MainMod;
 using static SBCameraScroll.PositionTypeCamera;
-using static SBCameraScroll.ProcessManagerMod;
 using static SBCameraScroll.RoomCameraMod;
 using static SBCameraScroll.VanillaTypeCamera;
 using static WorldLoader.LoadingContext;
@@ -39,9 +38,6 @@ public class MainModOptions : OptionInterface {
             "You can switch between the other two camera types by pressing the map button.\nThe keybinding can be configured using the mod 'Improved Input Config'."
     };
 
-    private const string _create_cache_button_text = "CREATE CACHE";
-    private const string _create_cache_button_description = "WARNING: This can take several (10+) minutes. Merges camera textures for all rooms\nin all regions at once. This way you don't have to wait when using region gates later.";
-
     //
     // options
     //
@@ -51,10 +47,6 @@ public class MainModOptions : OptionInterface {
     public static Configurable<bool> full_screen_effects = main_mod_options.config.Bind("fullScreenEffects", defaultValue: true, new ConfigurableInfo("When disabled, full screen effects like fog, bloom and melt are removed.", null, "", "Full Screen Effects"));
     public static Configurable<bool> scroll_one_screen_rooms = main_mod_options.config.Bind("scrollOneScreenRooms", defaultValue: false, new ConfigurableInfo("When disabled, the camera does not scroll in rooms with only one screen.", null, "", "One Screen Rooms")); // Automatically enabled when using SplitScreenMod.
     public static Configurable<int> smoothing_factor_slider = main_mod_options.config.Bind("smoothing_factor_slider", defaultValue: 8, new ConfigurableInfo("Determines how much of the distance is covered per frame. This is used when switching cameras as well to ensure a smooth transition.", new ConfigAcceptableRange<int>(0, 35), "", "Smoothing Factor (8)"));
-
-    public static Configurable<bool> jit_merging = main_mod_options.config.Bind("jit_merging", defaultValue: true, new ConfigurableInfo("When enabled, textures are merged just-in-time on the GPU. The cache is not used. Rooms load slightly slower.", null, "", "Just-In-Time Merging"));
-    public static Configurable<bool> merge_while_loading = main_mod_options.config.Bind("mergeWhileLoading", defaultValue: true, new ConfigurableInfo("When enabled, the camera textures for each room are merged when the region gets loaded.\nWhen disabled, camera textures are merged for each room on demand. Merging happens only once and might take a while.", null, "", "Merge While Loading")); //Merging happens only once and the files are stored inside the folder \"Mods/SBCameraScroll/\".\nThis process can take a while. Merging all rooms in Deserted Wastelands took me around three minutes.
-    public static Configurable<bool> region_mods = main_mod_options.config.Bind("regionMods", defaultValue: true, new ConfigurableInfo("When enabled, merged textures are checked for modded rooms. If the cache is invalid\nthen the merged texture is deleted automatically.", null, "", "Region Mods"));
 
     //
     //
@@ -80,7 +72,6 @@ public class MainModOptions : OptionInterface {
     public static Configurable<bool> dynamic_zoom = main_mod_options.config.Bind("dynamicZoom", defaultValue: false, new ConfigurableInfo("When enabled, the camera zoom is adjusted dynamically per room. This removes any black borders when using custom resolutions.\nEnables scrolling in one-screen rooms. Disabled when SplitScreen Coop is used.", null, "", "Dynamic Zoom"));
     public static Configurable<string> resolution = main_mod_options.config.Bind("resolution", "Default", new ConfigurableInfo("Overrides the current resolution. Can be used to zoom out with less\npixelation issues. Might reduce black borders on larger monitors.", null, "", "Resolution:"));
     public static Configurable<string> custom_resolution = main_mod_options.config.Bind("customResolution", "", new ConfigurableInfo("Requires the format \"WIDTHxHEIGHT\". Needs to be at least 960x540.\nFirst, you need to select \"Custom\" in the Resolution combo box.", null, "", "Custom Resolution:"));
-    public static Configurable<bool> fill_empty_spaces = main_mod_options.config.Bind("fill_empty_spaces", defaultValue: false, new ConfigurableInfo("When enabled during merging, unknown pixels are set to the nearest pre-rendered pixel vertically\ninstead of defaulting to black. You might need to clear the cache before using this. Requires the option `Just-In-Time Merging` to be disabled.", null, "", "Fill Empty Spaces"));
 
     //
     // variables
@@ -121,12 +112,8 @@ public class MainModOptions : OptionInterface {
     private OpComboBox? _camera_type_combo_box = null;
     private int _last_camera_type              = 0;
 
-    private OpCheckBox? _jit_merging         = null;
-    private OpCheckBox? _merge_while_loading = null;
-
-    // the buttons are properly initialized later;
+    // The button is initialized later.
     private OpSimpleButton _clear_cache_button = new OpSimpleButton(new(), new());
-    private OpSimpleButton _create_cache_button = new OpSimpleButton(new(), new());
 
     private OpComboBox? _resolution_combo_box      = null;
     private OpTextBox? _custom_resolution_text_box = null;
@@ -135,20 +122,12 @@ public class MainModOptions : OptionInterface {
     private OpCheckBox? _dynamic_zoom = null;
 
     //
-    //
-
-    //
     // main
     //
 
     private MainModOptions() {
         On.OptionInterface._SaveConfigFile -= OptionInterface_SaveConfigFile;
         On.OptionInterface._SaveConfigFile += OptionInterface_SaveConfigFile;
-
-        // OnDeactivate += CreateCache_StopCoroutines;
-        System.Reflection.EventInfo event_info = GetType().GetEvent("OnDeactivate");
-        Delegate event_handler = Delegate.CreateDelegate(event_info.EventHandlerType, this, "CreateCache_StopCoroutines");
-        event_info.AddEventHandler(this, event_handler);
     }
 
     //
@@ -158,60 +137,55 @@ public class MainModOptions : OptionInterface {
     public void Apply_And_Log_All_Options() {
         // 0: Position type, 1: Vanilla type
         RoomCameraMod.camera_type = (RoomCameraMod.CameraType)Array.IndexOf(_camera_type_keys, camera_type.Value);
-        Debug.Log("SBCameraScroll: cameraType " + RoomCameraMod.camera_type);
+        Debug.Log($"{mod_id}: cameraType {RoomCameraMod.camera_type}");
 
-        Debug.Log("SBCameraScroll: Option_FillEmptySpaces " + Option_FillEmptySpaces);
-        Debug.Log("SBCameraScroll: Option_FullScreenEffects " + Option_FullScreenEffects);
-        Debug.Log("SBCameraScroll: Option_JIT_Merging " + Option_JIT_Merging);
-        Debug.Log("SBCameraScroll: Option_MergeWhileLoading " + Option_MergeWhileLoading);
-        Debug.Log("SBCameraScroll: Option_RegionMods " + Option_RegionMods);
-        Debug.Log("SBCameraScroll: Option_ScrollOneScreenRooms " + Option_ScrollOneScreenRooms);
+        Debug.Log($"{mod_id}: Option_FullScreenEffects {Option_FullScreenEffects}");
+        Debug.Log($"{mod_id}: Option_ScrollOneScreenRooms {Option_ScrollOneScreenRooms}");
 
         camera_zoom = 0.1f * camera_zoom_slider.Value;
         Set_Resolution(resolution.Value);
         smoothing_factor = smoothing_factor_slider.Value / 50f;
 
-        Debug.Log("SBCameraScroll: camera_zoom " + camera_zoom);
-        Debug.Log("SBCameraScroll: resolution_width " + resolution.Value);
-        Debug.Log("SBCameraScroll: smoothing_factor " + smoothing_factor);
+        Debug.Log($"{mod_id}: camera_zoom {camera_zoom}");
+        Debug.Log($"{mod_id}: resolution_width {resolution.Value}");
+        Debug.Log($"{mod_id}: smoothing_factor {smoothing_factor}");
 
         if (RoomCameraMod.camera_type is RoomCameraMod.CameraType.Position or RoomCameraMod.CameraType.Switch) {
             camera_box_x = 20f * innercameraboxx_position.Value;
             camera_box_y = 20f * innercameraboxy_position.Value;
-            Debug.Log("SBCameraScroll: camera_box_x " + camera_box_x);
-            Debug.Log("SBCameraScroll: camera_box_y " + camera_box_y);
+            Debug.Log($"{mod_id}: camera_box_x {camera_box_x}");
+            Debug.Log($"{mod_id}: camera_box_y {camera_box_y}");
 
             offset_speed_multiplier = 0.1f * cameraoffsetspeedmultiplier_position.Value;
-            Debug.Log("SBCameraScroll: Option_CameraOffset " + Option_CameraOffset);
-            Debug.Log("SBCameraScroll: offset_speed_multiplier " + offset_speed_multiplier);
+            Debug.Log($"{mod_id}: Option_CameraOffset {Option_CameraOffset}");
+            Debug.Log($"{mod_id}: offset_speed_multiplier {offset_speed_multiplier}");
         }
 
         if (RoomCameraMod.camera_type is RoomCameraMod.CameraType.Vanilla or RoomCameraMod.CameraType.Switch) {
             camera_box_from_border_x = 20f * outercameraboxx_vanilla.Value;
             camera_box_from_border_y = 20f * outercameraboxy_vanilla.Value;
-            Debug.Log("SBCameraScroll: camera_box_from_border_x " + camera_box_from_border_x);
-            Debug.Log("SBCameraScroll: camera_box_from_border_y " + camera_box_from_border_y);
+            Debug.Log($"{mod_id}: camera_box_from_border_x {camera_box_from_border_x}");
+            Debug.Log($"{mod_id}: camera_box_from_border_y {camera_box_from_border_y}");
         }
     }
 
     public void ClearCacheButton_OnClick(UIfocusable _) {
-        DirectoryInfo[] region_directories = new DirectoryInfo(mod_directory_path + "world").GetDirectories();
+        DirectoryInfo[] region_directories = new DirectoryInfo($"{mod_directory_path}world").GetDirectories();
         for (int directory_index = region_directories.Length - 1; directory_index >= 0; --directory_index) {
             region_directories[directory_index].Delete(recursive: true);
         }
 
-        FileInfo[] arena_files = new DirectoryInfo(mod_directory_path + "levels").GetFiles("*.*", SearchOption.AllDirectories);
+        FileInfo[] arena_files = new DirectoryInfo($"{mod_directory_path}levels").GetFiles("*.*", SearchOption.AllDirectories);
         for (int file_index = arena_files.Length - 1; file_index >= 0; --file_index) {
             arena_files[file_index].Delete();
         }
 
         ClearCacheButton_UpdateColor();
-        CreateCacheButton_UpdateColor();
     }
 
     public void ClearCacheButton_UpdateColor() {
-        bool is_levels_empty = Directory.GetFiles(mod_directory_path + "levels", "*.*", SearchOption.AllDirectories).Length == 0;
-        bool is_world_empty = Directory.GetFiles(mod_directory_path + "world", "*.*", SearchOption.AllDirectories).Length == 0;
+        bool is_levels_empty = Directory.GetFiles($"{mod_directory_path}levels", "*.*", SearchOption.AllDirectories).Length == 0;
+        bool is_world_empty = Directory.GetFiles($"{mod_directory_path}world", "*.*", SearchOption.AllDirectories).Length == 0;
         _clear_cache_button.colorEdge = new Color(1f, 1f, 1f, 1f);
 
         if (is_levels_empty && is_world_empty) {
@@ -222,95 +196,6 @@ public class MainModOptions : OptionInterface {
 
         _clear_cache_button.colorFill = new Color(1f, 0.0f, 0.0f, 0.5f);
         _clear_cache_button.greyedOut = false;
-    }
-
-    public IEnumerator CreateCache_Coroutine() {
-        if (rainWorld.processManager.currentMainLoop is not ModdingMenu modding_menu) yield break;
-        _create_cache_button.text = "Please wait...";
-        Region[] all_regions = Region.LoadAllRegions(SlugcatStats.Timeline.White);
-
-        for (int region_index = 0; region_index < all_regions.Length; ++region_index) {
-            Region region = all_regions[region_index];
-            WorldLoader world_loader = new WorldLoader(null, SlugcatStats.Name.White, SlugcatStats.Timeline.White, singleRoomWorld: false, region.name, region, rainWorld.setup, FASTTRAVEL);
-            world_loader.NextActivity();
-
-            while (!world_loader.Finished) {
-                world_loader.Update();
-                Thread.Sleep(1);
-            }
-
-            Debug.Log("SBCameraScroll: Checking rooms in region " + region.name + " for missing merged textures.");
-            string updated_description = "Checking rooms in region " + region.name + " (" + (region_index + 1) + "/" + all_regions.Length + ") for missing merged textures.";
-
-            if (modding_menu.description == _create_cache_button.description) {
-                // update description even when the element is currently not focused (i.e. not 
-                // hovered over with the mouse);
-                modding_menu.ShowDescription(updated_description);
-            }
-            _create_cache_button.description = updated_description;
-
-            foreach (AbstractRoom abstract_room in world_loader.abstractRooms) {
-                yield return new WaitForSeconds(0.001f);
-                MergeCameraTextures(abstract_room, region.name);
-            }
-        }
-
-        if (modding_menu.description == _create_cache_button.description) {
-            modding_menu.ShowDescription("");
-        }
-
-        CreateCacheButton_Reset();
-        CreateCacheButton_UpdateColor(all_regions);
-        ClearCacheButton_UpdateColor();
-
-        // Otherwise, the message will be shown when entering a game.
-        next_text_prompt_message = null;
-    }
-
-    public void CreateCache_StopCoroutines() {
-        if (_coroutine_wrapper == null) {
-            Debug.Log(mod_id + ": ERROR! The coroutine wrapper is null.");
-            CreateCacheButton_Reset();
-            return;
-        }
-
-        _coroutine_wrapper.StopAllCoroutines();
-        CreateCacheButton_Reset();
-        next_text_prompt_message = null;
-    }
-
-    public void CreateCacheButton_OnClick(UIfocusable _) {
-        if (_create_cache_button.description != _create_cache_button_description) {
-            CreateCache_StopCoroutines();
-            return;
-        }
-
-        if (_coroutine_wrapper == null) {
-            Debug.Log(mod_id + ": ERROR! The coroutine wrapper is null.");
-            CreateCacheButton_Reset();
-            return;
-        }
-
-        CreateCache_StopCoroutines();
-        _coroutine_wrapper.StartCoroutine(CreateCache_Coroutine());
-    }
-
-    public void CreateCacheButton_Reset() {
-        _create_cache_button.text = _create_cache_button_text;
-        _create_cache_button.description = _create_cache_button_description;
-    }
-
-    public void CreateCacheButton_UpdateColor(Region[]? all_regions = null) {
-        all_regions ??= Region.LoadAllRegions(SlugcatStats.Timeline.White);
-        foreach (Region region in all_regions) {
-            if (Directory.Exists(mod_directory_path + "world" + Path.DirectorySeparatorChar + region.name.ToLower() + "-rooms")) continue;
-            _create_cache_button.colorFill = new Color(0.0f, 1f, 0.0f, 0.5f);
-            _create_cache_button.greyedOut = false;
-            return;
-        }
-
-        _create_cache_button.colorFill = new Color(0.0f, 0.0f, 0.0f, 0.0f);
-        _create_cache_button.greyedOut = true;
     }
 
     public void ReInitialize_Futile() {
@@ -422,8 +307,8 @@ public class MainModOptions : OptionInterface {
 
         // Subtitle
         AddNewLine(0.5f);
-        AddTextLabel("Version " + version, FLabelAlignment.Left);
-        AddTextLabel("by " + author, FLabelAlignment.Right);
+        AddTextLabel($"Version {version}", FLabelAlignment.Left);
+        AddTextLabel($"by {author}", FLabelAlignment.Right);
         DrawTextLabels(ref Tabs[tab_index]);
 
         // Content //
@@ -458,41 +343,18 @@ public class MainModOptions : OptionInterface {
         AddSlider(smoothing_factor_slider, (string)smoothing_factor_slider.info.Tags[0], "0%", "70%");
         DrawSliders(ref Tabs[tab_index]);
 
-        AddNewLine(2f);
-
-        AddCheckBox(jit_merging, (string)jit_merging.info.Tags[0]);
-        AddCheckBox(merge_while_loading, (string)merge_while_loading.info.Tags[0]);
-        AddCheckBox(region_mods, (string)region_mods.info.Tags[0]);
-        DrawCheckBoxes(ref Tabs[tab_index]);
-
         AddNewLine(3f);
 
-        // same size as apply and back button in ConfigMachine; the text and description
-        // for _create_cache_button is updated when used;
-        _create_cache_button = new(new(_pos.x + (_margin_x.y - _margin_x.x) / 2f - 55f - 65f, _pos.y), new(110f, 30f), _create_cache_button_text) {
-            description = _create_cache_button_description
-        };
-        CreateCacheButton_UpdateColor();
-
-        // gives an ambiguity error; :/
-        // _create_cache_button.OnClick += CreateCacheButton_OnClick;
-
-        System.Reflection.EventInfo event_info = _create_cache_button.GetType().GetEvent("OnClick");
-        Delegate event_handler = Delegate.CreateDelegate(event_info.EventHandlerType, this, "CreateCacheButton_OnClick");
-        event_info.AddEventHandler(_create_cache_button, event_handler);
-        Tabs[tab_index].AddItems(_create_cache_button);
-
+        // This button has the same size as apply and back button in
+        // ConfigMachine.
         _clear_cache_button = new(new(_pos.x + (_margin_x.y - _margin_x.x) / 2f - 55f + 65f, _pos.y), new(110f, 30f), "CLEAR CACHE") {
-            description = "WARNING: Deletes all merged textures inside the folders \"levels\" and \"world\". These folders can be found inside the folder \"mods/SBCameraScroll/\" or \"312520/2928752589\"."
+            description = "The cache is not used anymore. You can just clear it."
         };
         ClearCacheButton_UpdateColor();
-
-        // gives an ambiguity error; :/
-        // _clear_cache_button.OnClick += ClearCacheButton_OnClick;
-
-        event_info = _clear_cache_button.GetType().GetEvent("OnClick");
-        event_handler = Delegate.CreateDelegate(event_info.EventHandlerType, this, "ClearCacheButton_OnClick");
+        System.Reflection.EventInfo event_info = _clear_cache_button.GetType().GetEvent("OnClick");
+        Delegate event_handler = Delegate.CreateDelegate(event_info.EventHandlerType, this, "ClearCacheButton_OnClick");
         event_info.AddEventHandler(_clear_cache_button, event_handler);
+
         Tabs[tab_index].AddItems(_clear_cache_button);
 
         DrawBox(ref Tabs[tab_index]);
@@ -512,8 +374,8 @@ public class MainModOptions : OptionInterface {
 
         // Subtitle
         AddNewLine(0.5f);
-        AddTextLabel("Version " + version, FLabelAlignment.Left);
-        AddTextLabel("by " + author, FLabelAlignment.Right);
+        AddTextLabel($"Version {version}", FLabelAlignment.Left);
+        AddTextLabel($"by {author}", FLabelAlignment.Right);
         DrawTextLabels(ref Tabs[tab_index]);
 
         // Content //
@@ -560,8 +422,8 @@ public class MainModOptions : OptionInterface {
 
         // Subtitle
         AddNewLine(0.5f);
-        AddTextLabel("Version " + version, FLabelAlignment.Left);
-        AddTextLabel("by " + author, FLabelAlignment.Right);
+        AddTextLabel($"Version {version}", FLabelAlignment.Left);
+        AddTextLabel($"by {author}", FLabelAlignment.Right);
         DrawTextLabels(ref Tabs[tab_index]);
 
         // Content //
@@ -598,8 +460,8 @@ public class MainModOptions : OptionInterface {
 
         // Subtitle
         AddNewLine(0.5f);
-        AddTextLabel("Version " + version, FLabelAlignment.Left);
-        AddTextLabel("by " + author, FLabelAlignment.Right);
+        AddTextLabel($"Version {version}", FLabelAlignment.Left);
+        AddTextLabel($"by {author}", FLabelAlignment.Right);
         DrawTextLabels(ref Tabs[tab_index]);
 
         // Content //
@@ -617,7 +479,6 @@ public class MainModOptions : OptionInterface {
         AddNewLine();
 
         AddCheckBox(dynamic_zoom, (string)dynamic_zoom.info.Tags[0]);
-        AddCheckBox(fill_empty_spaces, (string)fill_empty_spaces.info.Tags[0]);
         DrawCheckBoxes(ref Tabs[tab_index]);
 
         AddNewLine();
@@ -629,11 +490,11 @@ public class MainModOptions : OptionInterface {
 
         List<ListItem> resolution_item_list = new() { new ListItem("Default", "Default", 0) { desc = "Resets the screen resolution." } };
         foreach (Resolution resolution in UnityEngine.Screen.resolutions) {
-            ListItem item = new(resolution.width.ToString() + " x " + resolution.height.ToString(), resolution.width) { desc = "Sets the screen resolution to " + resolution + " pixels." };
+            ListItem item = new($"{resolution.width.ToString()} x {resolution.height.ToString()}", resolution.width) { desc = $"Sets the screen resolution to {resolution} pixels." };
             if (resolution_item_list.Contains(item)) continue;
             resolution_item_list.Add(item);
         }
-        resolution_item_list.Add(new ListItem("Custom", "Custom", 9999) { desc = "Uses the resolution from the text box `" + (string)custom_resolution.info.Tags[0] + "`." });
+        resolution_item_list.Add(new ListItem("Custom", "Custom", 9999) { desc = $"Uses the resolution from the text box `{(string)custom_resolution.info.Tags[0]}`." });
 
         AddComboBox(resolution, resolution_item_list, (string)resolution.info.Tags[0]);
         // DrawComboBoxes(ref Tabs[tab_index]);
@@ -658,10 +519,8 @@ public class MainModOptions : OptionInterface {
                     }
                 } else if (ui_element is OpTextBox op_text_box && op_text_box.Key == "customResolution") {
                     _custom_resolution_text_box = op_text_box;
-                } else if (ui_element is OpCheckBox op_check_box) {
-                    if (op_check_box.Key == "dynamicZoom") _dynamic_zoom = op_check_box;
-                    else if (op_check_box.Key == "jit_merging") _jit_merging = op_check_box;
-                    else if (op_check_box.Key == "mergeWhileLoading") _merge_while_loading = op_check_box;
+                } else if (ui_element is OpCheckBox op_check_box && op_check_box.Key == "dynamicZoom") {
+                    _dynamic_zoom = op_check_box;
                 } else if (ui_element is OpSlider op_slider && op_slider.Key == "camera_zoom_slider") {
                     _zoom_slider = op_slider;
                 }
@@ -697,11 +556,6 @@ public class MainModOptions : OptionInterface {
         if (_zoom_slider != null && _dynamic_zoom != null) {
             _zoom_slider.greyedOut = _dynamic_zoom.value == "true";
         }
-
-        if (_jit_merging != null) {
-            if (_merge_while_loading != null) _merge_while_loading.greyedOut = _jit_merging.value == "true";
-            if (_create_cache_button != null) _create_cache_button.greyedOut = _jit_merging.value == "true";
-        }
     }
 
     //
@@ -719,10 +573,9 @@ public class MainModOptions : OptionInterface {
         orig(option_interface);
         if (option_interface != main_mod_options) return;
         Debug.Log("SBCameraScroll: Save_Config_File.");
-        Initialize_Option_Specific_Hooks();
+        Apply_And_Log_All_Options();
     }
 
-    //
     //
     //
 

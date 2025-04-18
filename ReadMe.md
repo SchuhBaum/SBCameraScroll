@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 3.0.5
+###### Version: 3.0.6
 This is a mod for Rain World v1.10.
 
 ### Description
@@ -23,7 +23,7 @@ This mod includes additional cameras:
 
 ### Installation
 0. Update Rain World to version 1.10 if needed.
-1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v3.0.5).
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v3.0.6).
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
@@ -38,6 +38,13 @@ See the file LICENSE-MIT.
 
 ### Changelog
 #### (Rain World v1.10)
+v3.0.6:
+- (just-in-time merging) This is now the only option. No more cache. You can
+  still delete the cache using the button in the mod settings menu.
+- Simplified the code base and did some refactoring.
+- Potentially fixed a bug where you would get a black screen when using
+  SplitScreen Co-op.
+
 v3.0.5:
 - (Watcher campaign) Fixed a bug where the overlapped ripple texture would be
   stretched.

@@ -12,18 +12,11 @@ using static SBCameraScroll.MainMod;
 namespace SBCameraScroll;
 
 internal static class LevelTexCombinerMod {
-    internal static void On_Config_Changed() {
-        IL.Watcher.LevelTexCombiner.CreateBuffer -= IL_LevelTexCombiner_CreateBuffer;
-        IL.Watcher.LevelTexCombiner.Initialize -= IL_LevelTexCombiner_Initialize;
-        IL.Watcher.LevelTexCombiner.SetGlobals -= IL_LevelTexCombiner_SetGlobals;
-        IL.Watcher.LevelTexCombiner.UnSetGlobals -= IL_LevelTexCombiner_UnSetGlobals;
-
-        if (Option_JIT_Merging) {
-            IL.Watcher.LevelTexCombiner.CreateBuffer += IL_LevelTexCombiner_CreateBuffer;
-            IL.Watcher.LevelTexCombiner.Initialize += IL_LevelTexCombiner_Initialize;
-            IL.Watcher.LevelTexCombiner.SetGlobals += IL_LevelTexCombiner_SetGlobals;
-            IL.Watcher.LevelTexCombiner.UnSetGlobals += IL_LevelTexCombiner_UnSetGlobals;
-        }
+    internal static void OnEnable() {
+        IL.Watcher.LevelTexCombiner.CreateBuffer += IL_LevelTexCombiner_CreateBuffer;
+        IL.Watcher.LevelTexCombiner.Initialize += IL_LevelTexCombiner_Initialize;
+        IL.Watcher.LevelTexCombiner.SetGlobals += IL_LevelTexCombiner_SetGlobals;
+        IL.Watcher.LevelTexCombiner.UnSetGlobals += IL_LevelTexCombiner_UnSetGlobals;
     }
 
     //
@@ -33,7 +26,7 @@ internal static class LevelTexCombinerMod {
     public static bool LevelTexCombinerMod_ApplyLevelTexturePatch(ILCursor cursor, string function_name) {
         if (cursor.TryGotoNext(instruction => instruction.MatchLdfld("PersistentData", "cameraTextures"))) {
             if (can_log_il_hooks) {
-                Debug.Log("SBCameraScroll: IL_LevelTexCombiner_" + function_name + ": Index " + cursor.Index);
+                Debug.Log($"{mod_id}: IL_LevelTexCombiner_{function_name}: Index {cursor.Index}");
             }
 
             cursor.Index -= 2;
@@ -44,7 +37,7 @@ internal static class LevelTexCombinerMod {
 
         } else {
             if (can_log_il_hooks) {
-                Debug.Log("SBCameraScroll: IL_LevelTexCombiner_" + function_name + " failed.");
+                Debug.Log($"{mod_id}: IL_LevelTexCombiner_{function_name} failed.");
             }
             return false;
         }

@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 
+using static SBCameraScroll.MainMod;
+
 namespace SBCameraScroll;
 
 internal static class RainWorldGameMod {
@@ -14,18 +16,20 @@ internal static class RainWorldGameMod {
 
     private static void RainWorldGame_Ctor(On.RainWorldGame.orig_ctor orig, RainWorldGame game, ProcessManager manager) {
         AbstractRoomMod._all_attached_fields.Clear();
+        AbstractRoomMod.room_name_to_crs_room_name.Clear();
         RoomCameraMod._all_attached_fields.Clear();
         WormGrassMod._all_attached_fields.Clear();
 
-        Debug.Log("SBCameraScroll: Initialize variables.");
+        Debug.Log($"{mod_id}: Initialize variables.");
         orig(game, manager);
     }
 
     private static void RainWorldGame_ShutDownProcess(On.RainWorldGame.orig_ShutDownProcess orig, RainWorldGame game) {
-        Debug.Log("SBCameraScroll: Cleanup.");
+        Debug.Log($"{mod_id}: Cleanup.");
         orig(game);
 
         AbstractRoomMod._all_attached_fields.Clear();
+        AbstractRoomMod.room_name_to_crs_room_name.Clear();
         RoomCameraMod._all_attached_fields.Clear();
         WormGrassMod._all_attached_fields.Clear();
     }

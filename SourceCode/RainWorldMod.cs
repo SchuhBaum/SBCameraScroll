@@ -33,9 +33,9 @@ public static class RainWorldMod {
     public static void Load_Asset_Bundle() {
         if (modded_shaders_bundle != null) return;
         try {
-            modded_shaders_bundle = AssetBundle.LoadFromFile(mod_directory_path + "AssetBundles" + Path.DirectorySeparatorChar + "modded_shaders");
+            modded_shaders_bundle = AssetBundle.LoadFromFile($"{mod_directory_path}AssetBundles{Path.DirectorySeparatorChar}modded_shaders");
         } catch (Exception exception) {
-            Debug.Log("SBCameraScroll: Could not load the asset bundle with modded shaders.\n  " + exception);
+            Debug.Log($"{mod_id}: Could not load the asset bundle with modded shaders.\n  {exception}");
             modded_shaders_bundle = null;
         }
     }
@@ -44,10 +44,12 @@ public static class RainWorldMod {
         if (modded_shaders_bundle == null) return null;
         ComputeShader? compute_shader = modded_shaders_bundle.LoadAsset<ComputeShader>(shader_name);
         if (compute_shader == null) return null;
-        Debug.Log(mod_id + ": Loaded the compute shader '" + shader_name + "'.");
+        Debug.Log($"{mod_id}: Loaded the compute shader '{shader_name}'.");
         return compute_shader;
     }
 
+    // We use only render textures. This function is used to replace the vanilla
+    // Texture2D.
     public static void Replace_Or_Add_Atlas(string name, Texture texture) {
         if (Get_Atlas_Index(name) is not int index) {
             Futile.atlasManager.LoadAtlasFromTexture(name, texture, textureFromAsset: false);
@@ -60,7 +62,7 @@ public static class RainWorldMod {
 		FAtlas atlas = new FAtlas(name, texture, index, false); // don't use index++;
         atlas_manager._atlases[index] = atlas;
         Replace_Or_Add_Atlas_Elements(atlas);
-        Debug.Log(mod_id + ": Replaced atlas for Texture " + name + ".");
+        Debug.Log($"{mod_id}: Replaced atlas for Texture {name}.");
     }
 
     public static void Replace_Or_Add_Atlas_Elements(FAtlas atlas) {
@@ -83,17 +85,17 @@ public static class RainWorldMod {
     public static void Replace_Shader(this RainWorld rain_world, string shader_name) {
         if (modded_shaders_bundle == null) return;
         if (!rain_world.Shaders.ContainsKey(shader_name)) {
-            Debug.Log("SBCameraScroll: Didn't find the shader '" + shader_name + "'.");
+            Debug.Log($"{mod_id}: Didn't find the shader '{shader_name}'.");
             return;
         }
         Shader? modded_shader = modded_shaders_bundle.LoadAsset<Shader>(shader_name);
         if (modded_shader == null) {
-            Debug.Log("SBCameraScroll: Didn't find the modded shader for '" + shader_name + "'.");
+            Debug.Log($"{mod_id}: Didn't find the modded shader for '{shader_name}'.");
             return;
         }
 
         rain_world.Shaders[shader_name].shader = modded_shader;
-        Debug.Log("SBCameraScroll: Replaced the shader '" + shader_name + "'.");
+        Debug.Log($"{mod_id}: Replaced the shader '{shader_name}'.");
     }
 
     // public static void Replace_Shader_LevelBlend() {
@@ -102,12 +104,12 @@ public static class RainWorldMod {
     //     string shader_name = "LevelBlend";
     //     Shader? modded_shader = modded_shaders_bundle.LoadAsset<Shader>(shader_name);
     //     if (modded_shader == null) {
-    //         Debug.Log("SBCameraScroll: Didn't find the modded shader for '" + shader_name + "'.");
+    //         Debug.Log($"{mod_id}: Didn't find the modded shader for '{shader_name}'.");
     //         return;
     //     }
 
     //     UnityEngine.Object.Destroy(Watcher.RippleCameraData.combinerMaterial);
     //     Watcher.RippleCameraData.combinerMaterial = new Material(modded_shader);
-    //     Debug.Log("SBCameraScroll: Replaced the shader '" + shader_name + "'.");
+    //     Debug.Log($"{mod_id}: Replaced the shader '{shader_name}'.");
     // }
 }

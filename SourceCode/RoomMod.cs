@@ -7,16 +7,9 @@ using static SBCameraScroll.RoomCameraMod;
 namespace SBCameraScroll;
 
 public static class RoomMod {
-    internal static void On_Config_Changed() {
-        On.Room.LoadFromDataString -= Room_LoadFromDataString;
-
-        if (!Option_JIT_Merging) {
-            On.Room.LoadFromDataString += Room_LoadFromDataString;
-        }
-    }
-
     internal static void OnEnable() {
-        On.Room.Loaded += Room_Loaded; // removes DeathFallFocus objects (which create fall focal points);
+        // removes DeathFallFocus objects (which create fall focal points);
+        On.Room.Loaded += Room_Loaded;
     }
 
     //
@@ -52,19 +45,5 @@ public static class RoomMod {
         // out of range;
         // => remove for now;
         room.deathFallFocalPoints = new();
-    }
-
-    private static void Room_LoadFromDataString(On.Room.orig_LoadFromDataString orig, Room room, string[] lines) {
-        orig(room, lines);
-
-        if (room?.game == null) return;
-        if (room.abstractRoom is not AbstractRoom abstract_room) return;
-
-        // This is now done for every room when they are created.
-        // CheckCameraPositions(ref room.cameraPositions);
-        // InitializeAttachedFields(abstract_room, room.cameraPositions); // update for one-screen rooms as well
-
-        if (blacklisted_rooms.Contains(abstract_room.name)) return;
-        MergeCameraTextures(abstract_room, room.abstractRoom.world?.regionState?.regionName, room.cameraPositions); // warping might mess with world or region state => check for nulls // regionState is a function and needs game != null
     }
 }

@@ -25,7 +25,7 @@ internal static class MoreSlugcatsMod {
         ILCursor cursor = new(context);
         if (cursor.TryGotoNext(instruction => instruction.MatchLdarg(2))) {
             if (can_log_il_hooks) {
-                Debug.Log("SBCameraScroll: IL_BlizzardGraphics_DrawSprites: Index " + cursor.Index); // 16
+                Debug.Log($"{mod_id}: IL_BlizzardGraphics_DrawSprites: Index {cursor.Index}"); // 16
             }
 
             cursor.Next.OpCode = OpCodes.Ldarg_0; // blizzardGraphics
@@ -35,7 +35,7 @@ internal static class MoreSlugcatsMod {
 
             cursor.EmitDelegate<Func<MoreSlugcats.BlizzardGraphics, Vector2, Vector2>>((blizzard_graphics, camera_position) => {
                 RoomCamera room_camera = blizzard_graphics.rCam;
-                if (room_camera.Is_Type_Camera_Not_Used()) {
+                if (room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom.name)) {
                     return room_camera.pos - blizzard_graphics.room.cameraPositions[room_camera.currentCameraPosition];
                 }
 
@@ -46,7 +46,7 @@ internal static class MoreSlugcatsMod {
             });
         } else {
             if (can_log_il_hooks) {
-                Debug.Log("SBCameraScroll: IL_BlizzardGraphics_DrawSprites failed.");
+                Debug.Log($"{mod_id}: IL_BlizzardGraphics_DrawSprites failed.");
             }
             return;
         }
@@ -59,12 +59,7 @@ internal static class MoreSlugcatsMod {
 
     private static void BlizzardGraphics_Update(On.MoreSlugcats.BlizzardGraphics.orig_Update orig, MoreSlugcats.BlizzardGraphics blizzard_graphics, bool eu) {
         RoomCamera room_camera = blizzard_graphics.rCam;
-        if (room_camera.room == null) {
-            orig(blizzard_graphics, eu);
-            return;
-        }
-
-        if (room_camera.Is_Type_Camera_Not_Used()) {
+        if (room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom.name)) {
             orig(blizzard_graphics, eu);
             return;
         }
@@ -89,8 +84,15 @@ internal static class MoreSlugcatsMod {
 
     private static Vector4[] SnowSource_PackSnowData(On.MoreSlugcats.SnowSource.orig_PackSnowData orig, MoreSlugcats.SnowSource snow_source) {
         if (snow_source.room is not Room room) return orig(snow_source);
-        RoomCamera room_camera = snow_source.room.game.cameras[0];
-        if (room_camera.Is_Type_Camera_Not_Used()) return orig(snow_source);
+
+        RoomCamera? room_camera = null;
+        foreach (RoomCamera rc in room.world.game.cameras) {
+            if (room == rc.room) {
+                room_camera = rc;
+                break;
+            }
+        }
+        if (room_camera == null || room_camera.IsRoomBlacklisted(room.abstractRoom.name)) return orig(snow_source);
 
         // this should be more consistent with vanilla; min_camera_position is in most cases
         // the camera position of the bottom left screen (unless the max texture size is reached);
@@ -120,7 +122,7 @@ internal static class MoreSlugcatsMod {
             return;
         }
 
-        if (room_camera.Is_Type_Camera_Not_Used()) {
+        if (room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom.name)) {
             orig(snow_source, eu);
             return;
         }

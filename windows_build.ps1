@@ -9,8 +9,8 @@ if ($LASTEXITCODE) {
 }
 
 $mod_name = "SBCameraScroll"
-$dll_name = $mod_name + ".dll"
-$pdb_name = $mod_name + ".pdb"
+$dll_name = "$mod_name.dll"
+$pdb_name = "$mod_name.pdb"
 
 function copy_file($file_name) {
     $src = Get-ChildItem -Path "$dir\sourcecode\bin\$config" -Recurse -Filter $file_name | Select-Object -ExpandProperty FullName

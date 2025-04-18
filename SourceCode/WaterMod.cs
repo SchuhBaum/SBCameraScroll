@@ -28,8 +28,7 @@ internal static class WaterMod {
             // flips the sprite / water overlay.
 
             if (can_log_il_hooks) {
-                Debug.Log("SBCameraScroll: IL_Water_DrawSprites: Index " +
-                          cursor.Index);
+                Debug.Log($"{mod_id}: IL_Water_DrawSprites: Index {cursor.Index}");
             }
             cursor.Goto(cursor.Index + 1);
 
@@ -41,13 +40,12 @@ internal static class WaterMod {
 
             cursor.EmitDelegate<Func<float, RoomCamera, Vector2, float>>(
                 (y_local, room_camera, camera_pos) => {
-                    if (room_camera.Is_Type_Camera_Not_Used()) return y_local;
-                    if (room_camera.room is not Room room) return y_local;
+                    if (room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom.name)) return y_local;
                     return y_local + room.abstractRoom.Get_Attached_Fields().min_camera_position.y - camera_pos.y; // modded
                 });
         } else {
             if (can_log_il_hooks) {
-                Debug.Log("SBCameraScroll: IL_Water_DrawSprites failed.");
+                Debug.Log($"{mod_id}: IL_Water_DrawSprites failed.");
             }
             return;
         }
@@ -57,8 +55,7 @@ internal static class WaterMod {
             // This is the same as before but for upside-down water.
 
             if (can_log_il_hooks) {
-                Debug.Log("SBCameraScroll: IL_Water_DrawSprites: Index " +
-                          cursor.Index);
+                Debug.Log($"{mod_id}: IL_Water_DrawSprites: Index {cursor.Index}");
             }
 
             cursor.Goto(cursor.Index + 2);
@@ -67,13 +64,12 @@ internal static class WaterMod {
 
             cursor.EmitDelegate<Func<float, RoomCamera, Vector2, float>>(
                 (y_local, room_camera, camera_pos) => {
-                    if (room_camera.Is_Type_Camera_Not_Used()) return y_local;
-                    if (room_camera.room is not Room room) return y_local;
+                    if (room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom.name)) return y_local;
                     return y_local + room.abstractRoom.Get_Attached_Fields().min_camera_position.y - camera_pos.y; // modded
                 });
         } else {
             if (can_log_il_hooks) {
-                Debug.Log("SBCameraScroll: IL_Water_DrawSprites failed.");
+                Debug.Log($"{mod_id}: IL_Water_DrawSprites failed.");
             }
             return;
         }

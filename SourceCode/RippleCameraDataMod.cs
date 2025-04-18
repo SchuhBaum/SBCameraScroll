@@ -44,16 +44,10 @@ internal static class RippleCameraDataMod {
     //
     //
 
-    internal static void On_Config_Changed() {
-        IL.Watcher.RippleCameraData.AddCommandBuffer -= IL_RippleCameraData_AddCommandBuffer;
-        IL.Watcher.RippleCameraData.SetGlobals       -= IL_RippleCameraData_SetGlobals;
-        IL.Watcher.RippleCameraData.SetTarget        -= IL_RippleCameraData_SetTarget;
-
-        if (Option_JIT_Merging) {
-            IL.Watcher.RippleCameraData.AddCommandBuffer += IL_RippleCameraData_AddCommandBuffer;
-            IL.Watcher.RippleCameraData.SetGlobals       += IL_RippleCameraData_SetGlobals;
-            IL.Watcher.RippleCameraData.SetTarget        += IL_RippleCameraData_SetTarget;
-        }
+    internal static void OnEnable() {
+        IL.Watcher.RippleCameraData.AddCommandBuffer += IL_RippleCameraData_AddCommandBuffer;
+        IL.Watcher.RippleCameraData.SetGlobals       += IL_RippleCameraData_SetGlobals;
+        IL.Watcher.RippleCameraData.SetTarget        += IL_RippleCameraData_SetTarget;
     }
 
     //
@@ -63,7 +57,7 @@ internal static class RippleCameraDataMod {
     public static bool IL_RippleCameraDataMod_PatchRippleTargetScreen(ILCursor cursor, string function_name) {
         if (cursor.TryGotoNext(instruction => instruction.MatchLdfld("Watcher.RippleCameraData", "rippleTargetScreen"))) {
             if (can_log_il_hooks) {
-                Debug.Log("SBCameraScroll: IL_RippleCameraData_" + function_name + ": Index " + cursor.Index);
+                Debug.Log($"{mod_id}: IL_RippleCameraData_{function_name}: Index {cursor.Index}");
             }
 
             cursor.RemoveRange(1);
@@ -71,7 +65,7 @@ internal static class RippleCameraDataMod {
 
         } else {
             if (can_log_il_hooks) {
-                Debug.Log("SBCameraScroll: IL_RippleCameraData_" + function_name + " failed.");
+                Debug.Log($"{mod_id}: IL_RippleCameraData_{function_name} failed.");
             }
             return false;
         }
@@ -81,17 +75,22 @@ internal static class RippleCameraDataMod {
 
     public static UnityEngine.RenderTexture RippleCameraDataMod_GetRippleTargetScreen(Watcher.RippleCameraData ripple_data) {
         if (Custom.rainWorld?.processManager?.currentMainLoop is not RainWorldGame game) {
-            Debug.Log("SBCameraScroll: [WARNING] Expected to be in-game. But I did not find the instance for RainWorldGame. I assume now that this is the camera for player 1 and hope for the best.");
+            Debug.Log("SBCameraScroll.RippleCameraDataMod_GetRippleTargetScreen: [WARNING] Expected to be in-game. But I did not find the instance for RainWorldGame. I assume now that this is the camera for player 1 and hope for the best.");
             return ripple_target_screens[0];
         }
 
         foreach (RoomCamera room_camera in game.cameras) {
             if (ripple_data == room_camera.rippleData) {
+                int camera_number = room_camera.cameraNumber;
+                if (camera_number < 0 || camera_number > 3) {
+                    Debug.Log($"{mod_id}.RippleCameraDataMod_GetRippleTargetScreen: [WARNING] I got the invalid camera number {camera_number}. I will use 0 instead.");
+                    camera_number = 0;
+                }
                 return ripple_target_screens[room_camera.cameraNumber];
             }
         }
 
-        Debug.Log("SBCameraScroll: [WARNING] Expected to be in-game. But I did not find the room camera for the rippleData " + ripple_data + ". I assume now this is the camera for player 1 and hope for the best.");
+        Debug.Log($"SBCameraScroll.RippleCameraDataMod_GetRippleTargetScreen: [WARNING] Expected to be in-game. But I did not find the room camera for the rippleData {ripple_data}. I assume now this is the camera for player 1 and hope for the best.");
         return ripple_target_screens[0];
     }
 
@@ -102,7 +101,7 @@ internal static class RippleCameraDataMod {
         }
 
         if (Custom.rainWorld?.processManager?.currentMainLoop is not RainWorldGame game) {
-            Debug.Log("SBCameraScroll: [WARNING] Did not find the game process. Aborting the function RippleCameraDataMod_LoadRippleTargetScreen().");
+            Debug.Log("SBCameraScroll.RippleCameraDataMod_LoadRippleTargetScreen: [WARNING] Did not find the game process. Aborting the function RippleCameraDataMod_LoadRippleTargetScreen().");
             return;
         }
 
@@ -115,23 +114,48 @@ internal static class RippleCameraDataMod {
         }
 
         if (room_camera == null) {
-            Debug.Log("SBCameraScroll: [WARNING] Did not find the room camera. Aborting the function RippleCameraDataMod_LoadRippleTargetScreen().");
+            Debug.Log("SBCameraScroll.RippleCameraDataMod_LoadRippleTargetScreen: [WARNING] Did not find the room camera. Aborting the function RippleCameraDataMod_LoadRippleTargetScreen().");
             return;
         }
 
-        string? dest_room_name = room_camera.RippleSettings?.destRoom;
-        if (dest_room_name == null) {
-            dest_room_name = room_camera.loadingRoom?.abstractRoom.name;
+        string? room_name = room_camera.RippleSettings?.destRoom;
+        if (room_name == null) {
+            room_name = room_camera.loadingRoom?.abstractRoom.name;
         }
-        if (dest_room_name == null) {
-            dest_room_name = room_camera.room?.abstractRoom.name;
+        if (room_name == null) {
+            room_name = room_camera.room?.abstractRoom.name;
         }
-        if (dest_room_name == null) {
-            Debug.Log("SBCameraScroll: [WARNING] Did not find any room name. Aborting the function RippleCameraDataMod_LoadRippleTargetScreen().");
+        if (room_name == null) {
+            Debug.Log("SBCameraScroll.RippleCameraDataMod_LoadRippleTargetScreen: [WARNING] Did not find any room name. Aborting the function RippleCameraDataMod_LoadRippleTargetScreen().");
             return;
         }
 
-        Util_LoadRoomTextureIntoRenderTexture(dest_room_name, ripple_target_screens[room_camera.cameraNumber]);
+        if (room_name_to_crs_room_name.TryGetValue(room_name, out string new_room_name)) {
+            room_name = new_room_name;
+        }
+
+        int camera_number = room_camera.cameraNumber;
+        if (camera_number < 0 || camera_number > 3) {
+            Debug.Log($"{mod_id}.RippleCameraDataMod_LoadRippleTargetScreen: [WARNING] I got the invalid camera number {camera_number}. I will use 0 instead.");
+            camera_number = 0;
+        }
+
+
+        RenderTexture render_texture = ripple_target_screens[camera_number];
+        if (RoomCameraMod.blacklisted_rooms.Contains(room_name) || room_camera.voidSeaMode) {
+            // vanilla case
+            ripple_data.rippleTargetScreen.LoadImage(ripple_data.preLoadTexture, markNonReadable: false);
+
+            if (render_texture.width != 1400 || render_texture.height != 800) {
+                render_texture.Release();
+                render_texture.width = 1400;
+                render_texture.height = 800;
+            }
+            Graphics.CopyTexture(ripple_data.rippleTargetScreen, render_texture);
+            return;
+        }
+
+        Util_LoadRoomTextureIntoRenderTexture(room_name, render_texture);
     }
 
     //
@@ -162,7 +186,7 @@ internal static class RippleCameraDataMod {
 
         if (cursor.TryGotoNext(instruction => instruction.MatchLdfld("Watcher.RippleCameraData", "rippleTargetScreen"))) {
             if (can_log_il_hooks) {
-                Debug.Log("SBCameraScroll: IL_RippleCameraData_SetTarget: Index " + cursor.Index);
+                Debug.Log($"{mod_id}: IL_RippleCameraData_SetTarget: Index {cursor.Index}");
             }
 
             cursor.RemoveRange(6);
@@ -170,7 +194,7 @@ internal static class RippleCameraDataMod {
 
         } else {
             if (can_log_il_hooks) {
-                Debug.Log("SBCameraScroll: IL_RippleCameraData_SetTarget failed.");
+                Debug.Log($"{mod_id}: IL_RippleCameraData_SetTarget failed.");
             }
             return;
         }
