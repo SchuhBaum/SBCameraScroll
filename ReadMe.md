@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 3.0.8
+###### Version: 3.0.9
 This is a mod for Rain World v1.10.
 
 ### Description
@@ -17,7 +17,7 @@ This mod includes additional cameras:
 
 ### Installation
 0. Update Rain World to version 1.10 if needed.
-1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v3.0.8).
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v3.0.9).
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
@@ -32,6 +32,11 @@ See the file LICENSE-MIT.
 
 ### Changelog
 #### (Rain World v1.10)
+v3.0.9:
+- Modded the shader `LevelMeld`. Now, the ripple distortion effect should be way
+  less extreme and scale much better in larger rooms. I am looking at you
+  `WRSA_L01`.
+
 v3.0.8:
 - Fixed a bug where the ripple effect would jump visually when transitioning
   screens with camera scroll active.

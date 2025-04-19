@@ -98,18 +98,18 @@ public static class RainWorldMod {
         Debug.Log($"{mod_id}: Replaced the shader '{shader_name}'.");
     }
 
-    // public static void Replace_Shader_LevelBlend() {
-    //     if (modded_shaders_bundle == null) return;
+    public static void Replace_Shader_LevelBlend() {
+        if (modded_shaders_bundle == null) return;
 
-    //     string shader_name = "LevelBlend";
-    //     Shader? modded_shader = modded_shaders_bundle.LoadAsset<Shader>(shader_name);
-    //     if (modded_shader == null) {
-    //         Debug.Log($"{mod_id}: Didn't find the modded shader for '{shader_name}'.");
-    //         return;
-    //     }
+        string shader_name = "LevelBlend";
+        Shader? modded_shader = modded_shaders_bundle.LoadAsset<Shader>(shader_name);
+        if (modded_shader == null) {
+            Debug.Log($"{mod_id}: Didn't find the modded shader for '{shader_name}'.");
+            return;
+        }
 
-    //     UnityEngine.Object.Destroy(Watcher.RippleCameraData.combinerMaterial);
-    //     Watcher.RippleCameraData.combinerMaterial = new Material(modded_shader);
-    //     Debug.Log($"{mod_id}: Replaced the shader '{shader_name}'.");
-    // }
+        UnityEngine.Object.Destroy(Watcher.RippleCameraData.combinerMaterial);
+        Watcher.RippleCameraData.combinerMaterial = new Material(modded_shader);
+        Debug.Log($"{mod_id}: Replaced the shader '{shader_name}'.");
+    }
 }

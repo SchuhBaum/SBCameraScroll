@@ -300,10 +300,11 @@ public static class RoomCameraMod {
 
     public static Vector2 DrawUpdate_GetMainBodyChunkOrOnScreenPosition(RoomCamera room_camera) {
         if (room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom.name)) {
+            // vanilla:
             // The null check was already done.
             return room_camera.followAbstractCreature.realizedCreature.mainBodyChunk.pos;
         }
-        return room_camera.Get_Attached_Fields().on_screen_position;
+        return room_camera.Get_Attached_Fields().on_screen_position + 0.5f * room_camera.sSize;
     }
 
     public static void DrawUpdate_UpdateLevelTextureGameObject(RoomCamera room_camera, Vector2 camera_position) {
