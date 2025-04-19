@@ -33,7 +33,7 @@ See the file LICENSE-MIT.
 ### Changelog
 #### (Rain World v1.10)
 v3.0.9:
-- Modded the shader `LevelMeld`. Now, the ripple distortion effect should be way
+- Modded the shader `LevelBlend`. Now, the ripple distortion effect should be way
   less extreme and scale much better in larger rooms. I am looking at you
   `WRSA_L01`.
 
