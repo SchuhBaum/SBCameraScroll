@@ -104,10 +104,14 @@ public static class Util {
                 int height = Math.Min(800 - cutoff_y, maximum_texture_height - y);
 
                 if (camera_number == -1) {
+                    // Kinda wasteful. The Texture2D is just a buffer but it
+                    // lives on the CPU as well as the GPU. I only need the GPU.
+                    // But there doesn't seem to be a direct way to upload a png
+                    // file to the GPU.
                     string camera_texture_path = WorldLoader.FindRoomFile(room_name, includeRootDirectory: true, $"_{cam_pos_index+1}.png");
                     byte[] bytes = AssetManager.PreLoadTexture(camera_texture_path);
-
                     camera_texture.LoadImage(bytes);
+
                     Graphics.CopyTexture(camera_texture, 0, 0, cutoff_x, cutoff_y, width, height, render_texture, 0, 0, Mathf.Max(x, 0), Mathf.Max(y, 0));
 
                 } else {
@@ -117,6 +121,7 @@ public static class Util {
                         byte[] bytes = AssetManager.PreLoadTexture(camera_texture_path);
                         RoomCameraMod.Load_Image(room_name, camera_number, cam_pos_index, bytes);
                     }
+
                     Graphics.CopyTexture(RoomCameraMod.Get_Level_Texture(camera_number, cam_pos_index), 0, 0, cutoff_x, cutoff_y, width, height, render_texture, 0, 0, Mathf.Max(x, 0), Mathf.Max(y, 0));
                 }
             }

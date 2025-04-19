@@ -142,7 +142,7 @@ internal static class RippleCameraDataMod {
 
 
         RenderTexture render_texture = ripple_target_screens[camera_number];
-        if (RoomCameraMod.blacklisted_rooms.Contains(room_name) || room_camera.voidSeaMode) {
+        if (room_camera.IsRoomBlacklisted(room_name)) {
             // vanilla case
             ripple_data.rippleTargetScreen.LoadImage(ripple_data.preLoadTexture, markNonReadable: false);
 

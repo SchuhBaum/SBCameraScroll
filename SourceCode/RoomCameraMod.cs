@@ -17,8 +17,8 @@ using static SBCameraScroll.ShortcutHandlerMod;
 using static SBCameraScroll.SplitScreenCoopMod;
 using static SBCameraScroll.Util;
 
-// TODO: the trail is a fullscreen-effect-like and does not scroll properly;
-// TODO: there is some distortion based on distance going on that can be very extreme; check if I can reduce it; check what part of the ripple effect uses the current camera position index;
+// TODO: the trail is fullscreen-effect-like and does not scroll properly;
+// TODO: there is some distortion based on distance going on that can be very extreme; check if I can reduce it;
 
 namespace SBCameraScroll;
 
@@ -298,6 +298,14 @@ public static class RoomCameraMod {
         return camera_position;
     }
 
+    public static Vector2 DrawUpdate_GetMainBodyChunkOrOnScreenPosition(RoomCamera room_camera) {
+        if (room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom.name)) {
+            // The null check was already done.
+            return room_camera.followAbstractCreature.realizedCreature.mainBodyChunk.pos;
+        }
+        return room_camera.Get_Attached_Fields().on_screen_position;
+    }
+
     public static void DrawUpdate_UpdateLevelTextureGameObject(RoomCamera room_camera, Vector2 camera_position) {
         if (room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom.name)) {
             room_camera.levelGraphic.x = room_camera.CamPos(room_camera.currentCameraPosition).x - camera_position.x;
@@ -366,6 +374,16 @@ public static class RoomCameraMod {
         }
     }
 
+    public static void DrawUpdate_UpdateSlowFollowCreaturePos(RoomCamera room_camera, Vector2 target_slow_follow_creature_pos) {
+        if (room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom.name)) {
+            room_camera.slowFollowCreaturePos = target_slow_follow_creature_pos;
+            return;
+        }
+        // Don't do anything. In vanilla the position snaps when the
+        // cam_pos_index changes. Without this a smooth lerp is used in all
+        // cases. Otherwise, the ripple effect can jump visually.
+    }
+
     public static Vector2 GetCreaturePosition(Creature creature) {
         if (creature is Player player) {
             // reduce movement when "rolling" in place in ZeroG;
@@ -416,8 +434,12 @@ public static class RoomCameraMod {
             return;
         }
 
-        room_camera.Get_Attached_Fields().type_camera.Reset();
+        Attached_Fields room_camera_fields = room_camera.Get_Attached_Fields();
+        room_camera_fields.type_camera.Reset();
         Apply_Camera_Zoom(room_camera);
+
+        room_camera.slowFollowCreaturePos = (room_camera_fields.on_screen_position - room_camera.pos) / room_camera.sSize;
+        Shader.SetGlobalVector("_FollowCreatureScreenPos", room_camera.slowFollowCreaturePos);
     }
 
     public static void Reset_Camera_Zoom(RoomCamera room_camera) {
@@ -480,7 +502,7 @@ public static class RoomCameraMod {
         // We use just-in-time merging. We need to always load the room -- even
         // one-screen and blacklisted rooms. Since the vanilla call to
         // LoadImage() is removed via an IL-hook.
-        if (!is_changing_room || blacklisted_rooms.Contains(room_name) || room_camera.voidSeaMode || room.cameraPositions.Length < 2) {
+        if (!is_changing_room || room_camera.IsRoomBlacklisted(room_name) || room.cameraPositions.Length < 2) {
             //
             // Case 1: Load just one screen. The room is blacklisted or has only
             // one screen.
@@ -672,6 +694,42 @@ public static class RoomCameraMod {
 
             cursor.Emit(OpCodes.Ldloc_1); // camera_position
             cursor.EmitDelegate<Action<RoomCamera, Vector2>>(DrawUpdate_UpdateLevelTextureGameObject);
+        } else {
+            if (can_log_il_hooks) {
+                Debug.Log($"{mod_id}: IL_RoomCamera_DrawUpdate failed.");
+            }
+            return;
+        }
+
+        if (cursor.TryGotoNext(instruction => instruction.MatchCallvirt("Creature", "get_mainBodyChunk"))) {
+            if (can_log_il_hooks) {
+                Debug.Log($"{mod_id}: IL_RoomCamera_DrawUpdate: Index {cursor.Index}");
+            }
+
+            // Used when updating the slowFollowCreaturePosition in the function
+            // DrawUpdate. But the body chunk position does not update when in
+            // shortcuts. Use on_screen_position instead.
+
+            cursor.Index -= 2;
+            cursor.RemoveRange(4);
+            cursor.EmitDelegate<Func<RoomCamera, Vector2>>(DrawUpdate_GetMainBodyChunkOrOnScreenPosition);
+
+        } else {
+            if (can_log_il_hooks) {
+                Debug.Log($"{mod_id}: IL_RoomCamera_DrawUpdate failed.");
+            }
+            return;
+        }
+
+        if (cursor.TryGotoNext(instruction => instruction.MatchStfld("RoomCamera", "slowFollowCreaturePos"))) {
+            if (can_log_il_hooks) {
+                Debug.Log($"{mod_id}: IL_RoomCamera_DrawUpdate: Index {cursor.Index}");
+            }
+
+            // Reuse the arguments from the removed instruction.
+            cursor.RemoveRange(1);
+            cursor.EmitDelegate<Action<RoomCamera, Vector2>>(DrawUpdate_UpdateSlowFollowCreaturePos);
+
         } else {
             if (can_log_il_hooks) {
                 Debug.Log($"{mod_id}: IL_RoomCamera_DrawUpdate failed.");
