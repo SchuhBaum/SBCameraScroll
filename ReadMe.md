@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 3.0.6
+###### Version: 3.0.7
 This is a mod for Rain World v1.10.
 
 ### Description
@@ -7,12 +7,6 @@ Creates a smooth, scrolling camera that moves with the slugcat. Based on pipi to
   
 Here is a youtube video showing Rain World v1.5 + SBCameraScroll (+ other mods) in action:  
 https://www.youtube.com/watch?v=ePJbY4GSMck
-
-This mod generates (i.e. merges) camera textures for each room with multiple cameras. These textures are cached in the folders `levels` and `world` inside the folder:  
-'Steam\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods\SBCameraScroll\'
-
-If you want to manually generate all merged textures then you can go to the mod's options menu (in the Remix menu click on the name for this mod) and press the button `Create Cache`. In addition, there is the option `Region Mods` (enabled by default) that should update cached textures when mods modify existing rooms.  
-If you want to delete all merged textures and let them be generated again then you can press the button `Clear Cache`.
 
 This mod includes additional cameras:
 - (Vanilla Type Camera) Behaves almost identical to the vanilla camera -- with one major difference. You can center the camera on the slugcat by pressing the map button. The keybinding can be configured using the mod [Improved Input Config](https://steamcommunity.com/sharedfiles/filedetails/?id=2944727862).  
@@ -23,7 +17,7 @@ This mod includes additional cameras:
 
 ### Installation
 0. Update Rain World to version 1.10 if needed.
-1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v3.0.6).
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v3.0.7).
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
@@ -38,6 +32,9 @@ See the file LICENSE-MIT.
 
 ### Changelog
 #### (Rain World v1.10)
+v3.0.7:
+- Fixed an IO exception where the mod settings menu would not load.
+
 v3.0.6:
 - (just-in-time merging) This is now the only option. No more cache. You can
   still delete the cache using the button in the mod settings menu.

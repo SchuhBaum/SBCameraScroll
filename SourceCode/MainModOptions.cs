@@ -170,22 +170,26 @@ public class MainModOptions : OptionInterface {
     }
 
     public void ClearCacheButton_OnClick(UIfocusable _) {
-        DirectoryInfo[] region_directories = new DirectoryInfo($"{mod_directory_path}world").GetDirectories();
-        for (int directory_index = region_directories.Length - 1; directory_index >= 0; --directory_index) {
-            region_directories[directory_index].Delete(recursive: true);
-        }
-
-        FileInfo[] arena_files = new DirectoryInfo($"{mod_directory_path}levels").GetFiles("*.*", SearchOption.AllDirectories);
-        for (int file_index = arena_files.Length - 1; file_index >= 0; --file_index) {
-            arena_files[file_index].Delete();
-        }
+        try {
+            Directory.Delete($"{mod_directory_path}world", recursive: true);
+        } catch {}
+        try {
+            Directory.Delete($"{mod_directory_path}levels", recursive: true);
+        } catch {}
 
         ClearCacheButton_UpdateColor();
     }
 
     public void ClearCacheButton_UpdateColor() {
-        bool is_levels_empty = Directory.GetFiles($"{mod_directory_path}levels", "*.*", SearchOption.AllDirectories).Length == 0;
-        bool is_world_empty = Directory.GetFiles($"{mod_directory_path}world", "*.*", SearchOption.AllDirectories).Length == 0;
+        bool is_levels_empty = true;
+        bool is_world_empty  = true;
+        try {
+            is_levels_empty = Directory.GetFiles($"{mod_directory_path}levels", "*.*", SearchOption.AllDirectories).Length == 0;
+        } catch {}
+        try {
+            is_world_empty = Directory.GetFiles($"{mod_directory_path}world", "*.*", SearchOption.AllDirectories).Length == 0;
+        } catch {}
+
         _clear_cache_button.colorEdge = new Color(1f, 1f, 1f, 1f);
 
         if (is_levels_empty && is_world_empty) {
@@ -348,7 +352,7 @@ public class MainModOptions : OptionInterface {
         // This button has the same size as apply and back button in
         // ConfigMachine.
         _clear_cache_button = new(new(_pos.x + (_margin_x.y - _margin_x.x) / 2f - 55f + 65f, _pos.y), new(110f, 30f), "CLEAR CACHE") {
-            description = "The cache is not used anymore. You can just clear it."
+            description = "The cache is not used anymore. Just clear it."
         };
         ClearCacheButton_UpdateColor();
         System.Reflection.EventInfo event_info = _clear_cache_button.GetType().GetEvent("OnClick");

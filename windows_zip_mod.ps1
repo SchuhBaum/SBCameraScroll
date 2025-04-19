@@ -25,20 +25,9 @@ $item_paths = @(
     "$mod_name\previously_active_mods.json"
 )
 
-$folder_paths = @(
-    "$mod_name\world",
-    "$mod_name\levels"
-)
-
 foreach ($item_path in $item_paths) {
     if (Test-Path $item_path) {
         Remove-Item -Path "$item_path" -Force
-    }
-}
-
-foreach ($folder_path in $folder_paths) {
-    if (Test-Path $folder_path) {
-        Remove-Item -Path "$folder_path" -Recurse -Force
     }
 }
 
