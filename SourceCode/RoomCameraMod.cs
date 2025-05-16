@@ -1,23 +1,4 @@
-﻿using Expedition;
-using Mono.Cecil.Cil;
-using MonoMod.Cil;
-using MonoMod.RuntimeDetour;
-using RWCustom;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
-using UnityEngine;
-
-using static SBCameraScroll.AbstractRoomMod;
-using static SBCameraScroll.MainMod;
-using static SBCameraScroll.RainWorldMod;
-using static SBCameraScroll.RoomMod;
-using static SBCameraScroll.ShortcutHandlerMod;
-using static SBCameraScroll.SplitScreenCoopMod;
-using static SBCameraScroll.Util;
-
-// TODO: the trail is fullscreen-effect-like and does not scroll properly;
+﻿
 // TODO: there is some distortion based on distance going on that can be very extreme; check if I can reduce it;
 
 namespace SBCameraScroll;
@@ -51,9 +32,18 @@ public static class RoomCameraMod {
     // variables
     //
 
+    [Obsolete]
     internal static readonly Dictionary<RoomCamera, Attached_Fields> _all_attached_fields = new();
+    [Obsolete]
     public static Attached_Fields Get_Attached_Fields(this RoomCamera room_camera) => _all_attached_fields[room_camera];
-    public static bool Is_Camera_Scroll_Enabled(this RoomCamera room_camera) => room_camera.room?.cameraPositions.Length > 1 || Option_ScrollOneScreenRooms || camera_zoom > 1f || room_camera.Get_Attached_Fields() is Attached_Fields attached_fields && attached_fields.is_camera_scroll_forced_by_split_screen;
+
+    internal static readonly Dictionary<RoomCamera, RoomCameraFields> _all_room_camera_fields = new();
+    public static RoomCameraFields GetFields(this RoomCamera room_camera) {
+        _all_room_camera_fields.TryGetValue(room_camera, out RoomCameraFields room_camera_fields);
+        return room_camera_fields;
+    }
+
+    public static bool Is_Camera_Scroll_Enabled(this RoomCamera room_camera) => room_camera.room?.cameraPositions.Length > 1 || Option_ScrollOneScreenRooms || camera_zoom > 1f || room_camera.GetFields() is RoomCameraFields room_camera_fields && room_camera_fields.is_camera_scroll_forced_by_split_screen;
 
     [Obsolete("Use IsRoomBlacklisted() instead.")]
     public static bool Is_Type_Camera_Not_Used(this RoomCamera room_camera) => room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom.name);
@@ -250,7 +240,7 @@ public static class RoomCameraMod {
     public static void CheckBorders(RoomCamera room_camera, ref Vector2 position) {
         if (room_camera.room == null) return;
         Vector2 screen_size = room_camera.sSize;
-        Vector2 min_camera_position = room_camera.room.abstractRoom.Get_Attached_Fields().min_camera_position; // regionGate's min_camera_position might be unitialized => RegionGateMod
+        Vector2 min_camera_position = room_camera.room.abstractRoom.GetFields().min_camera_position; // regionGate's min_camera_position might be unitialized => RegionGateMod
 
         // half of the camera screen is not visible; the other half is centered; let the
         // non-visible part move past room borders;
@@ -304,7 +294,7 @@ public static class RoomCameraMod {
             // The null check was already done.
             return room_camera.followAbstractCreature.realizedCreature.mainBodyChunk.pos;
         }
-        return room_camera.Get_Attached_Fields().on_screen_position + 0.5f * room_camera.sSize;
+        return room_camera.GetFields().on_screen_position + 0.5f * room_camera.sSize;
     }
 
     public static void DrawUpdate_UpdateLevelTextureGameObject(RoomCamera room_camera, Vector2 camera_position) {
@@ -318,7 +308,7 @@ public static class RoomCameraMod {
 
         // not sure what this does // seems to visually darken stuff (apply shader or something) when offscreen
         // I think that textureOffset is only needed(?) for compatibility reasons with room.cameraPositions
-        Vector2 min_camera_position = room_camera.room.abstractRoom.Get_Attached_Fields().min_camera_position;
+        Vector2 min_camera_position = room_camera.room.abstractRoom.GetFields().min_camera_position;
         room_camera.levelGraphic.SetPosition(min_camera_position - camera_position);
         room_camera.backgroundGraphic.SetPosition(min_camera_position - camera_position);
     }
@@ -435,7 +425,7 @@ public static class RoomCameraMod {
             return;
         }
 
-        Attached_Fields room_camera_fields = room_camera.Get_Attached_Fields();
+        var room_camera_fields = room_camera.GetFields();
         room_camera_fields.type_camera.Reset();
         Apply_Camera_Zoom(room_camera);
 
@@ -475,7 +465,7 @@ public static class RoomCameraMod {
 
     public static void RoomCameraMod_LoadOneScreenOrFullRoomTexture(RoomCamera room_camera) {
         RenderTexture render_texture       = room_camera.Render_Texture();
-        Attached_Fields room_camera_fields = room_camera.Get_Attached_Fields();
+        var room_camera_fields = room_camera.GetFields();
 
         Room? new_room = room_camera.loadingRoom;
         new_room ??= room_camera.room;
@@ -486,7 +476,7 @@ public static class RoomCameraMod {
         //
         //
 
-        AbstractRoomMod.Attached_Fields abstract_room_fields = room.abstractRoom.Get_Attached_Fields();
+        var abstract_room_fields = room.abstractRoom.GetFields();
 
         // CRS (Custom-Region-Support) can replace rooms now.
         string room_name = room.abstractRoom.name;
@@ -561,9 +551,9 @@ public static class RoomCameraMod {
             position += GetCreaturePosition(creature);
         }
 
-        Attached_Fields attached_fields = room_camera.Get_Attached_Fields();
-        attached_fields.last_on_screen_position = attached_fields.on_screen_position;
-        attached_fields.on_screen_position = position;
+        var room_camera_fields = room_camera.GetFields();
+        room_camera_fields.last_on_screen_position = room_camera_fields.on_screen_position;
+        room_camera_fields.on_screen_position = position;
     }
 
     //
@@ -791,7 +781,7 @@ public static class RoomCameraMod {
                 // map-button; to better transition when doing so I want the scroll to be enabled
                 // in both cases => simply check Is_Split; otherwise it teleports to the target 
                 // location immediately;
-                room_camera.Get_Attached_Fields().is_camera_scroll_forced_by_split_screen = is_split_screen_coop_enabled && Is_Split;
+                room_camera.GetFields().is_camera_scroll_forced_by_split_screen = is_split_screen_coop_enabled && Is_Split;
                 if (room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom.name)) return;
                 AddFadeTransition(room_camera);
             });
@@ -833,7 +823,7 @@ public static class RoomCameraMod {
 
             cursor.EmitDelegate<Action<RoomCamera>>(room_camera => {
                 if (room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom.name)) return;
-                room_camera.Get_Attached_Fields().type_camera.Update();
+                room_camera.GetFields().type_camera.Update();
             });
             cursor.Emit(OpCodes.Ldarg_0);
         } else {
@@ -869,7 +859,7 @@ public static class RoomCameraMod {
     }
 
     private static void RoomCamera_ApplyPositionChange(On.RoomCamera.orig_ApplyPositionChange orig, RoomCamera room_camera) {
-        Attached_Fields room_camera_fields = room_camera.Get_Attached_Fields();
+        var room_camera_fields = room_camera.GetFields();
 
         // There is a bug when using SplitScreen Co-op where you would get a
         // black screen. For example, when spawning in a shelter. Setting the
@@ -881,7 +871,7 @@ public static class RoomCameraMod {
         //
 
         if (Is_Dynamic_Zoom_Enabled && room_camera.loadingRoom != null) {
-            AbstractRoomMod.Attached_Fields loading_room_fields = room_camera.loadingRoom.abstractRoom.Get_Attached_Fields();
+            var loading_room_fields = room_camera.loadingRoom.abstractRoom.GetFields();
             float dynamic_zoom_x = room_camera.sSize.x / loading_room_fields.total_width;
             if (dynamic_zoom_x < 1f)
                 dynamic_zoom_x = 1f;
@@ -905,7 +895,7 @@ public static class RoomCameraMod {
         //
         //
 
-        AbstractRoomMod.Attached_Fields abstract_room_fields = room.abstractRoom.Get_Attached_Fields();
+        var abstract_room_fields = room.abstractRoom.GetFields();
 
         // CRS (Custom-Region-Support) can replace rooms now.
         string room_name = room.abstractRoom.name;
@@ -990,8 +980,8 @@ public static class RoomCameraMod {
 
     private static void RoomCamera_Ctor(On.RoomCamera.orig_ctor orig, RoomCamera room_camera, RainWorldGame game, int camera_number) {
         orig(room_camera, game, camera_number);
-        if (_all_attached_fields.ContainsKey(room_camera)) return;
-        _all_attached_fields.Add(room_camera, new(room_camera));
+        if (_all_room_camera_fields.ContainsKey(room_camera)) return;
+        _all_room_camera_fields.Add(room_camera, new(room_camera));
     }
 
     private static float RoomCamera_DepthAtCoordinate(On.RoomCamera.orig_DepthAtCoordinate orig, RoomCamera room_camera, Vector2 position) {
@@ -1047,7 +1037,7 @@ public static class RoomCameraMod {
         }
 
         room_camera.currentCameraPosition = cam_pos_index;
-        if (room_camera.followAbstractCreature != null && room_camera.Get_Attached_Fields().type_camera is VanillaTypeCamera vanilla_type_camera && vanilla_type_camera.are_vanilla_positions_used && vanilla_type_camera.follow_abstract_creature_id == room_camera.followAbstractCreature.ID) {
+        if (room_camera.followAbstractCreature != null && room_camera.GetFields().type_camera is VanillaTypeCamera vanilla_type_camera && vanilla_type_camera.are_vanilla_positions_used && vanilla_type_camera.follow_abstract_creature_id == room_camera.followAbstractCreature.ID) {
             // Otherwise, the camera moves after a vanilla transition. But
             // ignore is during a smooth transition, i.e. when follow_abstract_creature_id
             // is set to null (kinda ugly to not have a separate variable for that).
@@ -1144,7 +1134,30 @@ public static class RoomCameraMod {
     //
     //
 
+    [Obsolete]
     public sealed class Attached_Fields {
+        public bool is_camera_scroll_forced_by_split_screen = false;
+
+        public Vector2 last_on_screen_position = new();
+        public Vector2 on_screen_position = new();
+
+        public IAmATypeCamera? type_camera;
+
+        public Attached_Fields(RoomCamera room_camera) {
+            // if (camera_type == CameraType.Position) {
+            //     type_camera = new PositionTypeCamera(room_camera, this);
+            //     return;
+            // }
+
+            // if (camera_type == CameraType.Vanilla) {
+            //     type_camera = new VanillaTypeCamera(room_camera, this);
+            //     return;
+            // }
+            // type_camera = new SwitchTypeCamera(room_camera, this);
+        }
+    }
+
+    public sealed class RoomCameraFields {
         public bool is_camera_scroll_forced_by_split_screen = false;
 
         public Vector2 last_on_screen_position = new();
@@ -1152,7 +1165,7 @@ public static class RoomCameraMod {
 
         public IAmATypeCamera type_camera;
 
-        public Attached_Fields(RoomCamera room_camera) {
+        public RoomCameraFields(RoomCamera room_camera) {
             if (camera_type == CameraType.Position) {
                 type_camera = new PositionTypeCamera(room_camera, this);
                 return;

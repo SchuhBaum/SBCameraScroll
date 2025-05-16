@@ -1,10 +1,3 @@
-using RWCustom;
-using System;
-using System.IO;
-using UnityEngine;
-
-using static SBCameraScroll.AbstractRoomMod;
-using static SBCameraScroll.MainMod;
 
 namespace SBCameraScroll;
 

@@ -1,8 +1,3 @@
-using RWCustom;
-using System.Collections.Generic;
-using UnityEngine;
-
-using static SBCameraScroll.MainMod;
 
 namespace SBCameraScroll;
 
@@ -11,8 +6,16 @@ public static class WormGrassMod {
     // variables
     //
 
+    [Obsolete]
     internal static readonly Dictionary<WormGrass, Attached_Fields> _all_attached_fields = new();
+    [Obsolete]
     public static Attached_Fields Get_Attached_Fields(this WormGrass worm_grass) => _all_attached_fields[worm_grass];
+
+    internal static readonly Dictionary<WormGrass, WormGrassFields> _all_worm_grass_fields = new();
+    public static WormGrassFields GetFields(this WormGrass worm_grass) {
+        _all_worm_grass_fields.TryGetValue(worm_grass, out WormGrassFields worm_grass_fields);
+        return worm_grass_fields;
+    }
 
     //
     //
@@ -29,11 +32,11 @@ public static class WormGrassMod {
     // public functions //
     // ---------------- //
 
-    public static void UpdatePatchTile(Attached_Fields attached_fields, WormGrass.WormGrassPatch worm_grass_patch, Room worm_grass_room, int tile_index) {
+    public static void UpdatePatchTile(WormGrassFields worm_grass_fields, WormGrass.WormGrassPatch worm_grass_patch, Room worm_grass_room, int tile_index) {
         System.Random random = new System.Random();
 
         // in the hunter cutscene this function is called before rainworldgame.ctor
-        ref List<WormGrass.Worm> cosmetic_worms_on_tile = ref attached_fields.cosmetic_worms_on_tiles[worm_grass_patch][tile_index];
+        ref List<WormGrass.Worm> cosmetic_worms_on_tile = ref worm_grass_fields.cosmetic_worms_on_tiles[worm_grass_patch][tile_index];
         if (cosmetic_worms_on_tile.Count == 0 && worm_grass_patch.cosmeticWormPositions[tile_index].Length > 0 && worm_grass_room.ViewedByAnyCamera(worm_grass_room.MiddleOfTile(worm_grass_patch.tiles[tile_index]), margin: 200f)) {
             for (int worm_index = 0; worm_index < worm_grass_patch.cosmeticWormPositions[tile_index].Length; ++worm_index) {
                 WormGrass.Worm worm = new WormGrass.Worm(
@@ -63,21 +66,21 @@ public static class WormGrassMod {
     // ----------------- //
 
     private static void WormGrass_Ctor(On.WormGrass.orig_ctor orig, WormGrass worm_grass, Room room, List<IntVector2> tiles) {
-        if (!_all_attached_fields.ContainsKey(worm_grass)) {
-            _all_attached_fields.Add(worm_grass, new Attached_Fields());
+        if (!_all_worm_grass_fields.ContainsKey(worm_grass)) {
+            _all_worm_grass_fields.Add(worm_grass, new WormGrassFields());
         }
         orig(worm_grass, room, tiles); // needs attachedFields for wormGrass
 
         if (worm_grass.patches.Count == 0) {
             Debug.Log($"{mod_id}: This worm grass for room {room.abstractRoom.name} has no patches. Destroy.");
             worm_grass.Destroy();
-            _all_attached_fields.Remove(worm_grass);
+            _all_worm_grass_fields.Remove(worm_grass);
         } else {
-            AbstractRoomMod.Attached_Fields abstract_room_fields = room.abstractRoom.Get_Attached_Fields();
+            var abstract_room_fields = room.abstractRoom.GetFields();
             if (abstract_room_fields.worm_grass is WormGrass worm_grass_) {
                 Debug.Log($"{mod_id}: There is already worm grass in {room.abstractRoom.name}. Destroy the old one.");
                 worm_grass_.Destroy();
-                _all_attached_fields.Remove(worm_grass_);
+                _all_worm_grass_fields.Remove(worm_grass_);
             }
             abstract_room_fields.worm_grass = worm_grass;
         }
@@ -88,15 +91,15 @@ public static class WormGrassMod {
 
         if (worm_grass.slatedForDeletetion) return;
 
-        Attached_Fields attached_fields = worm_grass.Get_Attached_Fields();
-        foreach (List<WormGrass.Worm>[] cosmetic_worms_on_tiles in attached_fields.cosmetic_worms_on_tiles.Values) {
+        var worm_grass_fields = worm_grass.GetFields();
+        foreach (List<WormGrass.Worm>[] cosmetic_worms_on_tiles in worm_grass_fields.cosmetic_worms_on_tiles.Values) {
             foreach (List<WormGrass.Worm> cosmetic_worms_on_tile in cosmetic_worms_on_tiles) {
                 foreach (WormGrass.Worm worm in cosmetic_worms_on_tile) // loaded worms
                 {
                     // vanilla copy & paste
                     if (Custom.DistLess(worm.pos, explosion.pos, explosion.rad * 2f)) {
                         float distance = Mathf.InverseLerp(explosion.rad * 2f, explosion.rad, Vector2.Distance(worm.pos, explosion.pos)); // between 0 and 1
-                        if (Random.value < distance) {
+                        if (UnityEngine.Random.value < distance) {
                             worm.vel += Custom.DirVec(explosion.pos, worm.pos) * explosion.force * 2f * distance;
                             worm.excitement = 0.0f;
                             worm.focusCreature = null;
@@ -135,10 +138,10 @@ public static class WormGrassMod {
         // update each tile based on distance
         // not when currentCameraIndex changes
 
-        Attached_Fields attached_fields = worm_grass.Get_Attached_Fields();
-        foreach (WormGrass.WormGrassPatch worm_grass_patch in attached_fields.cosmetic_worms_on_tiles.Keys) {
+        var worm_grass_fields = worm_grass.GetFields();
+        foreach (WormGrass.WormGrassPatch worm_grass_patch in worm_grass_fields.cosmetic_worms_on_tiles.Keys) {
             for (int tile_index = 0; tile_index < worm_grass_patch.tiles.Count; ++tile_index) { // update all tiles at once
-                UpdatePatchTile(attached_fields, worm_grass_patch, worm_grass.room, tile_index);
+                UpdatePatchTile(worm_grass_fields, worm_grass_patch, worm_grass.room, tile_index);
             }
         }
     }
@@ -147,7 +150,14 @@ public static class WormGrassMod {
     //
     //
 
+    [Obsolete]
     public sealed class Attached_Fields {
+        // the difference between this and WormGrass.cosmeticWorms is that I can update them tile by tile
+        // vanilla looks at every worm but only when switching screens // costs too much performance otherwise
+        public Dictionary<WormGrass.WormGrassPatch, List<WormGrass.Worm>[]> cosmetic_worms_on_tiles = new();
+    }
+
+    public sealed class WormGrassFields {
         // the difference between this and WormGrass.cosmeticWorms is that I can update them tile by tile
         // vanilla looks at every worm but only when switching screens // costs too much performance otherwise
         public Dictionary<WormGrass.WormGrassPatch, List<WormGrass.Worm>[]> cosmetic_worms_on_tiles = new();

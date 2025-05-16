@@ -1,0 +1,33 @@
+
+global using BepInEx;
+global using Expedition;
+global using Menu;
+global using Menu.Remix.MixedUI;
+global using Mono.Cecil.Cil;
+global using MonoMod.Cil;
+global using MonoMod.RuntimeDetour;
+global using RWCustom;
+global using System;
+global using System.Collections.Generic;
+global using System.IO;
+global using System.Reflection;
+global using System.Security.Permissions;
+global using System.Threading;
+global using Unity.Collections;
+global using UnityEngine;
+
+global using static RWCustom.Custom;
+global using static SBCameraScroll.AbstractRoomMod;
+global using static SBCameraScroll.MainMod;
+global using static SBCameraScroll.MainModOptions;
+global using static SBCameraScroll.PlayerMod;
+global using static SBCameraScroll.PositionTypeCamera;
+global using static SBCameraScroll.RainWorldMod;
+global using static SBCameraScroll.RoomMod;
+global using static SBCameraScroll.RoomCameraMod;
+global using static SBCameraScroll.ShortcutHandlerMod;
+global using static SBCameraScroll.SplitScreenCoopMod;
+global using static SBCameraScroll.Util;
+global using static SBCameraScroll.VanillaTypeCamera;
+global using static SBCameraScroll.WormGrassMod;
+global using static WorldLoader.LoadingContext;

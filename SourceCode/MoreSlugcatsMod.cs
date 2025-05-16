@@ -1,10 +1,4 @@
-﻿using Mono.Cecil.Cil;
-using MonoMod.Cil;
-using RWCustom;
-using System;
-using UnityEngine;
-using static SBCameraScroll.MainMod;
-
+﻿
 namespace SBCameraScroll;
 
 internal static class MoreSlugcatsMod {
@@ -97,7 +91,7 @@ internal static class MoreSlugcatsMod {
         // this should be more consistent with vanilla; min_camera_position is in most cases
         // the camera position of the bottom left screen (unless the max texture size is reached);
         // level texture size would be (1400f, 800f) for one screen;
-        Vector2 min_camera_position = room.abstractRoom.Get_Attached_Fields().min_camera_position;
+        Vector2 min_camera_position = room.abstractRoom.GetFields().min_camera_position;
 
         // saves an approximation of a float (in [0, 1)) (in steps of size 1f/255f) and the remainder (times 255f for some reason) in a Vector2;
         Vector2 approximated_position_x = Custom.EncodeFloatRG((snow_source.pos.x - min_camera_position.x) / room_camera.levelTexture.width * 0.3f + 0.3f);

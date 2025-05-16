@@ -1,10 +1,4 @@
-﻿using System;
-using Mono.Cecil.Cil;
-using MonoMod.Cil;
-using UnityEngine;
-
-using static SBCameraScroll.MainMod;
-
+﻿
 namespace SBCameraScroll;
 
 internal static class WaterMod {
@@ -41,7 +35,7 @@ internal static class WaterMod {
             cursor.EmitDelegate<Func<float, RoomCamera, Vector2, float>>(
                 (y_local, room_camera, camera_pos) => {
                     if (room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom.name)) return y_local;
-                    return y_local + room.abstractRoom.Get_Attached_Fields().min_camera_position.y - camera_pos.y; // modded
+                    return y_local + room.abstractRoom.GetFields().min_camera_position.y - camera_pos.y; // modded
                 });
         } else {
             if (can_log_il_hooks) {
@@ -65,7 +59,7 @@ internal static class WaterMod {
             cursor.EmitDelegate<Func<float, RoomCamera, Vector2, float>>(
                 (y_local, room_camera, camera_pos) => {
                     if (room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom.name)) return y_local;
-                    return y_local + room.abstractRoom.Get_Attached_Fields().min_camera_position.y - camera_pos.y; // modded
+                    return y_local + room.abstractRoom.GetFields().min_camera_position.y - camera_pos.y; // modded
                 });
         } else {
             if (can_log_il_hooks) {

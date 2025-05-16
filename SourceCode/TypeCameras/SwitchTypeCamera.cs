@@ -1,5 +1,3 @@
-using static SBCameraScroll.MainMod;
-using static SBCameraScroll.RoomCameraMod;
 
 namespace SBCameraScroll;
 
@@ -22,10 +20,10 @@ public class SwitchTypeCamera : IAmATypeCamera {
     // main
     //
 
-    public SwitchTypeCamera(RoomCamera room_camera, Attached_Fields attached_fields) {
+    public SwitchTypeCamera(RoomCamera room_camera, RoomCameraFields room_camera_fields) {
         this._room_camera = room_camera;
-        _position_type_camera = new(room_camera, attached_fields);
-        _vanilla_type_camera = new(room_camera, attached_fields);
+        _position_type_camera = new(room_camera, room_camera_fields);
+        _vanilla_type_camera = new(room_camera, room_camera_fields);
     }
 
     //

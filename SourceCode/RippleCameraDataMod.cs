@@ -1,16 +1,4 @@
-﻿using Mono.Cecil.Cil;
-using MonoMod.Cil;
-using MonoMod.RuntimeDetour;
-using RWCustom;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-using static SBCameraScroll.AbstractRoomMod;
-using static SBCameraScroll.MainMod;
-using static SBCameraScroll.Util;
-
+﻿
 namespace SBCameraScroll;
 
 internal static class RippleCameraDataMod {
@@ -48,6 +36,8 @@ internal static class RippleCameraDataMod {
         IL.Watcher.RippleCameraData.AddCommandBuffer += IL_RippleCameraData_AddCommandBuffer;
         IL.Watcher.RippleCameraData.SetGlobals       += IL_RippleCameraData_SetGlobals;
         IL.Watcher.RippleCameraData.SetTarget        += IL_RippleCameraData_SetTarget;
+
+        On.Watcher.RippleCameraData.ctor += RippleCameraData_Ctor;
     }
 
     //
@@ -200,5 +190,10 @@ internal static class RippleCameraDataMod {
         }
 
         // LogAllInstructions(context);
+    }
+
+    private static void RippleCameraData_Ctor(On.Watcher.RippleCameraData.orig_ctor orig, Watcher.RippleCameraData ripple_data, RoomCamera room_camera) {
+        orig(ripple_data, room_camera);
+        // RainWorldMod.Replace_Shader_SavePlayerCamoMask(ripple_data);
     }
 }

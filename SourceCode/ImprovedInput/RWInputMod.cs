@@ -1,7 +1,5 @@
-using ImprovedInput;
-using UnityEngine;
 
-using static SBCameraScroll.PlayerMod;
+using ImprovedInput;
 
 namespace SBCameraScroll;
 

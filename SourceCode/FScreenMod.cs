@@ -1,5 +1,3 @@
-using RWCustom;
-using UnityEngine;
 
 namespace SBCameraScroll;
 

@@ -1,12 +1,4 @@
-﻿using RWCustom;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using Unity.Collections;
-using UnityEngine;
-using static SBCameraScroll.MainMod;
-using static SBCameraScroll.RoomCameraMod;
-
+﻿
 namespace SBCameraScroll;
 
 public static class AbstractRoomMod {
@@ -22,8 +14,16 @@ public static class AbstractRoomMod {
     // variables
     //
 
+    [Obsolete]
     internal static readonly Dictionary<AbstractRoom, Attached_Fields> _all_attached_fields = new();
+    [Obsolete]
     public static Attached_Fields Get_Attached_Fields(this AbstractRoom abstract_room) => _all_attached_fields[abstract_room];
+
+    internal static readonly Dictionary<AbstractRoom, AbstractRoomFields> _all_abstract_room_fields = new();
+    public static AbstractRoomFields GetFields(this AbstractRoom abstract_room) {
+        _all_abstract_room_fields.TryGetValue(abstract_room, out AbstractRoomFields abstract_room_fields);
+        return abstract_room_fields;
+    }
 
     public static readonly Dictionary<string, string> room_name_to_crs_room_name = new Dictionary<string, string>();
 
@@ -90,17 +90,17 @@ public static class AbstractRoomMod {
     }
 
     public static void DestroyWormGrassInAbstractRoom(AbstractRoom abstract_room) {
-        Attached_Fields attached_fields = abstract_room.Get_Attached_Fields();
-        if (attached_fields.worm_grass is WormGrass worm_grass) {
+        var abstract_room_fields = abstract_room.GetFields();
+        if (abstract_room_fields.worm_grass is WormGrass worm_grass) {
             Debug.Log($"{mod_id}: Remove worm grass from {abstract_room.name}.");
 
             // I expect only one wormGrass per room
             // wormGrass can have multiple patches with multiple tiles each
 
             worm_grass.Destroy();
-            WormGrassMod._all_attached_fields.Remove(worm_grass);
+            WormGrassMod._all_worm_grass_fields.Remove(worm_grass);
         }
-        attached_fields.worm_grass = null;
+        abstract_room_fields.worm_grass = null;
     }
 
     public static Vector2[]? LoadCameraPositions(string? room_name) {
@@ -124,7 +124,7 @@ public static class AbstractRoomMod {
     // I need to initialize the fields again if CRS changes the room name.
     // Otherwise, the camera textures are misaligned or not merged.
     public static void UpdateAttachedFields(AbstractRoom abstract_room) {
-        Attached_Fields attached_fields = abstract_room.Get_Attached_Fields();
+        var abstract_room_fields = abstract_room.GetFields();
 
         string room_name = abstract_room.name;
         if (room_name_to_crs_room_name.TryGetValue(room_name, out string new_room_name)) {
@@ -136,13 +136,13 @@ public static class AbstractRoomMod {
         }
 
         if (CalculateLevelTextureRectangle(room_name) is not RectInt rect) {
-            Debug.Log($"{mod_id}: Failed to initialize attached_fields for room {room_name}.");
+            Debug.Log($"{mod_id}: Failed to initialize abstract_room_fields for room {room_name}.");
             return;
         }
 
         int total_width  = rect.width;
         int total_height = rect.height;
-        attached_fields.min_camera_position = new Vector2(rect.x, rect.y);
+        abstract_room_fields.min_camera_position = new Vector2(rect.x, rect.y);
 
         if (total_width > maximum_texture_width || total_height > maximum_texture_height) {
             Debug.Log($"{mod_id}: Warning! Merged texture width or height is too large. Setting to the maximum and hoping for the best.");
@@ -150,10 +150,10 @@ public static class AbstractRoomMod {
             total_height = Mathf.Min(total_height, maximum_texture_height);
         }
 
-        attached_fields.total_width  = total_width;
-        attached_fields.total_height = total_height;
+        abstract_room_fields.total_width  = total_width;
+        abstract_room_fields.total_height = total_height;
 
-        // Debug.Log($"{mod_id}: Initialized attached_fields for room {room_name}.");
+        // Debug.Log($"{mod_id}: Initialized abstract_room_fields for room {room_name}.");
     }
 
     //
@@ -162,8 +162,8 @@ public static class AbstractRoomMod {
 
     private static void AbstractRoom_Ctor(On.AbstractRoom.orig_ctor orig, AbstractRoom abstract_room, string room_name, int[] connections, int index, int swarm_room_index, int shelter_index, int gate_index) {
         orig(abstract_room, room_name, connections, index, swarm_room_index, shelter_index, gate_index);
-        if (_all_attached_fields.ContainsKey(abstract_room)) return;
-        _all_attached_fields.Add(abstract_room, new Attached_Fields());
+        if (_all_abstract_room_fields.ContainsKey(abstract_room)) return;
+        _all_abstract_room_fields.Add(abstract_room, new AbstractRoomFields());
         UpdateAttachedFields(abstract_room);
     }
 
@@ -176,7 +176,16 @@ public static class AbstractRoomMod {
     //
     //
 
+    [Obsolete]
     public sealed class Attached_Fields {
+        public int total_width = 1400;
+        public int total_height = 800;
+
+        public Vector2 min_camera_position = new();
+        public WormGrass? worm_grass = null;
+    }
+
+    public sealed class AbstractRoomFields {
         public int total_width = 1400;
         public int total_height = 800;
 

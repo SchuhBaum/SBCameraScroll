@@ -1,20 +1,4 @@
-﻿using Menu;
-using Menu.Remix.MixedUI;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading;
-using UnityEngine;
-
-using static RWCustom.Custom;
-using static SBCameraScroll.AbstractRoomMod;
-using static SBCameraScroll.MainMod;
-using static SBCameraScroll.PositionTypeCamera;
-using static SBCameraScroll.RoomCameraMod;
-using static SBCameraScroll.VanillaTypeCamera;
-using static WorldLoader.LoadingContext;
-
+﻿
 namespace SBCameraScroll;
 
 public class MainModOptions : OptionInterface {
@@ -46,6 +30,8 @@ public class MainModOptions : OptionInterface {
 
     public static Configurable<bool> full_screen_effects = main_mod_options.config.Bind("fullScreenEffects", defaultValue: true, new ConfigurableInfo("When disabled, full screen effects like fog, bloom and melt are removed.", null, "", "Full Screen Effects"));
     public static Configurable<bool> scroll_one_screen_rooms = main_mod_options.config.Bind("scrollOneScreenRooms", defaultValue: false, new ConfigurableInfo("When disabled, the camera does not scroll in rooms with only one screen.", null, "", "One Screen Rooms")); // Automatically enabled when using SplitScreenMod.
+    public static Configurable<bool> ripple_trail_effect = main_mod_options.config.Bind("rippleTrailEffect", defaultValue: true, new ConfigurableInfo("Watcher's ripple trail moves with the camera. You can disable the effect as a workaround.", null, "", "Ripple Trail Effect"));
+
     public static Configurable<int> smoothing_factor_slider = main_mod_options.config.Bind("smoothing_factor_slider", defaultValue: 8, new ConfigurableInfo("Determines how much of the distance is covered per frame. This is used when switching cameras as well to ensure a smooth transition.", new ConfigAcceptableRange<int>(0, 35), "", "Smoothing Factor (8)"));
 
     //
@@ -340,6 +326,7 @@ public class MainModOptions : OptionInterface {
 
         AddCheckBox(full_screen_effects, (string)full_screen_effects.info.Tags[0]);
         AddCheckBox(scroll_one_screen_rooms, (string)scroll_one_screen_rooms.info.Tags[0]);
+        AddCheckBox(ripple_trail_effect, (string)ripple_trail_effect.info.Tags[0]);
         DrawCheckBoxes(ref Tabs[tab_index]);
 
         AddNewLine();

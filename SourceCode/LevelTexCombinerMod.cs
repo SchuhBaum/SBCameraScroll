@@ -1,14 +1,4 @@
-﻿using Mono.Cecil.Cil;
-using MonoMod.Cil;
-using MonoMod.RuntimeDetour;
-using RWCustom;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-using static SBCameraScroll.MainMod;
-
+﻿
 namespace SBCameraScroll;
 
 internal static class LevelTexCombinerMod {

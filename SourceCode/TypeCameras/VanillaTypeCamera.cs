@@ -1,9 +1,3 @@
-using RWCustom;
-using System;
-using UnityEngine;
-using static SBCameraScroll.MainMod;
-using static SBCameraScroll.RoomCameraMod;
-using static SBCameraScroll.SplitScreenCoopMod;
 
 namespace SBCameraScroll;
 
@@ -17,7 +11,7 @@ public class VanillaTypeCamera : IAmATypeCamera {
     public static float camera_box_from_border_y = 20f;
 
     private readonly RoomCamera _room_camera;
-    private readonly Attached_Fields _attached_fields;
+    private readonly RoomCameraFields _room_camera_fields;
 
     //
     // variables
@@ -41,9 +35,9 @@ public class VanillaTypeCamera : IAmATypeCamera {
     // main
     //
 
-    public VanillaTypeCamera(RoomCamera room_camera, Attached_Fields attached_fields) {
+    public VanillaTypeCamera(RoomCamera room_camera, RoomCameraFields room_camera_fields) {
         _room_camera = room_camera;
-        _attached_fields = attached_fields;
+        _room_camera_fields = room_camera_fields;
         are_vanilla_positions_used = camera_zoom <= 1.33f;
     }
 
@@ -80,8 +74,8 @@ public class VanillaTypeCamera : IAmATypeCamera {
             camera_box_multiplier_y = 1f / camera_zoom;
         }
 
-        float direction_x = Math.Sign(_attached_fields.on_screen_position.x - vanilla_type_position.x);
-        float distance_x = direction_x * (_attached_fields.on_screen_position.x - vanilla_type_position.x);
+        float direction_x = Math.Sign(_room_camera_fields.on_screen_position.x - vanilla_type_position.x);
+        float distance_x = direction_x * (_room_camera_fields.on_screen_position.x - vanilla_type_position.x);
         float start_lean_distance_x = 2f * Mathf.Abs(_room_camera.followCreatureInputForward.x);
 
         if (distance_x > half_screen_size.x - camera_box_multiplier_x * camera_box_from_border_x) {
@@ -107,8 +101,8 @@ public class VanillaTypeCamera : IAmATypeCamera {
             _room_camera.pos.x = Mathf.Lerp(_room_camera.lastPos.x, vanilla_type_position.x + seek_position.x, 0.1f);
         }
 
-        float direction_y = Math.Sign(_attached_fields.on_screen_position.y - vanilla_type_position.y);
-        float distance_y = direction_y * (_attached_fields.on_screen_position.y - vanilla_type_position.y);
+        float direction_y = Math.Sign(_room_camera_fields.on_screen_position.y - vanilla_type_position.y);
+        float distance_y = direction_y * (_room_camera_fields.on_screen_position.y - vanilla_type_position.y);
         float start_lean_distance_y = 2f * Mathf.Abs(_room_camera.followCreatureInputForward.y);
 
         if (distance_y > half_screen_size.y - camera_box_multiplier_y * camera_box_from_border_y) {
@@ -134,7 +128,7 @@ public class VanillaTypeCamera : IAmATypeCamera {
     public bool Move_Camera_Transition() {
         Vector2 target_position;
         if (!are_vanilla_positions_used || Are_Vanilla_Positions_Forced_Disabled) {
-            target_position = _attached_fields.on_screen_position;
+            target_position = _room_camera_fields.on_screen_position;
             CheckBorders(_room_camera, ref target_position); // stop at borders
         } else {
             // only in case when the player is not the target
@@ -152,7 +146,7 @@ public class VanillaTypeCamera : IAmATypeCamera {
 
     public void Reset() {
         UpdateOnScreenPosition(_room_camera);
-        CheckBorders(_room_camera, ref _attached_fields.on_screen_position); // do not move past room boundaries
+        CheckBorders(_room_camera, ref _room_camera_fields.on_screen_position); // do not move past room boundaries
 
         _room_camera.seekPos = _room_camera.CamPos(_room_camera.currentCameraPosition);
         _room_camera.seekPos.x += _room_camera.hDisplace + 8f;
@@ -161,8 +155,8 @@ public class VanillaTypeCamera : IAmATypeCamera {
 
         are_vanilla_positions_used = camera_zoom <= 1.33f;
         if (!are_vanilla_positions_used || Are_Vanilla_Positions_Forced_Disabled) {
-            _room_camera.lastPos = _attached_fields.on_screen_position;
-            _room_camera.pos = _attached_fields.on_screen_position;
+            _room_camera.lastPos = _room_camera_fields.on_screen_position;
+            _room_camera.pos = _room_camera_fields.on_screen_position;
         } else {
             // center camera on vanilla position;
             _room_camera.lastPos = _room_camera.seekPos;
@@ -171,7 +165,7 @@ public class VanillaTypeCamera : IAmATypeCamera {
 
         follow_abstract_creature_id = null; // do a smooth transition // this actually makes a difference for the vanilla type camera // otherwise the map input would immediately be processed
         seek_position *= 0.0f;
-        vanilla_type_position = _attached_fields.on_screen_position;
+        vanilla_type_position = _room_camera_fields.on_screen_position;
         is_centered = false;
     }
 
@@ -213,7 +207,7 @@ public class VanillaTypeCamera : IAmATypeCamera {
             return;
         }
 
-        if (is_centered && (Mathf.Abs(_attached_fields.on_screen_position.x - _attached_fields.last_on_screen_position.x) > 1f || Mathf.Abs(_attached_fields.on_screen_position.y - _attached_fields.last_on_screen_position.y) > 1f)) {
+        if (is_centered && (Mathf.Abs(_room_camera_fields.on_screen_position.x - _room_camera_fields.last_on_screen_position.x) > 1f || Mathf.Abs(_room_camera_fields.on_screen_position.y - _room_camera_fields.last_on_screen_position.y) > 1f)) {
             is_centered = false;
         }
 

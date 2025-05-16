@@ -1,9 +1,4 @@
-﻿using UnityEngine;
-
-using static SBCameraScroll.AbstractRoomMod;
-using static SBCameraScroll.MainMod;
-using static SBCameraScroll.RoomCameraMod;
-
+﻿
 namespace SBCameraScroll;
 
 public static class RoomMod {

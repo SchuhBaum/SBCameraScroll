@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using UnityEngine;
-
-using static SBCameraScroll.MainMod;
-
+﻿
 namespace SBCameraScroll;
 
 public static class RainWorldMod {
@@ -111,5 +105,20 @@ public static class RainWorldMod {
         UnityEngine.Object.Destroy(Watcher.RippleCameraData.combinerMaterial);
         Watcher.RippleCameraData.combinerMaterial = new Material(modded_shader);
         Debug.Log($"{mod_id}: Replaced the shader '{shader_name}'.");
+    }
+
+    public static void Replace_Shader_SavePlayerCamoMask(Watcher.RippleCameraData ripple_data) {
+        if (modded_shaders_bundle == null) return;
+
+        string shader_name = "SavePlayerCamoMask";
+        Shader? modded_shader = modded_shaders_bundle.LoadAsset<Shader>(shader_name);
+        if (modded_shader == null) {
+            Debug.Log($"{mod_id}: Didn't find the modded shader for '{shader_name}'.");
+            return;
+        }
+
+        UnityEngine.Object.Destroy(ripple_data.playerCamoMaskSaver);
+        ripple_data.playerCamoMaskSaver = new Material(modded_shader);
+        Debug.Log($"{mod_id}: Replaced the shader '{shader_name}' for RippleCameraData instance {ripple_data.GetHashCode()}.");
     }
 }

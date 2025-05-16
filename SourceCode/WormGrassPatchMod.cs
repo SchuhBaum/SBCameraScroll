@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using static SBCameraScroll.WormGrassMod;
 
 namespace SBCameraScroll;
 
@@ -18,15 +16,15 @@ internal static class WormGrassPatchMod {
         orig(worm_grass_patch);
 
         // setting up cosmeticWormsOnTile
-        Attached_Fields attached_fields = worm_grass_patch.wormGrass.Get_Attached_Fields();
+        var worm_grass_fields = worm_grass_patch.wormGrass.GetFields();
         int tile_count = worm_grass_patch.tiles.Count;
 
-        if (!attached_fields.cosmetic_worms_on_tiles.ContainsKey(worm_grass_patch)) {
-            attached_fields.cosmetic_worms_on_tiles.Add(worm_grass_patch, new List<WormGrass.Worm>[tile_count]);
+        if (!worm_grass_fields.cosmetic_worms_on_tiles.ContainsKey(worm_grass_patch)) {
+            worm_grass_fields.cosmetic_worms_on_tiles.Add(worm_grass_patch, new List<WormGrass.Worm>[tile_count]);
         }
 
         for (int tile_index = 0; tile_index < tile_count; ++tile_index) {
-            attached_fields.cosmetic_worms_on_tiles[worm_grass_patch][tile_index] = new List<WormGrass.Worm>();
+            worm_grass_fields.cosmetic_worms_on_tiles[worm_grass_patch][tile_index] = new List<WormGrass.Worm>();
         }
     }
 }

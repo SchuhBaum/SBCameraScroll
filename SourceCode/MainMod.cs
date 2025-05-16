@@ -1,16 +1,4 @@
-﻿using BepInEx;
-using MonoMod.Cil;
-using RWCustom;
-using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
-using System.Security.Permissions;
-using UnityEngine;
-
-using static SBCameraScroll.AbstractRoomMod;
-using static SBCameraScroll.MainModOptions;
-using static SBCameraScroll.RainWorldMod;
-
+﻿
 // allows access to private members;
 #pragma warning disable CS0618
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
@@ -18,7 +6,7 @@ using static SBCameraScroll.RainWorldMod;
 
 namespace SBCameraScroll;
 
-[BepInPlugin("SBCameraScroll", "SBCameraScroll", "3.0.9")]
+[BepInPlugin("SBCameraScroll", "SBCameraScroll", "3.1.0")]
 public class MainMod : BaseUnityPlugin {
     //
     // meta data
@@ -26,7 +14,7 @@ public class MainMod : BaseUnityPlugin {
 
     public static readonly string mod_id = "SBCameraScroll";
     public static readonly string author = "SchuhBaum";
-    public static readonly string version = "3.0.9";
+    public static readonly string version = "3.1.0";
     public static readonly string mod_directory_path = Directory.GetParent(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)).FullName + Path.DirectorySeparatorChar;
 
     //
@@ -36,6 +24,7 @@ public class MainMod : BaseUnityPlugin {
     public static bool Option_DynamicZoom          => dynamic_zoom.Value;
     public static bool Option_FullScreenEffects    => full_screen_effects.Value;
     public static bool Option_ScrollOneScreenRooms => scroll_one_screen_rooms.Value;
+    public static bool Option_RippleTrailEffect    => ripple_trail_effect.Value;
     public static bool Option_CameraOffset         => cameraoffset_position.Value;
 
     //
@@ -188,6 +177,9 @@ public class MainMod : BaseUnityPlugin {
         rain_world.Replace_Shader("Fog");
         rain_world.Replace_Shader("LevelColor");
         rain_world.Replace_Shader("LevelHeat");
+        rain_world.Replace_Shader("PlayerRippleTrail");
+        rain_world.Replace_Shader("ShiftMask");
+        rain_world.Replace_Shader("RippleTearMask");
         rain_world.Replace_Shader("SporesSnow");
         rain_world.Replace_Shader("UnderWaterLight");
 
@@ -238,6 +230,7 @@ public class MainMod : BaseUnityPlugin {
         LevelTexCombinerMod.OnEnable();
         MoreSlugcatsMod.OnEnable();
         OverWorldMod.OnEnable();
+        PlayerGraphicsMod.OnEnable();
         RainWorldGameMod.OnEnable();
         RippleCameraDataMod.OnEnable();
         RoomCameraMod.OnEnable();
