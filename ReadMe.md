@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 3.1.0
+###### Version: 3.1.1
 This is a mod for Rain World v1.10.
 
 ### Description
@@ -17,7 +17,7 @@ This mod includes additional cameras:
 
 ### Installation
 0. Update Rain World to version 1.10 if needed.
-1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v3.1.0).
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v3.1.1).
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
@@ -32,6 +32,9 @@ See the file LICENSE-MIT.
 
 ### Changelog
 #### (Rain World v1.10)
+v3.1.1:
+- Fixed a bug where the render texture was not initialized correctly. The deep water shader would not be drawn over offscreen areas.
+
 v3.1.0:
 - (ripple trail effect) Added this option (enabled by default). Watcher's ripple
   trail moves with the camera. You can disable the effect as a workaround.

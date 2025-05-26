@@ -464,7 +464,7 @@ public static class RoomCameraMod {
     }
 
     public static void RoomCameraMod_LoadOneScreenOrFullRoomTexture(RoomCamera room_camera) {
-        RenderTexture render_texture       = room_camera.Render_Texture();
+        RenderTexture render_texture = room_camera.Render_Texture();
         var room_camera_fields = room_camera.GetFields();
 
         Room? new_room = room_camera.loadingRoom;

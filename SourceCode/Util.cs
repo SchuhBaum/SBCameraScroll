@@ -68,6 +68,11 @@ public static class Util {
             render_texture.Release();
             render_texture.width  = total_width;
             render_texture.height = total_height;
+
+            RenderTexture activeRT = RenderTexture.active;
+            RenderTexture.active = render_texture;
+            GL.Clear(clearDepth: false, clearColor: true, new Color(1f/255f, 0f, 0f));
+            RenderTexture.active = activeRT;
         }
 
         int camera_number = -1;
