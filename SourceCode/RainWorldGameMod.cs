@@ -13,7 +13,6 @@ internal static class RainWorldGameMod {
 
     private static void RainWorldGame_Ctor(On.RainWorldGame.orig_ctor orig, RainWorldGame game, ProcessManager manager) {
         AbstractRoomMod._all_abstract_room_fields.Clear();
-        AbstractRoomMod.room_name_to_crs_room_name.Clear();
         RoomCameraMod._all_room_camera_fields.Clear();
         WormGrassMod._all_worm_grass_fields.Clear();
 
@@ -26,7 +25,6 @@ internal static class RainWorldGameMod {
         orig(game);
 
         AbstractRoomMod._all_abstract_room_fields.Clear();
-        AbstractRoomMod.room_name_to_crs_room_name.Clear();
         RoomCameraMod._all_room_camera_fields.Clear();
         WormGrassMod._all_worm_grass_fields.Clear();
     }

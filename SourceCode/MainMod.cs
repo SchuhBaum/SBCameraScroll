@@ -6,7 +6,7 @@
 
 namespace SBCameraScroll;
 
-[BepInPlugin("SBCameraScroll", "SBCameraScroll", "3.1.1")]
+[BepInPlugin("SBCameraScroll", "SBCameraScroll", "3.1.2")]
 public class MainMod : BaseUnityPlugin {
     //
     // meta data
@@ -14,7 +14,7 @@ public class MainMod : BaseUnityPlugin {
 
     public static readonly string mod_id = "SBCameraScroll";
     public static readonly string author = "SchuhBaum";
-    public static readonly string version = "3.1.1";
+    public static readonly string version = "3.1.2";
     public static readonly string mod_directory_path = Directory.GetParent(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)).FullName + Path.DirectorySeparatorChar;
 
     //
@@ -176,7 +176,13 @@ public class MainMod : BaseUnityPlugin {
         rain_world.Replace_Shader("DisplaySnowShader");
         rain_world.Replace_Shader("Fog");
         rain_world.Replace_Shader("LevelColor");
+
+        // There is a bug, where you get heavy flickering when using portals.
+        // But so far, even replacing the LevelHeat shader with itself does not
+        // fix this. Maybe the provided version is not the same as the actual
+        // version used in the Watcher DLC.
         rain_world.Replace_Shader("LevelHeat");
+
         rain_world.Replace_Shader("PlayerRippleTrail");
         rain_world.Replace_Shader("ShiftMask");
         rain_world.Replace_Shader("RippleTearMask");
@@ -203,9 +209,9 @@ public class MainMod : BaseUnityPlugin {
         }
 
         // if (is_custom_region_support_enabled) {
-        //     Debug.Log($"{mod_id}: CRS found. Adept merging when the `REPLACEROOM` feature is used.");
+        //     Debug.Log($"{mod_id}: Custom Region Support (CRS) found. Adept merging when the `REPLACEROOM` feature is used.");
         // } else {
-        //     Debug.Log($"{mod_id}: CRS not found.");
+        //     Debug.Log($"{mod_id}: Custom Region Support (CRS) not found.");
         // }
 
         if (is_improved_input_enabled) {

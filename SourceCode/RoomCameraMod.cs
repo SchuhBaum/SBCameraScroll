@@ -477,12 +477,7 @@ public static class RoomCameraMod {
         //
 
         var abstract_room_fields = room.abstractRoom.GetFields();
-
-        // CRS (Custom-Region-Support) can replace rooms now.
-        string room_name = room.abstractRoom.name;
-        if (room_name_to_crs_room_name.TryGetValue(room_name, out string new_room_name)) {
-            room_name = new_room_name;
-        }
+        string room_name = room.abstractRoom.FileName;
 
         //
         //
@@ -896,12 +891,7 @@ public static class RoomCameraMod {
         //
 
         var abstract_room_fields = room.abstractRoom.GetFields();
-
-        // CRS (Custom-Region-Support) can replace rooms now.
-        string room_name = room.abstractRoom.name;
-        if (room_name_to_crs_room_name.TryGetValue(room_name, out string new_room_name)) {
-            room_name = new_room_name;
-        }
+        string room_name = room.abstractRoom.FileName;
 
         // If I blacklist too early then the camera might jump in the current
         // room. Do it after calling orig() / ChangeRoom().

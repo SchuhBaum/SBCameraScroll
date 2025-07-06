@@ -25,8 +25,6 @@ public static class AbstractRoomMod {
         return abstract_room_fields;
     }
 
-    public static readonly Dictionary<string, string> room_name_to_crs_room_name = new Dictionary<string, string>();
-
     //
     //
     //
@@ -126,11 +124,8 @@ public static class AbstractRoomMod {
     public static void UpdateAttachedFields(AbstractRoom abstract_room) {
         var abstract_room_fields = abstract_room.GetFields();
 
-        string room_name = abstract_room.name;
-        if (room_name_to_crs_room_name.TryGetValue(room_name, out string new_room_name)) {
-            room_name = new_room_name;
-        }
-
+        // This changes the name if the REPLACEROOM feature is used.
+        string room_name = abstract_room.FileName;
         if (room_name.Contains("OffScreenDen") || room_name.Contains("offscreenden")) {
             return;
         }

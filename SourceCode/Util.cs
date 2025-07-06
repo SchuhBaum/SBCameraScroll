@@ -11,6 +11,15 @@ public static class Util {
     //
     //
 
+    public static void Util_ClearTexture(Texture2D tex, Color color) {
+        Color[] pixels = new Color[tex.width * tex.height];
+        for (int i = 0; i < pixels.Length; i++) pixels[i] = color;
+        tex.SetPixels(pixels);
+
+        // This is required. Futile doesn't handle this for us.
+        tex.Apply();
+    }
+
     public static string? Util_ExtractRoomNameFromPath(string room_path) {
         string[] split = room_path.Split(Path.DirectorySeparatorChar);
         if (split.Length == 0) {
