@@ -54,6 +54,8 @@ public class MainModOptions : OptionInterface {
     //
     //
 
+    public static Configurable<bool> reduced_memory_usage = main_mod_options.config.Bind("reduced_memory_usage", defaultValue: false, new ConfigurableInfo("When enabled, caches only pixel colors on demand (e.g. when worm grass or\nwhite lizards request them). This is slower but should reduce memory usage.", null, "", "Reduced Memory Usage"));
+
     public static Configurable<int> camera_zoom_slider = main_mod_options.config.Bind("camera_zoom_slider", defaultValue: 10, new ConfigurableInfo("Works for the most part but makes some shaders glitch out more. Not used when the SplitScreen Co-op mod is active.", new ConfigAcceptableRange<int>(5, 40), "", "Camera Zoom (10)"));
     public static Configurable<bool> dynamic_zoom = main_mod_options.config.Bind("dynamicZoom", defaultValue: false, new ConfigurableInfo("When enabled, the camera zoom is adjusted dynamically per room. This removes any black borders when using custom resolutions.\nEnables scrolling in one-screen rooms. Disabled when SplitScreen Coop is used.", null, "", "Dynamic Zoom"));
     public static Configurable<string> resolution = main_mod_options.config.Bind("resolution", "Default", new ConfigurableInfo("Overrides the current resolution. Can be used to zoom out with less\npixelation issues. Might reduce black borders on larger monitors.", null, "", "Resolution:"));
@@ -152,6 +154,11 @@ public class MainModOptions : OptionInterface {
             camera_box_from_border_y = 20f * outercameraboxy_vanilla.Value;
             Debug.Log($"{mod_id}: camera_box_from_border_x {camera_box_from_border_x}");
             Debug.Log($"{mod_id}: camera_box_from_border_y {camera_box_from_border_y}");
+        }
+
+        Debug.Log($"{mod_id}: Option_ReducedMemoryUsage {Option_ReducedMemoryUsage}");
+        if (Option_ReducedMemoryUsage) {
+
         }
     }
 
@@ -461,6 +468,11 @@ public class MainModOptions : OptionInterface {
 
         AddTextLabel("Experimental:", FLabelAlignment.Left);
         DrawTextLabels(ref Tabs[tab_index]);
+
+        AddNewLine();
+
+        AddCheckBox(reduced_memory_usage, (string)reduced_memory_usage.info.Tags[0]);
+        DrawCheckBoxes(ref Tabs[tab_index]);
 
         AddNewLine();
 

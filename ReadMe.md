@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 3.1.2
+###### Version: 3.1.3
 This is a mod for Rain World v1.10.
 
 ### Description
@@ -17,7 +17,7 @@ This mod includes additional cameras:
 
 ### Installation
 0. Update Rain World to version 1.10 if needed.
-1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v3.1.2).
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v3.1.3).
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
@@ -32,6 +32,14 @@ See the file LICENSE-MIT.
 
 ### Changelog
 #### (Rain World v1.10)
+v3.1.3:
+- (experimental; reduced memory usage) Added this option (disabled by default).
+  I haven't tested it enough to tell, how big or small the effect is. When
+  enabled, it does not cache whole screen textures (1400x800 pixels each). Some
+  creatures need to know the background color (like white lizards and worm
+  grass). In that case, the pixel colors are fetched from the GPU and cached
+  directly. 
+
 v3.1.2:
 - Remove the ripple texture that is used for portals. In vanilla, you can see parts of the room on the other side. But creating another larger texture creates memory overhead. And if the room sizes misalign then the texture is still stretched.
 - Fixed a bug where the wrong texture would be merged if the REPLACEROOM feature is used.

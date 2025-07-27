@@ -15,7 +15,7 @@ internal static class AboveCloudsViewMod {
     //
 
     private static void CloseCloud_DrawSprites(On.AboveCloudsView.CloseCloud.orig_DrawSprites orig, AboveCloudsView.CloseCloud close_cloud, RoomCamera.SpriteLeaser sprite_leaser, RoomCamera room_camera, float time_stacker, Vector2 camera_position) {
-        if (room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom.name)) {
+        if (room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom)) {
             orig(close_cloud, sprite_leaser, room_camera, time_stacker, camera_position);
             return;
         }
@@ -36,7 +36,7 @@ internal static class AboveCloudsViewMod {
     }
 
     private static void DistantCloud_DrawSprites(On.AboveCloudsView.DistantCloud.orig_DrawSprites orig, AboveCloudsView.DistantCloud distant_cloud, RoomCamera.SpriteLeaser sprite_leaser, RoomCamera room_camera, float time_stacker, Vector2 camera_position) {
-        if (room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom.name)) {
+        if (room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom)) {
             orig(distant_cloud, sprite_leaser, room_camera, time_stacker, camera_position);
             return;
         }
@@ -50,7 +50,7 @@ internal static class AboveCloudsViewMod {
     }
 
     private static void DistantLightning_DrawSprites(On.AboveCloudsView.DistantLightning.orig_DrawSprites orig, AboveCloudsView.DistantLightning distant_lightning, RoomCamera.SpriteLeaser sprite_leaser, RoomCamera room_camera, float time_stacker, Vector2 camera_position) {
-        if (room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom.name)) {
+        if (room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom)) {
             orig(distant_lightning, sprite_leaser, room_camera, time_stacker, camera_position);
             return;
         }
@@ -65,7 +65,7 @@ internal static class AboveCloudsViewMod {
     }
 
     private static void FlyingCloud_DrawSprites(On.AboveCloudsView.FlyingCloud.orig_DrawSprites orig, AboveCloudsView.FlyingCloud flying_cloud, RoomCamera.SpriteLeaser sprite_leaser, RoomCamera room_camera, float time_stacker, Vector2 camera_position) {
-        if (room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom.name)) {
+        if (room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom)) {
             orig(flying_cloud, sprite_leaser, room_camera, time_stacker, camera_position);
             return;
         }

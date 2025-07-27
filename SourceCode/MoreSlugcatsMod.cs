@@ -29,7 +29,7 @@ internal static class MoreSlugcatsMod {
 
             cursor.EmitDelegate<Func<MoreSlugcats.BlizzardGraphics, Vector2, Vector2>>((blizzard_graphics, camera_position) => {
                 RoomCamera room_camera = blizzard_graphics.rCam;
-                if (room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom.name)) {
+                if (room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom)) {
                     return room_camera.pos - blizzard_graphics.room.cameraPositions[room_camera.currentCameraPosition];
                 }
 
@@ -53,7 +53,7 @@ internal static class MoreSlugcatsMod {
 
     private static void BlizzardGraphics_Update(On.MoreSlugcats.BlizzardGraphics.orig_Update orig, MoreSlugcats.BlizzardGraphics blizzard_graphics, bool eu) {
         RoomCamera room_camera = blizzard_graphics.rCam;
-        if (room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom.name)) {
+        if (room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom)) {
             orig(blizzard_graphics, eu);
             return;
         }
@@ -86,7 +86,7 @@ internal static class MoreSlugcatsMod {
                 break;
             }
         }
-        if (room_camera == null || room_camera.IsRoomBlacklisted(room.abstractRoom.name)) return orig(snow_source);
+        if (room_camera == null || room_camera.IsRoomBlacklisted(room.abstractRoom)) return orig(snow_source);
 
         // this should be more consistent with vanilla; min_camera_position is in most cases
         // the camera position of the bottom left screen (unless the max texture size is reached);
@@ -116,7 +116,7 @@ internal static class MoreSlugcatsMod {
             return;
         }
 
-        if (room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom.name)) {
+        if (room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom)) {
             orig(snow_source, eu);
             return;
         }

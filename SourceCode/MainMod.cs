@@ -6,7 +6,7 @@
 
 namespace SBCameraScroll;
 
-[BepInPlugin("SBCameraScroll", "SBCameraScroll", "3.1.2")]
+[BepInPlugin("SBCameraScroll", "SBCameraScroll", "3.1.3")]
 public class MainMod : BaseUnityPlugin {
     //
     // meta data
@@ -14,7 +14,7 @@ public class MainMod : BaseUnityPlugin {
 
     public static readonly string mod_id = "SBCameraScroll";
     public static readonly string author = "SchuhBaum";
-    public static readonly string version = "3.1.2";
+    public static readonly string version = "3.1.3";
     public static readonly string mod_directory_path = Directory.GetParent(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)).FullName + Path.DirectorySeparatorChar;
 
     //
@@ -24,6 +24,7 @@ public class MainMod : BaseUnityPlugin {
     public static bool Option_DynamicZoom          => dynamic_zoom.Value;
     public static bool Option_FullScreenEffects    => full_screen_effects.Value;
     public static bool Option_ScrollOneScreenRooms => scroll_one_screen_rooms.Value;
+    public static bool Option_ReducedMemoryUsage   => reduced_memory_usage.Value;
     public static bool Option_RippleTrailEffect    => ripple_trail_effect.Value;
     public static bool Option_CameraOffset         => cameraoffset_position.Value;
 

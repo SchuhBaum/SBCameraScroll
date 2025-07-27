@@ -34,7 +34,7 @@ internal static class WaterMod {
 
             cursor.EmitDelegate<Func<float, RoomCamera, Vector2, float>>(
                 (y_local, room_camera, camera_pos) => {
-                    if (room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom.name)) return y_local;
+                    if (room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom)) return y_local;
                     return y_local + room.abstractRoom.GetFields().min_camera_position.y - camera_pos.y; // modded
                 });
         } else {
@@ -58,7 +58,7 @@ internal static class WaterMod {
 
             cursor.EmitDelegate<Func<float, RoomCamera, Vector2, float>>(
                 (y_local, room_camera, camera_pos) => {
-                    if (room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom.name)) return y_local;
+                    if (room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom)) return y_local;
                     return y_local + room.abstractRoom.GetFields().min_camera_position.y - camera_pos.y; // modded
                 });
         } else {
