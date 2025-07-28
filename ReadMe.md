@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 3.1.3
+###### Version: 3.1.4
 This is a mod for Rain World v1.10.
 
 ### Description
@@ -17,7 +17,7 @@ This mod includes additional cameras:
 
 ### Installation
 0. Update Rain World to version 1.10 if needed.
-1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v3.1.3).
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v3.1.4).
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
@@ -32,6 +32,10 @@ See the file LICENSE-MIT.
 
 ### Changelog
 #### (Rain World v1.10)
+v3.1.4:
+- Using the level texture instead of the ripple texture. This fixed issues where
+  the empty / black ripple texture can block the view in some rooms.
+
 v3.1.3:
 - (experimental; reduced memory usage) Added this option (disabled by default).
   I haven't tested it enough to tell, how big or small the effect is. When
@@ -41,11 +45,16 @@ v3.1.3:
   directly. 
 
 v3.1.2:
-- Remove the ripple texture that is used for portals. In vanilla, you can see parts of the room on the other side. But creating another larger texture creates memory overhead. And if the room sizes misalign then the texture is still stretched.
-- Fixed a bug where the wrong texture would be merged if the REPLACEROOM feature is used.
+- Remove the ripple texture that is used for portals. In vanilla, you can see
+  parts of the room on the other side. But creating another larger texture
+  creates memory overhead. And if the room sizes misalign then the texture is
+  still stretched.
+- Fixed a bug where the wrong texture would be merged if the REPLACEROOM feature
+  is used.
 
 v3.1.1:
-- Fixed a bug where the render texture was not initialized correctly. The deep water shader would not be drawn over offscreen areas.
+- Fixed a bug where the render texture was not initialized correctly. The deep
+  water shader would not be drawn over offscreen areas.
 
 v3.1.0:
 - (ripple trail effect) Added this option (enabled by default). Watcher's ripple
@@ -78,7 +87,8 @@ v3.0.5:
   stretched.
 
 v3.0.4:
-- (not just-in-time merging) Fixed a bug where the warp room would be stretched when caching / merging camera textures was too slow.
+- (not just-in-time merging) Fixed a bug where the warp room would be stretched
+  when caching / merging camera textures was too slow.
 
 v3.0.3:
 - Fixed a bug where specific hooks were added multiple times.

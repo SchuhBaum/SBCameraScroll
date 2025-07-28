@@ -24,6 +24,9 @@ internal static class RainWorldGameMod {
         Debug.Log($"{mod_id}: Cleanup.");
         orig(game);
 
+        // Profiler.Api.WriteLine = Debug.Log;
+        // Profiler.Api.PrintAndReset();
+
         AbstractRoomMod._all_abstract_room_fields.Clear();
         RoomCameraMod._all_room_camera_fields.Clear();
         WormGrassMod._all_worm_grass_fields.Clear();

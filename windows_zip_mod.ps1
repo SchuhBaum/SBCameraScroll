@@ -1,6 +1,7 @@
 
-$dir = $PSScriptRoot
-$ErrorActionPreference = "Stop"
+. ".\variables.ps1";
+
+#
 
 Write-Host "Running build.ps1..."
 & "$dir\windows_build.ps1"
@@ -12,17 +13,12 @@ if ($LASTEXITCODE -ne 0) {
 #
 #
 
-$mod_name = "SBCameraScroll"
-$dll_name = "$mod_name.dll"
-$pdb_name = "$mod_name.pdb"
-
-$downloads_path = "$HOME\downloads"
-$zip_path = "$downloads_path\$mod_name.zip"
-
 Push-Location $dir
 
 $item_paths = @(
-    "$mod_name\previously_active_mods.json"
+    "$mod_name\previously_active_mods.json",
+    "$mod_name\plugins\profiler.dll",
+    "$mod_name\plugins\profiler.pdb"
 )
 
 foreach ($item_path in $item_paths) {
