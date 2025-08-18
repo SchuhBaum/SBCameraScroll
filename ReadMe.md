@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 3.1.4
+###### Version: 3.1.5
 This is a mod for Rain World v1.10.
 
 ### Description
@@ -17,7 +17,7 @@ This mod includes additional cameras:
 
 ### Installation
 0. Update Rain World to version 1.10 if needed.
-1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v3.1.4).
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v3.1.5).
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
@@ -32,6 +32,10 @@ See the file LICENSE-MIT.
 
 ### Changelog
 #### (Rain World v1.10)
+v3.1.5:
+- (reduced memory usage) Marked the temporary cache texture as non-readable.
+  This means that it does not have a RAM copy anymore.
+
 v3.1.4:
 - Using the level texture instead of the ripple texture. This fixed issues where
   the empty / black ripple texture can block the view in some rooms.

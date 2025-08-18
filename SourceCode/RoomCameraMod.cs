@@ -548,7 +548,11 @@ public static class RoomCameraMod {
         } else if (is_changing_room) {
             // Case 2: The whole room gets pre-loaded at once.
             if (Option_ReducedMemoryUsage) {
-                Util_LoadRoomTextureIntoRenderTexture(room_name, render_texture, cache: room_camera.levelTexture);
+                // Use Util.camera_texture since it gets marked as non readable.
+                // Functions like GetPixels() won't work. Therefore, don't use
+                // room_camera.levelTexture since other mods might try to read
+                // pixels from it.
+                Util_LoadRoomTextureIntoRenderTexture(room_name, render_texture, cache: Util.camera_texture);
             } else {
                 Util_LoadRoomTextureIntoRenderTexture(room_camera, room_name);
             }

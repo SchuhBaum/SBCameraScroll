@@ -134,7 +134,10 @@ public static class Util {
                 // GPU.
                 string camera_texture_path = WorldLoader.FindRoomFile(room_name, includeRootDirectory: true, $"_{cam_pos_index+1}.png");
                 byte[] bytes = AssetManager.PreLoadTexture(camera_texture_path);
-                cache.LoadImage(bytes);
+
+                // Marking it prevents the copy in the RAM. But you cannot call
+                // GetPixel(), etc.
+                cache.LoadImage(bytes, markNonReadable: true);
 
                 Graphics.CopyTexture(cache, 0, 0, cutoff_x, cutoff_y, width, height, render_texture, 0, 0, Mathf.Max(x, 0), Mathf.Max(y, 0));
             }
@@ -188,7 +191,7 @@ public static class Util {
     //
     //
 
-    private static readonly int _capacity = 10_000;
+    private static readonly int _capacity = 16 * 1024;
     public static Dictionary<Vector2, Color>[] camera_number_to_cached_pixel_colors = {
         new(_capacity), new(_capacity), new(_capacity), new(_capacity)
     };
