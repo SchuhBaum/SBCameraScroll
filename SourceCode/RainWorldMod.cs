@@ -76,19 +76,23 @@ public static class RainWorldMod {
         }
     }
 
-    public static void Replace_Shader(this RainWorld rain_world, string shader_name) {
+    public static void Replace_Shader(this RainWorld rain_world, string shader_name, string? modded_shader_name = null) {
         if (modded_shaders_bundle == null) return;
-        if (!rain_world.Shaders.ContainsKey(shader_name)) {
+        var f_shader = FShader._shaders.Find(s => s.name == shader_name);
+        if (f_shader == null) {
             Debug.Log($"{mod_id}: Didn't find the shader '{shader_name}'.");
             return;
         }
-        Shader? modded_shader = modded_shaders_bundle.LoadAsset<Shader>(shader_name);
+
+        modded_shader_name ??= shader_name;
+        var modded_shader = modded_shaders_bundle.LoadAsset<Shader>(modded_shader_name);
         if (modded_shader == null) {
-            Debug.Log($"{mod_id}: Didn't find the modded shader for '{shader_name}'.");
+            Debug.Log($"{mod_id}: Didn't find the modded shader for '{modded_shader_name}'.");
             return;
         }
 
-        rain_world.Shaders[shader_name].shader = modded_shader;
+        f_shader.shader = modded_shader;
+        f_shader.name = modded_shader.name;
         Debug.Log($"{mod_id}: Replaced the shader '{shader_name}'.");
     }
 

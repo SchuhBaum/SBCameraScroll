@@ -6,7 +6,7 @@
 
 namespace SBCameraScroll;
 
-[BepInPlugin("SBCameraScroll", "SBCameraScroll", "3.1.5")]
+[BepInPlugin("SBCameraScroll", "SBCameraScroll", "3.1.6")]
 public class MainMod : BaseUnityPlugin {
     //
     // meta data
@@ -14,7 +14,7 @@ public class MainMod : BaseUnityPlugin {
 
     public static readonly string mod_id = "SBCameraScroll";
     public static readonly string author = "SchuhBaum";
-    public static readonly string version = "3.1.5";
+    public static readonly string version = "3.1.6";
     public static readonly string mod_directory_path = Directory.GetParent(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)).FullName + Path.DirectorySeparatorChar;
 
     //
@@ -179,14 +179,19 @@ public class MainMod : BaseUnityPlugin {
         rain_world.Replace_Shader("LevelColor");
 
         // There is a bug, where you get heavy flickering when using portals.
-        // But so far, even replacing the LevelHeat shader with itself does not
+        // But so far, even replacing the LevelHeat shader with itself doesn't
         // fix this. Maybe the provided version is not the same as the actual
         // version used in the Watcher DLC.
-        rain_world.Replace_Shader("LevelHeat");
+        //
+        // Vanilla doesn't use the shader `Futile/LevelHeat` but rather the
+        // shader `Futile/LevelColor` with the keyword `levelheat`.
+        rain_world.Replace_Shader("LevelHeat", "LevelColor");
 
-        rain_world.Replace_Shader("PlayerRippleTrail");
-        rain_world.Replace_Shader("ShiftMask");
-        rain_world.Replace_Shader("RippleTearMask");
+        // Unused currently.
+        // rain_world.Replace_Shader("PlayerRippleTrail");
+        // rain_world.Replace_Shader("ShiftMask");
+        // rain_world.Replace_Shader("RippleTearMask");
+
         rain_world.Replace_Shader("SporesSnow");
         rain_world.Replace_Shader("UnderWaterLight");
 
