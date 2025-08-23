@@ -61,13 +61,17 @@ public static class Util {
         return (camera_positions, rect);
     }
 
-    public static void Util_UpdateRenderTexture(RenderTexture render_texture, RectInt rectangle) {
+    public static bool Util_UpdateRenderTexture(RenderTexture render_texture, RectInt rectangle) {
         int total_width  = rectangle.width;
         int total_height = rectangle.height;
         if (total_width > maximum_texture_width || total_height > maximum_texture_height) {
             Debug.Log($"{mod_id}.Util_LoadRoomTextureIntoRenderTexture: Warning! Merged texture width or height is too large. Setting to the maximum and hoping for the best.");
             total_width  = Mathf.Min(total_width, maximum_texture_width);
             total_height = Mathf.Min(total_height, maximum_texture_height);
+        }
+
+        if (total_width > SystemInfo.maxTextureSize || total_height > SystemInfo.maxTextureSize) {
+            return false;
         }
 
         if (render_texture.width != total_width || render_texture.height != total_height) {
@@ -80,6 +84,7 @@ public static class Util {
             GL.Clear(clearDepth: false, clearColor: true, new Color(1f/255f, 0f, 0f));
             RenderTexture.active = active_render_texture;
         }
+        return true;
     }
 
     //
@@ -101,12 +106,14 @@ public static class Util {
         wrapMode = TextureWrapMode.Clamp
     };
 
-    public static void Util_LoadRoomTextureIntoRenderTexture(string room_name, RenderTexture render_texture, Texture2D? cache = null) {
+    public static bool Util_LoadRoomTextureIntoRenderTexture(string room_name, RenderTexture render_texture, Texture2D? cache = null) {
         if (Util_GetCameraPositionsAndLevelTextureRectangle(room_name) is not (Vector2[] camera_positions, RectInt rect)) {
-            return;
+            return false;
         }
 
-        Util_UpdateRenderTexture(render_texture, rect);
+        if (!Util_UpdateRenderTexture(render_texture, rect)) {
+            return false;
+        }
 
         if (cache == null) {
             cache = Util.camera_texture;
@@ -142,17 +149,20 @@ public static class Util {
                 Graphics.CopyTexture(cache, 0, 0, cutoff_x, cutoff_y, width, height, render_texture, 0, 0, Mathf.Max(x, 0), Mathf.Max(y, 0));
             }
         }
+        return true;
     }
 
-    public static void Util_LoadRoomTextureIntoRenderTexture(RoomCamera room_camera, string room_name, RenderTexture? render_texture = null) {
+    public static bool Util_LoadRoomTextureIntoRenderTexture(RoomCamera room_camera, string room_name, RenderTexture? render_texture = null) {
         if (Util_GetCameraPositionsAndLevelTextureRectangle(room_name) is not (Vector2[] camera_positions, RectInt rect)) {
-            return;
+            return false;
         }
 
         if (render_texture == null) {
             render_texture = room_camera.Render_Texture();
         }
-        Util_UpdateRenderTexture(render_texture, rect);
+        if (!Util_UpdateRenderTexture(render_texture, rect)) {
+            return false;
+        }
 
         int camera_number = room_camera.cameraNumber;
         if (camera_number < 0 || camera_number > 3) {
@@ -186,6 +196,7 @@ public static class Util {
                 Graphics.CopyTexture(Get_Level_Texture(camera_number, cam_pos_index), 0, 0, cutoff_x, cutoff_y, width, height, render_texture, 0, 0, Mathf.Max(x, 0), Mathf.Max(y, 0));
             }
         }
+        return true;
     }
 
     //

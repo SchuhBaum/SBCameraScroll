@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 3.1.6
+###### Version: 3.1.7
 This is a mod for Rain World v1.10.
 
 ### Description
@@ -17,7 +17,7 @@ This mod includes additional cameras:
 
 ### Installation
 0. Update Rain World to version 1.10 if needed.
-1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v3.1.6).
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v3.1.7).
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
@@ -32,6 +32,10 @@ See the file LICENSE-MIT.
 
 ### Changelog
 #### (Rain World v1.10)
+v3.1.7:
+- Blacklist rooms if the graphics card cannot handle large textures. This fixes
+  a bug where you get black screens in larger rooms.
+
 v3.1.6:
 - (LevelHeat shader) Fixed a bug where using portals would flicker the screen.
   And where using Watcher's ability with max karma would not change the palette.

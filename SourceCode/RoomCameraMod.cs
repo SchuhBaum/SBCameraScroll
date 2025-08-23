@@ -546,15 +546,31 @@ public static class RoomCameraMod {
             Graphics.CopyTexture(room_camera.levelTexture, render_texture);
 
         } else if (is_changing_room) {
+            bool hasSucceeded;
+
             // Case 2: The whole room gets pre-loaded at once.
             if (Option_ReducedMemoryUsage) {
                 // Use Util.camera_texture since it gets marked as non readable.
                 // Functions like GetPixels() won't work. Therefore, don't use
                 // room_camera.levelTexture since other mods might try to read
                 // pixels from it.
-                Util_LoadRoomTextureIntoRenderTexture(room_name, render_texture, cache: Util.camera_texture);
+                hasSucceeded = Util_LoadRoomTextureIntoRenderTexture(room_name, render_texture, cache: Util.camera_texture);
             } else {
-                Util_LoadRoomTextureIntoRenderTexture(room_camera, room_name);
+                hasSucceeded = Util_LoadRoomTextureIntoRenderTexture(room_camera, room_name);
+            }
+
+            if (!hasSucceeded)
+            {
+                blacklisted_rooms.Add(room_name);
+
+                // case 1
+                RoomCameraMod_LoadOneScreenImage(room_camera, room_name);
+                if (render_texture.width != 1400 || render_texture.height != 800) {
+                    render_texture.Release();
+                    render_texture.width = 1400;
+                    render_texture.height = 800;
+                }
+                Graphics.CopyTexture(room_camera.levelTexture, render_texture);
             }
         }
     }
