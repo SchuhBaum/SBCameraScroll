@@ -1,6 +1,6 @@
 ## SBCameraScroll
-###### Version: 3.1.7
-This is a mod for Rain World v1.10.
+###### Version: 3.2.0
+This is a mod for Rain World v1.11.
 
 ### Description
 Creates a smooth, scrolling camera that moves with the slugcat. Based on pipi toki's CameraScroll mod.  
@@ -17,7 +17,7 @@ This mod includes additional cameras:
 
 ### Installation
 0. Update Rain World to version 1.10 if needed.
-1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v3.1.7).
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v3.2.0).
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
@@ -31,6 +31,11 @@ If you have feedback, you can message me on Discord `@schuhbaum` or write an ema
 See the file LICENSE-MIT.
 
 ### Changelog
+#### (Rain World v1.11)
+v3.2.0:
+- Fixed a bug where a hook was not applied. Maybe leading to level texture not
+  being shown.
+
 #### (Rain World v1.10)
 v3.1.7:
 - Blacklist rooms if the graphics card cannot handle large textures. This fixes

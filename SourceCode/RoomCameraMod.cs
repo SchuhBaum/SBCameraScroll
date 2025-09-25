@@ -175,16 +175,16 @@ public static class RoomCameraMod {
         // loaded when that function is called.
         if (Type.GetType("RoomCamera, Assembly-CSharp") is Type RoomCamera) {
             try {
-                hook_RoomCamera_LevelTexture = new Hook(RoomCamera.GetMethod("get_levelTexture", BindingFlags.NonPublic | BindingFlags.Instance), typeof(RoomCameraMod).GetMethod("RoomCamera_LevelTexture"));
+                hook_RoomCamera_LevelTexture = new Hook(RoomCamera.GetMethod("get_levelTexture", BindingFlags.Public | BindingFlags.Instance), typeof(RoomCameraMod).GetMethod("RoomCamera_LevelTexture"));
             } catch (Exception exception) {
                 Debug.Log($"{mod_id}: {exception}");
             }
         }
 
-
         //
-        // These are not all hooks. The IL-hook IL_RoomCamera_Update contains a
-        // small section only for just-in-time merging.
+        // These are not all option unrelated hooks. The IL-hook
+        // IL_RoomCamera_Update contains a small section only for just-in-time
+        // merging.
         //
 
         IL.RoomCamera.ApplyPositionChange += IL_RoomCamera_ApplyPositionChange;
