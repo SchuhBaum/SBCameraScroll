@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 3.2.0
+###### Version: 3.2.1
 This is a mod for Rain World v1.11.
 
 ### Description
@@ -17,7 +17,7 @@ This mod includes additional cameras:
 
 ### Installation
 0. Update Rain World to version 1.11 if needed.
-1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v3.2.0).
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v3.2.1).
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
@@ -32,6 +32,10 @@ See the file LICENSE-MIT.
 
 ### Changelog
 #### (Rain World v1.11)
+v3.2.1:
+- Blacklisted the Weaver ending room. Otherwise, the vanilla camera scroll is
+  not working.
+
 v3.2.0:
 - Fixed a bug where a hook was not applied. Maybe leading to level texture not
   being shown.

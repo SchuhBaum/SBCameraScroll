@@ -20,7 +20,7 @@ public static class RoomCameraMod {
 
     // used in CoopTweaks; don't rename;
     public static float number_of_frames_per_shortcut_udpate = 3f;
-    public static List<string> blacklisted_rooms = new List<string>() { "RM_AI", "GW_ARTYSCENES", "GW_ARTYNIGHTMARE", "SB_E05SAINT", "SL_AI" };
+    public static List<string> blacklisted_rooms = new List<string>() { "RM_AI", "GW_ARTYSCENES", "GW_ARTYNIGHTMARE", "SB_E05SAINT", "SL_AI", "WRSA_WEAVER" };
 
     // makes some shader glitch out more;
     // not recommended;
