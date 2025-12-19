@@ -982,7 +982,7 @@ public static class RoomCameraMod {
         // texture in the shaders while active.
         //
         // The visuals are pixelated without resizing.
-        Watcher.LevelTexCombiner combiner = room_camera.levelTexCombiner;
+        LevelTexCombiner combiner = room_camera.levelTexCombiner;
         if (combiner.combinedLevelTex != null) {
             combiner.combinedLevelTex.Release();
             combiner.combinedLevelTex.width  = render_texture.width;

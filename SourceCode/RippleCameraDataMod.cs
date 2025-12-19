@@ -11,7 +11,7 @@ public static class RippleCameraDataMod {
     // public
     //
 
-    public static UnityEngine.Texture RippleCameraDataMod_GetRippleTargetScreen(Watcher.RippleCameraData ripple_data) {
+    public static UnityEngine.Texture RippleCameraDataMod_GetRippleTargetScreen(RippleCameraData ripple_data) {
         if (Custom.rainWorld?.processManager?.currentMainLoop is not RainWorldGame game) {
             Debug.Log("SBCameraScroll.RippleCameraDataMod_GetRippleTargetScreen: [WARNING] Expected to be in-game. But I did not find the instance for RainWorldGame. I assume now that this is the camera for player 1 and hope for the best.");
             return ripple_data.rippleTargetScreen;
@@ -80,7 +80,7 @@ public static class RippleCameraDataMod {
             }
 
             cursor.RemoveRange(1);
-            cursor.EmitDelegate<Func<Watcher.RippleCameraData, UnityEngine.Texture>>(RippleCameraDataMod_GetRippleTargetScreen);
+            cursor.EmitDelegate<Func<RippleCameraData, UnityEngine.Texture>>(RippleCameraDataMod_GetRippleTargetScreen);
 
         } else {
             if (can_log_il_hooks) {

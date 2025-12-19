@@ -143,7 +143,8 @@ public static class Util {
                 byte[] bytes = AssetManager.PreLoadTexture(camera_texture_path);
 
                 // Marking it prevents the copy in the RAM. But you cannot call
-                // GetPixel(), etc.
+                // GetPixel(), etc. I get these from the GPU and cache them
+                // instead.
                 cache.LoadImage(bytes, markNonReadable: true);
 
                 Graphics.CopyTexture(cache, 0, 0, cutoff_x, cutoff_y, width, height, render_texture, 0, 0, Mathf.Max(x, 0), Mathf.Max(y, 0));

@@ -15,6 +15,7 @@ global using System.Security.Permissions;
 global using System.Threading;
 global using Unity.Collections;
 global using UnityEngine;
+global using Watcher;
 
 global using static RWCustom.Custom;
 global using static SBCameraScroll.AbstractRoomMod;

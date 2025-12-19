@@ -56,9 +56,9 @@ public class MainModOptions : OptionInterface {
 
     public static Configurable<bool> reduced_memory_usage = main_mod_options.config.Bind("reduced_memory_usage", defaultValue: false, new ConfigurableInfo("When enabled, caches only pixel colors on demand (e.g. when worm grass or\nwhite lizards request them). This is slower but should reduce memory usage.", null, "", "Reduced Memory Usage"));
 
-    public static Configurable<int> camera_zoom_slider = main_mod_options.config.Bind("camera_zoom_slider", defaultValue: 10, new ConfigurableInfo("Works for the most part but makes some shaders glitch out more. Not used when the SplitScreen Co-op mod is active.", new ConfigAcceptableRange<int>(5, 40), "", "Camera Zoom (10)"));
+    public static Configurable<int> camera_zoom_slider = main_mod_options.config.Bind("camera_zoom_slider", defaultValue: 10, new ConfigurableInfo("WARNING: Can lead to visual glitches and shader issues.\nNot used when the SplitScreen Co-op mod is active.", new ConfigAcceptableRange<int>(5, 40), "", "Camera Zoom (10)"));
     public static Configurable<bool> dynamic_zoom = main_mod_options.config.Bind("dynamicZoom", defaultValue: false, new ConfigurableInfo("When enabled, the camera zoom is adjusted dynamically per room. This removes any black borders when using custom resolutions.\nEnables scrolling in one-screen rooms. Disabled when SplitScreen Coop is used.", null, "", "Dynamic Zoom"));
-    public static Configurable<string> resolution = main_mod_options.config.Bind("resolution", "Default", new ConfigurableInfo("Overrides the current resolution. Can be used to zoom out with less\npixelation issues. Might reduce black borders on larger monitors.", null, "", "Resolution:"));
+    public static Configurable<string> resolution = main_mod_options.config.Bind("resolution", "Default", new ConfigurableInfo("Overrides the screen resolution. Can be used to zoom out with less\npixelation issues. WARNING: Can lead to visual glitches and shader issues.", null, "", "Resolution:"));
     public static Configurable<string> custom_resolution = main_mod_options.config.Bind("customResolution", "", new ConfigurableInfo("Requires the format \"WIDTHxHEIGHT\". Needs to be at least 960x540.\nFirst, you need to select \"Custom\" in the Resolution combo box.", null, "", "Custom Resolution:"));
 
     //

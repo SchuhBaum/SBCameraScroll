@@ -106,12 +106,12 @@ public static class RainWorldMod {
             return;
         }
 
-        UnityEngine.Object.Destroy(Watcher.RippleCameraData.combinerMaterial);
-        Watcher.RippleCameraData.combinerMaterial = new Material(modded_shader);
+        UnityEngine.Object.Destroy(RippleCameraData.combinerMaterial);
+        RippleCameraData.combinerMaterial = new Material(modded_shader);
         Debug.Log($"{mod_id}: Replaced the shader '{shader_name}'.");
     }
 
-    public static void Replace_Shader_SavePlayerCamoMask(Watcher.RippleCameraData ripple_data) {
+    public static void Replace_Shader_SavePlayerCamoMask(RippleCameraData ripple_data) {
         if (modded_shaders_bundle == null) return;
 
         string shader_name = "SavePlayerCamoMask";
