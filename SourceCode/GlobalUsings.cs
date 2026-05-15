@@ -17,6 +17,7 @@ global using Unity.Collections;
 global using UnityEngine;
 global using Watcher;
 
+global using static SuperStructureProjector;
 global using static RWCustom.Custom;
 global using static SBCameraScroll.AbstractRoomMod;
 global using static SBCameraScroll.MainMod;

@@ -1,38 +1,105 @@
 
 namespace SBCameraScroll;
 
-internal static class SuperStructureProjectorMod {
-    // same as in AboveCloudsViewMod
+public static class SuperStructureProjectorMod {
+    //
+    // Variables
+
+    public static Hook? hook_SuperStructureProjector_IdealGlyphNumber = null;
+
+    //
+    // Initialization
+
     internal static void OnEnable() {
+        On.SuperStructureProjector.ctor += SuperStructureProjector_Ctor;
+
+        var superStructureProjector = Type.GetType("SuperStructureProjector, Assembly-CSharp");
+        if (superStructureProjector != null) {
+            try {
+                var vanillaMethodInfo = superStructureProjector
+                    .GetMethod("get_idealGlyphNumber");
+                var moddedMethodInfo = typeof(SuperStructureProjectorMod)
+                    .GetMethod("SuperStructureProjector_IdealGlyphNumber");
+                var hook = new Hook(vanillaMethodInfo, moddedMethodInfo);
+                hook_SuperStructureProjector_IdealGlyphNumber = hook;
+
+                Debug.Log($"{mod_id}: Created hook for the property `SuperStructureProjector.idealGlyphNumber`.");
+                    
+            } catch (Exception exception) {
+                Debug.Log($"{mod_id}: {exception}");
+            }
+        }
+
+        // Same idea as in AboveCloudsViewMod. Although here, we need to take
+        // the bottom-left camera position.
         On.SuperStructureProjector.GlyphMatrix.DrawSprites += GlyphMatrix_DrawSprites;
         On.SuperStructureProjector.SingleGlyph.DrawSprites += SingleGlyph_DrawSprites;
     }
 
-    // ----------------- //
-    // private functions //
-    // ----------------- //
+    //
+    // Private
 
-    private static void GlyphMatrix_DrawSprites(On.SuperStructureProjector.GlyphMatrix.orig_DrawSprites orig, SuperStructureProjector.GlyphMatrix glyph_matrix, RoomCamera.SpriteLeaser sprite_leaser, RoomCamera room_camera, float time_stacker, Vector2 cam_pos) {
-        if (room_camera.room == null) {
+    private static void
+    GlyphMatrix_DrawSprites(
+        On.SuperStructureProjector.GlyphMatrix.orig_DrawSprites orig,
+        SuperStructureProjector.GlyphMatrix glyph_matrix,
+        RoomCamera.SpriteLeaser sprite_leaser,
+        RoomCamera room_camera,
+        float time_stacker,
+        Vector2 cam_pos)
+    {
+        if (room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom)) {
             orig(glyph_matrix, sprite_leaser, room_camera, time_stacker, cam_pos);
             return;
         }
 
+        var roomFields = room_camera.room.abstractRoom.GetFields();
+
         Vector2 camera_position = room_camera.room.cameraPositions[room_camera.currentCameraPosition];
-        room_camera.room.cameraPositions[room_camera.currentCameraPosition] = room_camera.room.cameraPositions[0];
+        room_camera.room.cameraPositions[room_camera.currentCameraPosition] = roomFields.min_camera_position;
         orig(glyph_matrix, sprite_leaser, room_camera, time_stacker, cam_pos);
         room_camera.room.cameraPositions[room_camera.currentCameraPosition] = camera_position;
     }
 
-    private static void SingleGlyph_DrawSprites(On.SuperStructureProjector.SingleGlyph.orig_DrawSprites orig, SuperStructureProjector.SingleGlyph single_glyph, RoomCamera.SpriteLeaser sprite_leaser, RoomCamera room_camera, float time_stacker, Vector2 cam_pos) {
-        if (room_camera.room == null) {
+    private static void
+    SingleGlyph_DrawSprites(
+        On.SuperStructureProjector.SingleGlyph.orig_DrawSprites orig,
+        SuperStructureProjector.SingleGlyph single_glyph,
+        RoomCamera.SpriteLeaser sprite_leaser,
+        RoomCamera room_camera,
+        float time_stacker,
+        Vector2 cam_pos)
+    {
+        if (room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom)) {
             orig(single_glyph, sprite_leaser, room_camera, time_stacker, cam_pos);
             return;
         }
 
+        var roomFields = room_camera.room.abstractRoom.GetFields();
+
         Vector2 camera_position = room_camera.room.cameraPositions[room_camera.currentCameraPosition];
-        room_camera.room.cameraPositions[room_camera.currentCameraPosition] = room_camera.room.cameraPositions[0];
+        room_camera.room.cameraPositions[room_camera.currentCameraPosition] = roomFields.min_camera_position;
         orig(single_glyph, sprite_leaser, room_camera, time_stacker, cam_pos);
         room_camera.room.cameraPositions[room_camera.currentCameraPosition] = camera_position;
+    }
+
+    private static void
+    SuperStructureProjector_Ctor(
+        On.SuperStructureProjector.orig_ctor orig,
+        SuperStructureProjector self,
+        Room room,
+        RoomSettings.RoomEffect effect)
+    {
+        orig(self, room, effect);
+        self.glyphGrid = new Glyph[self.entireRoomSize.x, self.entireRoomSize.y];
+    }
+
+    public static int
+    SuperStructureProjector_IdealGlyphNumber(
+        Func<SuperStructureProjector,int> orig,
+        SuperStructureProjector projector)
+    {
+        var multiplier = (float)projector.glyphGrid.GetLength(0)/95f * (float)projector.glyphGrid.GetLength(1)/55f;
+        return (int)(multiplier * 520f * projector.effect.amount);
     }
 }

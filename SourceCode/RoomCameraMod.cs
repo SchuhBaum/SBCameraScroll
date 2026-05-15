@@ -46,10 +46,10 @@ public static class RoomCameraMod {
 
     public static bool Is_Camera_Scroll_Enabled(this RoomCamera room_camera) => room_camera.room?.cameraPositions.Length > 1 || Option_ScrollOneScreenRooms || camera_zoom > 1f || room_camera.GetFields() is RoomCameraFields room_camera_fields && room_camera_fields.is_camera_scroll_forced_by_split_screen;
 
+    // You want to access the non-null room in most cases. This does not save
+    // code.
     [Obsolete("Use IsRoomBlacklisted() instead.")]
     public static bool Is_Type_Camera_Not_Used(this RoomCamera room_camera) => room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom);
-    // I want a function for this because synchronizing a variable is a pain the
-    // bootey.
     public static bool IsRoomBlacklisted(this RoomCamera room_camera, AbstractRoom abstract_room) => room_camera.IsRoomBlacklisted(abstract_room.FileName);
     public static bool IsRoomBlacklisted(this RoomCamera room_camera, string room_name) => blacklisted_rooms.Contains(room_name) || room_camera.voidSeaMode;
 

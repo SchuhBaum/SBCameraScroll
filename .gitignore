@@ -1,5 +1,6 @@
 
 .git/
+.vs/
 
 ModdedShaders/*_backup.shader
 SourceCode/bin
