@@ -53,10 +53,8 @@ public static class SuperStructureProjectorMod {
             return;
         }
 
-        var roomFields = room_camera.room.abstractRoom.GetFields();
-
-        Vector2 camera_position = room_camera.room.cameraPositions[room_camera.currentCameraPosition];
-        room_camera.room.cameraPositions[room_camera.currentCameraPosition] = roomFields.min_camera_position;
+        var camera_position = room_camera.room.cameraPositions[room_camera.currentCameraPosition];
+        room_camera.room.cameraPositions[room_camera.currentCameraPosition] = new Vector2();
         orig(glyph_matrix, sprite_leaser, room_camera, time_stacker, cam_pos);
         room_camera.room.cameraPositions[room_camera.currentCameraPosition] = camera_position;
     }
@@ -75,10 +73,8 @@ public static class SuperStructureProjectorMod {
             return;
         }
 
-        var roomFields = room_camera.room.abstractRoom.GetFields();
-
-        Vector2 camera_position = room_camera.room.cameraPositions[room_camera.currentCameraPosition];
-        room_camera.room.cameraPositions[room_camera.currentCameraPosition] = roomFields.min_camera_position;
+        var camera_position = room_camera.room.cameraPositions[room_camera.currentCameraPosition];
+        room_camera.room.cameraPositions[room_camera.currentCameraPosition] = new Vector2();
         orig(single_glyph, sprite_leaser, room_camera, time_stacker, cam_pos);
         room_camera.room.cameraPositions[room_camera.currentCameraPosition] = camera_position;
     }
@@ -86,12 +82,17 @@ public static class SuperStructureProjectorMod {
     private static void
     SuperStructureProjector_Ctor(
         On.SuperStructureProjector.orig_ctor orig,
-        SuperStructureProjector self,
+        SuperStructureProjector projector,
         Room room,
         RoomSettings.RoomEffect effect)
     {
-        orig(self, room, effect);
-        self.glyphGrid = new Glyph[self.entireRoomSize.x, self.entireRoomSize.y];
+        if (room == null || room.abstractRoom.IsRoomBlacklisted()) {
+            orig(projector, room, effect);
+            return;
+        }
+
+        orig(projector, room, effect);
+        projector.glyphGrid = new Glyph[projector.entireRoomSize.x, projector.entireRoomSize.y];
     }
 
     public static int

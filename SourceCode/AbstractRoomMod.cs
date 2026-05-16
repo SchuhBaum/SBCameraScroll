@@ -14,13 +14,18 @@ public static class AbstractRoomMod {
     // variables
     //
 
-    [Obsolete]
+    [Obsolete("Use _all_abstract_room_fields instead.")]
     internal static readonly Dictionary<AbstractRoom, Attached_Fields> _all_attached_fields = new();
-    [Obsolete]
+    [Obsolete("Use GetFields() instead.")]
     public static Attached_Fields Get_Attached_Fields(this AbstractRoom abstract_room) => _all_attached_fields[abstract_room];
 
-    internal static readonly Dictionary<AbstractRoom, AbstractRoomFields> _all_abstract_room_fields = new();
-    public static AbstractRoomFields GetFields(this AbstractRoom abstract_room) {
+    internal static readonly Dictionary<AbstractRoom, AbstractRoomFields>
+    _all_abstract_room_fields = new();
+
+    public static AbstractRoomFields
+    GetFields(
+        this AbstractRoom abstract_room)
+    {
         _all_abstract_room_fields.TryGetValue(abstract_room, out AbstractRoomFields abstract_room_fields);
         return abstract_room_fields;
     }

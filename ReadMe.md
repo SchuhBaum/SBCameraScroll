@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 3.2.3
+###### Version: 3.2.4
 This is a mod for Rain World v1.11.
 
 ### Description
@@ -17,7 +17,7 @@ This mod includes additional cameras:
 
 ### Installation
 0. Update Rain World to version 1.11 if needed.
-1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v3.2.3).
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v3.2.4).
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
@@ -32,6 +32,11 @@ See the file LICENSE-MIT.
 
 ### Changelog
 #### (Rain World v1.11)
+v3.2.4:
+- Fixed a visual bug where projection glyphs would not be shown on the right and
+  top end of rooms. The offset was based on the texture size while the glyph
+  grid size is based only on the room size.
+
 v3.2.3:
 - Fixed a visual bug where projection glyphs were stretched and only located at
   the top left of a room.

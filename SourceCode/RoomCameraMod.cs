@@ -49,9 +49,42 @@ public static class RoomCameraMod {
     // You want to access the non-null room in most cases. This does not save
     // code.
     [Obsolete("Use IsRoomBlacklisted() instead.")]
-    public static bool Is_Type_Camera_Not_Used(this RoomCamera room_camera) => room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom);
-    public static bool IsRoomBlacklisted(this RoomCamera room_camera, AbstractRoom abstract_room) => room_camera.IsRoomBlacklisted(abstract_room.FileName);
-    public static bool IsRoomBlacklisted(this RoomCamera room_camera, string room_name) => blacklisted_rooms.Contains(room_name) || room_camera.voidSeaMode;
+    public static bool
+    Is_Type_Camera_Not_Used(
+        this RoomCamera room_camera)
+    {
+        return room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom);
+    }
+
+    public static bool
+    IsRoomBlacklisted(
+        this RoomCamera room_camera,
+        AbstractRoom abstract_room)
+    {
+        return room_camera.voidSeaMode || abstract_room.IsRoomBlacklisted();
+    }
+
+    public static bool
+    IsRoomBlacklisted(
+        this RoomCamera room_camera,
+        String room_name)
+    {
+        return room_camera.voidSeaMode || IsRoomBlacklisted(room_name);
+    }
+
+    public static bool
+    IsRoomBlacklisted(
+        this AbstractRoom abstract_room)
+    {
+        return IsRoomBlacklisted(abstract_room.FileName);
+    }
+
+    public static bool
+    IsRoomBlacklisted(
+        string room_name)
+    {
+        return blacklisted_rooms.Contains(room_name);
+    }
 
     public static string? next_text_prompt_message = null;
 
