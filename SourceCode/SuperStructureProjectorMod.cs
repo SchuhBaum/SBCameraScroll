@@ -12,6 +12,7 @@ public static class SuperStructureProjectorMod {
 
     internal static void OnEnable() {
         On.SuperStructureProjector.ctor += SuperStructureProjector_Ctor;
+        On.SuperStructureProjector.Update += SuperStructureProjector_Update;
 
         var superStructureProjector = Type.GetType("SuperStructureProjector, Assembly-CSharp");
         if (superStructureProjector != null) {
@@ -92,7 +93,12 @@ public static class SuperStructureProjectorMod {
         }
 
         orig(projector, room, effect);
+
         projector.glyphGrid = new Glyph[projector.entireRoomSize.x, projector.entireRoomSize.y];
+        for (int j = 0; j < projector.idealGlyphNumber / 2; j++)
+		{
+			projector.AddRandomGlyph();
+		}
     }
 
     public static int
@@ -102,5 +108,28 @@ public static class SuperStructureProjectorMod {
     {
         var multiplier = (float)projector.glyphGrid.GetLength(0)/95f * (float)projector.glyphGrid.GetLength(1)/55f;
         return (int)(multiplier * 520f * projector.effect.amount);
+    }
+
+    private static void
+    SuperStructureProjector_Update(
+        On.SuperStructureProjector.orig_Update orig,
+        SuperStructureProjector projector,
+        bool eu)
+    {
+        if (projector.room == null || projector.room.abstractRoom.IsRoomBlacklisted()) {
+            orig(projector, eu);
+            return;
+        }
+
+        orig(projector, eu);
+
+        var multiplier = (float)projector.glyphGrid.GetLength(0)/95f * (float)projector.glyphGrid.GetLength(1)/55f;
+        for (int j = 0; j < multiplier; j++)
+        {
+            if (projector.glyphsList.Count < projector.idealGlyphNumber)
+            {
+                projector.AddRandomGlyph();
+            }
+        }
     }
 }
