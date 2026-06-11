@@ -93,8 +93,13 @@ v2f vert (appdata_full v)
 
 half4 frag (v2f i) : SV_Target
 {
-float2 texSize = float2(1400.0, 800.0);
+// vanilla:
+// float2 texSize = float2(1400.0, 800.0);
 
+// modded:
+float number_of_screens_x = _spriteRect.z - _spriteRect.x;
+float number_of_screens_y = _spriteRect.w - _spriteRect.y;
+float2 texSize = float2(number_of_screens_x * _screenSize.x, number_of_screens_y * _screenSize.y);
 
 float2 textCoord = float2(floor(i.scrPos.x*texSize.x)/texSize.x, floor(i.scrPos.y*texSize.y)/texSize.y);
 
@@ -109,12 +114,6 @@ textCoord.y /= _spriteRect.w - _spriteRect.y;
 
 float2 sampleCoord = textCoord * half2(texSize.x, texSize.y)/15.0;
 
-// modded:
-float number_of_screens_x = _spriteRect.z - _spriteRect.x;
-float number_of_screens_y = _spriteRect.w - _spriteRect.y;
-sampleCoord.x *= number_of_screens_x;
-sampleCoord.y *= number_of_screens_y;
-
 sampleCoord.x = floor(sampleCoord.x)/texSize.x;
 sampleCoord.y = floor(sampleCoord.y)/texSize.y;
 float rand = frac(sin(dot(sampleCoord.x, 12.98232)*sampleCoord.y*0.23532-tex2D(_NoiseTex, half2( lerp(0.265, 0.9455, sampleCoord.y), 0.5)).x) * lerp(43758.5453, 23746.232, i.clr.y));
@@ -123,13 +122,9 @@ float rand = frac(sin(dot(sampleCoord.x, 12.98232)*sampleCoord.y*0.23532-tex2D(_
 if(frac(sin(dot(sampleCoord.x, 7.62232)*sampleCoord.y*0.19532-tex2D(_NoiseTex, half2( lerp(0.235, 0.973, sampleCoord.y), 0.4)).x) * 102438.543) > i.clr.w)
 return half4(0,0,0,0);
 
-// vanilla:
-// float strtX = frac((textCoord.x * texSize.x) / 15.0);
-// float strtY = frac(textCoord.y * texSize.y / 15.0);
 
-// modded:
-float strtX = frac(number_of_screens_x * textCoord.x * texSize.x / 15.0);
-float strtY = frac(number_of_screens_y * textCoord.y * texSize.y / 15.0);
+float strtX = frac((textCoord.x * texSize.x) / 15.0);
+float strtY = frac(textCoord.y * texSize.y / 15.0);
 
 float glyph = floor(rand * 50.0)/50.0;
 

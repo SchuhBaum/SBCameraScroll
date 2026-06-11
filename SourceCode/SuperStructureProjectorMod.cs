@@ -121,6 +121,7 @@ public static class SuperStructureProjectorMod {
             return;
         }
 
+        projector.lastCamPos = projector.room.game.cameras[0].currentCameraPosition;
         orig(projector, eu);
 
         var multiplier = (float)projector.glyphGrid.GetLength(0)/95f * (float)projector.glyphGrid.GetLength(1)/55f;
