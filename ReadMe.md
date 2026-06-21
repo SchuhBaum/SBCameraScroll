@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 3.2.6
+###### Version: 3.2.7
 This is a mod for Rain World v1.11.
 
 ### Description
@@ -17,7 +17,7 @@ This mod includes additional cameras:
 
 ### Installation
 0. Update Rain World to version 1.11 if needed.
-1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v3.2.6).
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v3.2.7).
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
@@ -32,6 +32,9 @@ See the file LICENSE-MIT.
 
 ### Changelog
 #### (Rain World v1.11)
+v3.2.7:
+- Fixed a bug where glyphs would have the wrong offset.
+
 v3.2.6:
 - Fixed a bug in Five Pebbles where Mycelium would not spawn or just spawn in
   one screen.

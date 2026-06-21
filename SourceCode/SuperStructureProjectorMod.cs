@@ -54,8 +54,10 @@ public static class SuperStructureProjectorMod {
             return;
         }
 
+        var abstract_room_fields = room.abstractRoom.GetFields();
+
         var camera_position = room_camera.room.cameraPositions[room_camera.currentCameraPosition];
-        room_camera.room.cameraPositions[room_camera.currentCameraPosition] = new Vector2();
+        room_camera.room.cameraPositions[room_camera.currentCameraPosition] = abstract_room_fields.min_camera_position;
         orig(glyph_matrix, sprite_leaser, room_camera, time_stacker, cam_pos);
         room_camera.room.cameraPositions[room_camera.currentCameraPosition] = camera_position;
     }
@@ -74,8 +76,10 @@ public static class SuperStructureProjectorMod {
             return;
         }
 
+        var abstract_room_fields = room.abstractRoom.GetFields();
+
         var camera_position = room_camera.room.cameraPositions[room_camera.currentCameraPosition];
-        room_camera.room.cameraPositions[room_camera.currentCameraPosition] = new Vector2();
+        room_camera.room.cameraPositions[room_camera.currentCameraPosition] = abstract_room_fields.min_camera_position;
         orig(single_glyph, sprite_leaser, room_camera, time_stacker, cam_pos);
         room_camera.room.cameraPositions[room_camera.currentCameraPosition] = camera_position;
     }
@@ -93,6 +97,11 @@ public static class SuperStructureProjectorMod {
         }
 
         orig(projector, room, effect);
+
+        // NOTE: SuperStructureProjector is created and initialized when the
+        // room gets viewed. This means that IsRoomBlacklisted() is up-to-date.
+        // E.g. when failing to load the room texture in
+        // RoomCameraMod_LoadOneScreenOrFullRoomTexture().
 
         projector.glyphGrid = new Glyph[projector.entireRoomSize.x, projector.entireRoomSize.y];
         for (int j = 0; j < projector.idealGlyphNumber / 2; j++)
