@@ -103,7 +103,12 @@ public static class SuperStructureProjectorMod {
         // E.g. when failing to load the room texture in
         // RoomCameraMod_LoadOneScreenOrFullRoomTexture().
 
-        projector.glyphGrid = new Glyph[projector.entireRoomSize.x, projector.entireRoomSize.y];
+        var abstract_room_fields = room.abstractRoom.GetFields();
+        var grid_size = new IntVector2(
+            Mathf.FloorToInt(abstract_room_fields.total_width / 15f) + 1,
+            Mathf.FloorToInt(abstract_room_fields.total_height / 15f) + 1);
+        projector.glyphGrid = new Glyph[grid_size.x, grid_size.y];
+
         for (int j = 0; j < projector.idealGlyphNumber / 2; j++)
 		{
 			projector.AddRandomGlyph();
