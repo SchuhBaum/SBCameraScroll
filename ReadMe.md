@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 3.2.9
+###### Version: 3.3.0
 This is a mod for Rain World v1.11.
 
 ### Description
@@ -17,7 +17,7 @@ This mod includes additional cameras:
 
 ### Installation
 0. Update Rain World to version 1.11 if needed.
-1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v3.2.9).
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v3.3.0).
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
@@ -32,6 +32,15 @@ See the file LICENSE-MIT.
 
 ### Changelog
 #### (Rain World v1.11)
+v3.3.0:
+- Added padding based on the screen size. In one screen rooms the camera will
+  align with the vanilla camera position. And in general it helps with avoiding
+  screen shake showing offscreen non-pre-rendered areas.
+- (custom resolution) Fixed a bug where the custom resolution was reset when the
+  main menu was loaded. Steam Deck resolution 1229x768 is still not applied
+  correctly (unless you are on Steam Deck, I assume). Use 1228x768 as a
+  workaround.
+
 v3.2.9:
 - Removing screen shake from creatures is now tied to the `Rain World Remix` QoL
   option `Reduce screen shaking`. That option already changes that but does not

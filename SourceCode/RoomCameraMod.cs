@@ -283,19 +283,31 @@ public static class RoomCameraMod {
 
     public static void CheckBorders(RoomCamera room_camera, ref Vector2 position) {
         if (room_camera.room == null) return;
+
         Vector2 screen_size = room_camera.sSize;
         Vector2 min_camera_position = room_camera.room.abstractRoom.GetFields().min_camera_position; // regionGate's min_camera_position might be unitialized => RegionGateMod
 
+        float padding_x = 0.5f * Math.Max(0f, 1400f - screen_size.x);
+        float padding_y = 0.5f * Math.Max(0f, 800f - screen_size.y);
+
         // half of the camera screen is not visible; the other half is centered; let the
         // non-visible part move past room borders;
-        Vector2 screen_offset = is_split_screen_coop_enabled ? Get_Screen_Offset(room_camera, screen_size) : new();
+        Vector2 screen_offset = is_split_screen_coop_enabled
+            ? Get_Screen_Offset(room_camera, screen_size)
+            : Vector2.zero;
 
         // Half_Inverse_Camera_Zoom_XY:
         // in percent; how much screen space is added left and right, top and bottom;
         // example: camera_zoom = 0.8f increases the screen size in x and y by 25% each; Half_Inverse_Camera_Zoom_XY = 0.5 * 25%;
-        Vector2 screen_size_increase = Is_Camera_Zoom_Enabled ? Half_Inverse_Camera_Zoom_XY * room_camera.sSize : Vector2.zero;
-        float min_x = min_camera_position.x - screen_offset.x + screen_size_increase.x;
-        float max_x = min_camera_position.x + screen_offset.x - screen_size_increase.x + room_camera.levelGraphic.width - screen_size.x;
+        Vector2 screen_size_increase = Is_Camera_Zoom_Enabled
+            ? Half_Inverse_Camera_Zoom_XY * room_camera.sSize
+            : Vector2.zero;
+        float min_x =
+            min_camera_position.x - screen_offset.x + screen_size_increase.x
+            + padding_x;
+        float max_x =
+            min_camera_position.x + screen_offset.x - screen_size_increase.x
+            + room_camera.levelGraphic.width - screen_size.x - padding_x;
 
         if (min_x < max_x) {
             // stop position at room texture borders;
@@ -308,8 +320,12 @@ public static class RoomCameraMod {
         // not sure why I have to decrease max_y by a constant;
         // I picked 18f bc room_camera.seekPos.y gets changed by 18f in Update();
         // seems to work, i.e. I don't see black bars;
-        float min_y = min_camera_position.y - screen_offset.y + screen_size_increase.y;
-        float max_y = min_camera_position.y + screen_offset.y - screen_size_increase.y + room_camera.levelGraphic.height - screen_size.y - 18f;
+        float min_y =
+            min_camera_position.y - screen_offset.y + screen_size_increase.y
+            + padding_y;
+        float max_y =
+            min_camera_position.y + screen_offset.y - screen_size_increase.y
+            + room_camera.levelGraphic.height - screen_size.y - padding_y;
 
         if (min_y < max_y) {
             position.y = Mathf.Clamp(position.y, min_y, max_y);

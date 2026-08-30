@@ -248,8 +248,7 @@ public class MainModOptions : OptionInterface {
         }
 
         Reset_Resolution(apply_immediately: false);
-        Options options        = rainWorld.options;
-        saved_resolution_index = options.resolution;
+        saved_resolution_index = rainWorld.options.resolution;
         saved_resolution       = Options.screenResolutions[(int)saved_resolution_index];
 
         // I am confused. I assumed that the height is hardcoded. But it is not.
@@ -278,7 +277,10 @@ public class MainModOptions : OptionInterface {
 
         // the second screen does not get initialized correctly in split screen coop 
         // when the height is larger than 768f; the zoom does not match;
-        Options.screenResolutions[(int)saved_resolution_index] = is_split_screen_coop_enabled ? new(resolution_width, 768f) : new(resolution_width, resolution_height);
+        Options.screenResolutions[(int)saved_resolution_index] =
+            is_split_screen_coop_enabled
+                ? new Vector2(resolution_width, 768f)
+                : new Vector2(resolution_width, resolution_height);
 
         ReInitialize_Futile();
         rainWorld.options.OnLoadFinished();

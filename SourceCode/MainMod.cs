@@ -6,7 +6,7 @@
 
 namespace SBCameraScroll;
 
-[BepInPlugin("SBCameraScroll", "SBCameraScroll", "3.2.9")]
+[BepInPlugin("SBCameraScroll", "SBCameraScroll", "3.3.0")]
 public class MainMod : BaseUnityPlugin {
     //
     // meta data
@@ -14,7 +14,7 @@ public class MainMod : BaseUnityPlugin {
 
     public static readonly string mod_id = "SBCameraScroll";
     public static readonly string author = "SchuhBaum";
-    public static readonly string version = "3.2.9";
+    public static readonly string version = "3.3.0";
     public static readonly string mod_directory_path = Directory.GetParent(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)).FullName + Path.DirectorySeparatorChar;
 
     //
@@ -241,6 +241,7 @@ public class MainMod : BaseUnityPlugin {
         GhostWorldPresenceMod.OnEnable();
         GoldFlakesMod.OnEnable();
         LevelTexCombinerMod.OnEnable();
+        MainMenuMod.OnEnable();
         MoreSlugcatsMod.OnEnable();
         MyceliumMod.OnEnable();
         OverWorldMod.OnEnable();
