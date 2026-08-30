@@ -1,5 +1,5 @@
 ## SBCameraScroll
-###### Version: 3.2.8
+###### Version: 3.2.9
 This is a mod for Rain World v1.11.
 
 ### Description
@@ -17,7 +17,7 @@ This mod includes additional cameras:
 
 ### Installation
 0. Update Rain World to version 1.11 if needed.
-1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v3.2.8).
+1. Download the file  `SBCameraScroll.zip` from [Releases](https://github.com/SchuhBaum/SBCameraScroll/releases/tag/v3.2.9).
 2. Extract its content in the folder `[Steam]\SteamApps\common\Rain World\RainWorld_Data\StreamingAssets\mods`.
 3. Start the game as normal. In the main menu select `Remix` and enable the mod. 
 
@@ -32,6 +32,11 @@ See the file LICENSE-MIT.
 
 ### Changelog
 #### (Rain World v1.11)
+v3.2.9:
+- Removing screen shake from creatures is now tied to the `Rain World Remix` QoL
+  option `Reduce screen shaking`. That option already changes that but does not
+  remove it completely.
+
 v3.2.8:
 - Add the missing change for v3.2.7 that I removed accidentally.
 

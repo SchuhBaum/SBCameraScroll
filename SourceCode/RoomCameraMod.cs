@@ -1285,9 +1285,20 @@ public static class RoomCameraMod {
         return test_rectangle.CheckIntersect(other_rectangle);
     }
 
-    private static void RoomCamera_ScreenMovement(On.RoomCamera.orig_ScreenMovement orig, RoomCamera room_camera, Vector2? source_position, Vector2 bump, float shake) {
-        // should remove effects on camera like camera shakes caused by other creatures // feels weird otherwise
-        if (room_camera.room is not Room room || room_camera.IsRoomBlacklisted(room.abstractRoom)) {
+    private static void
+    RoomCamera_ScreenMovement(
+        On.RoomCamera.orig_ScreenMovement orig,
+        RoomCamera room_camera,
+        Vector2? source_position,
+        Vector2 bump,
+        float shake)
+    {
+        // Remove camera shake caused by other creatures.
+        if (!ModManager.MMF
+            || !MoreSlugcats.MMF.cfgDisableScreenShake.Value
+            || room_camera.room is not Room room
+            || room_camera.IsRoomBlacklisted(room.abstractRoom))
+        {
             orig(room_camera, source_position, bump, shake);
         }
     }
