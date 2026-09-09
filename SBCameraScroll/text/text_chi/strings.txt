@@ -1,0 +1,57 @@
+Camera Type|相机类型
+When disabled, full screen effects like fog, bloom and melt are removed.|关闭后会移除雾、泛光和融化等全屏效果。
+Full Screen Effects|全屏效果
+When disabled, the camera does not scroll in rooms with only one screen.|关闭后，相机不会在只有一屏大小的房间中滚动。
+One Screen Rooms|单屏房间
+Watcher's ripple trail moves with the camera. You can disable the effect as a workaround.|观望者的涟漪轨迹会随相机移动。若出现问题，可关闭此效果。
+Ripple Trail Effect|涟漪轨迹效果
+Determines how much of the distance is covered per frame. This is used when switching cameras as well to ensure a smooth transition.|决定每帧移动的距离占总距离的比例。切换相机时也会使用此设置，以保证过渡平滑。
+Smoothing Factor (8)|平滑系数（8）
+The camera does not move when the player is closer than this.|玩家与相机中心的距离小于此值时，相机不会移动。
+Minimum Distance in X (2)|水平最小距离（2）
+Minimum Distance in Y (2)|垂直最小距离（2）
+When enabled, the camera can move ahead but still stays within the minimum distance.|启用后，相机可向玩家前方移动，但仍保持在最小距离范围内。
+Camera Offset|相机前移
+Determines how fast the camera pulls ahead. When set to 1.0 then the offset changes as fast as the player moves.|决定相机向前移动的速度。设为 1.0 时，偏移变化速度与玩家移动速度相同。
+Camera Offset Speed Multiplier (2)|相机前移速度倍率（2）
+The camera changes position if the player is closer to the edge of the screen than this value.|玩家与屏幕边缘的距离小于此值时，相机会改变位置。
+Distance from the Edge in X (9)|水平边缘距离（9）
+Distance to the Edge in Y (1)|垂直边缘距离（1）
+When enabled, caches only pixel colors on demand (e.g. when worm grass or<LINE>white lizards request them). This is slower but should reduce memory usage.|启用后，仅在需要时缓存像素颜色，例如蠕虫草或白蜥蜴请求颜色时。<LINE>这会降低处理速度，但能减少内存占用。
+Reduced Memory Usage|降低内存占用
+WARNING: Can lead to visual glitches and shader issues.<LINE>Not used when the SplitScreen Co-op mod is active.|警告：可能导致显示异常和着色器问题。<LINE>启用分屏合作模组时，此设置不生效。
+Camera Zoom (10)|相机缩放（10）
+When enabled, the camera zoom is adjusted dynamically per room. This removes any black borders when using custom resolutions.<LINE>Enables scrolling in one-screen rooms. Disabled when SplitScreen Coop is used.|启用后，会按房间动态调整相机缩放，消除使用自定义分辨率时的黑边。<LINE>同时启用单屏房间滚动。使用分屏合作模组时，此设置不生效。
+Dynamic Zoom|动态缩放
+Overrides the screen resolution. Can be used to zoom out with less<LINE>pixelation issues. WARNING: Can lead to visual glitches and shader issues.|覆盖屏幕分辨率，可在缩小画面时减少像素化问题。<LINE>警告：可能导致显示异常和着色器问题。
+Resolution:|分辨率：
+Requires the format "WIDTHxHEIGHT". Needs to be at least 960x540.<LINE>First, you need to select "Custom" in the Resolution combo box.|格式必须为“宽度x高度”，至少为 960x540。<LINE>请先在分辨率下拉框中选择“自定义”。
+Custom Resolution:|自定义分辨率：
+General|通用设置
+SBCameraScroll Mod|平滑相机模组
+Version {0}|版本 {0}
+by {0}|作者：{0}
+General:|通用：
+Position (Default)|跟随（默认）
+Vanilla|原版
+Switch|切换
+CLEAR CACHE|清除缓存
+The cache is not used anymore. Just clear it.|缓存已不再使用，可以直接清除。
+Position|跟随
+Position Type Camera:|跟随式相机：
+Vanilla Type Camera:|原版式相机：
+Experimental|实验性设置
+Experimental:|实验性设置：
+Default|默认
+Resets the screen resolution.|恢复默认屏幕分辨率。
+Sets the screen resolution to {0} pixels.|将屏幕分辨率设为 {0} 像素。
+Custom|自定义
+Uses the resolution from the text box `{0}`.|使用“{0}”文本框中填写的分辨率。
+This type tries to stay close to the player. A larger distance means a faster camera.<LINE>The smoothing factor determines how much of the distance is covered per frame.|此模式使相机保持靠近玩家。距离越远，相机移动越快。<LINE>平滑系数决定每帧移动的距离占总距离的比例。
+Vanilla-style camera. You can center the camera by pressing the map button. Pressing the map button again will revert to vanilla camera positions.<LINE>When the player is close to the edge of the screen the camera jumps a constant distance.|原版风格的相机。按地图键可使相机居中，再次按下则恢复原版相机位置。<LINE>玩家靠近屏幕边缘时，相机会移动一段固定距离。
+You can switch between the other two camera types by pressing the map button.<LINE>The keybinding can be configured using the mod 'Improved Input Config'.|按地图键可在另外两种相机模式之间切换。<LINE>可通过“Improved Input Config”模组自定义按键。
+0 tiles|0 格
+35 tiles|35 格
+Center|居中
+SBCameraScroll-name|平滑相机
+SBCameraScroll-description|创建一个随蛞蝓猫移动的平滑相机。基于pipi toki的平滑相机模组。<LINE>已知冲突: <LINE>-Slugcat Eyebrow Raise模组的相机缩放

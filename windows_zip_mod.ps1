@@ -27,7 +27,7 @@ foreach ($item_path in $item_paths) {
     }
 }
 
-7z a $zip_path "$mod_name\AssetBundles\modded_shaders" "$mod_name\plugins\$dll_name" "$mod_name\plugins\$pdb_name" "$mod_name\modinfo.json" "$mod_name\thumbnail.png" "$mod_name\workshopdata.json"
+7z a $zip_path "$mod_name\AssetBundles\modded_shaders" "$mod_name\plugins\$dll_name" "$mod_name\plugins\$pdb_name" "$mod_name\modinfo.json" "$mod_name\thumbnail.png" "$mod_name\workshopdata.json" "$mod_name\text"
 
 Pop-Location
 
