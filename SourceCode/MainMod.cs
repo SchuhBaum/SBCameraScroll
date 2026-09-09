@@ -12,6 +12,16 @@ public class MainMod : BaseUnityPlugin {
     // meta data
     //
 
+    public static string Translate(string text) {
+        if (string.IsNullOrEmpty(text)) return text;
+        // Short-string entries must remain on one physical line.
+        string key = text.Replace("\r\n", "\n").Replace("\n", "<LINE>");
+        string? translated = RWCustom.Custom.rainWorld?.inGameTranslator?.Translate(key);
+        return string.IsNullOrEmpty(translated) || translated == "!NO TRANSLATION!"
+            ? text
+            : translated!.Replace("<LINE>", "\n");
+    }
+
     public static readonly string mod_id = "SBCameraScroll";
     public static readonly string author = "SchuhBaum";
     public static readonly string version = "3.3.0";
