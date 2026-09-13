@@ -6,25 +6,15 @@
 
 namespace SBCameraScroll;
 
-[BepInPlugin("SBCameraScroll", "SBCameraScroll", "3.3.0")]
+[BepInPlugin("SBCameraScroll", "SBCameraScroll", "3.3.1")]
 public class MainMod : BaseUnityPlugin {
     //
     // meta data
     //
 
-    public static string Translate(string text) {
-        if (string.IsNullOrEmpty(text)) return text;
-        // Short-string entries must remain on one physical line.
-        string key = text.Replace("\r\n", "\n").Replace("\n", "<LINE>");
-        string? translated = RWCustom.Custom.rainWorld?.inGameTranslator?.Translate(key);
-        return string.IsNullOrEmpty(translated) || translated == "!NO TRANSLATION!"
-            ? text
-            : translated!.Replace("<LINE>", "\n");
-    }
-
     public static readonly string mod_id = "SBCameraScroll";
     public static readonly string author = "SchuhBaum";
-    public static readonly string version = "3.3.0";
+    public static readonly string version = "3.3.1";
     public static readonly string mod_directory_path = Directory.GetParent(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)).FullName + Path.DirectorySeparatorChar;
 
     //
@@ -158,6 +148,16 @@ public class MainMod : BaseUnityPlugin {
         } else {
             Debug.LogWarning("Failed to encode texture to PNG.");
         }
+    }
+
+    public static string Translate(string text) {
+        if (string.IsNullOrEmpty(text)) return text;
+        // Short-string entries must remain on one physical line.
+        string key = text.Replace("\r\n", "\n").Replace("\n", "<LINE>");
+        string? translated = Custom.rainWorld?.inGameTranslator?.Translate(key);
+        return string.IsNullOrEmpty(translated) || translated == "!NO TRANSLATION!"
+            ? text
+            : translated!.Replace("<LINE>", "\n");
     }
 
     //

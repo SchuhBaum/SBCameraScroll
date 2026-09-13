@@ -322,10 +322,10 @@ public static class RoomCameraMod {
         // seems to work, i.e. I don't see black bars;
         float min_y =
             min_camera_position.y - screen_offset.y + screen_size_increase.y
-            + padding_y;
+            + padding_y + 2f;
         float max_y =
             min_camera_position.y + screen_offset.y - screen_size_increase.y
-            + room_camera.levelGraphic.height - screen_size.y - padding_y;
+            + room_camera.levelGraphic.height - screen_size.y - padding_y + 2f;
 
         if (min_y < max_y) {
             position.y = Mathf.Clamp(position.y, min_y, max_y);
