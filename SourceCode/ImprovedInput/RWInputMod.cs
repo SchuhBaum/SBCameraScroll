@@ -19,9 +19,9 @@ public static class RWInputMod {
         if (center_keybinding != null) return;
 
         // initialize after ImprovedInput has;
-        center_keybinding = PlayerKeybind.Register("SBCameraScroll-Center_Vanilla_Type_Camera", "SBCameraScroll", "Center", KeyCode.None, KeyCode.None);
+        center_keybinding = PlayerKeybind.Register("SBCameraScroll-Center_Vanilla_Type_Camera", "SBCameraScroll", MainMod.Translate("Center"), KeyCode.None, KeyCode.None);
         center_keybinding.HideConflict = other_keybinding => center_keybinding.Can_Hide_Conflict_With(other_keybinding);
-        switch_keybinding = PlayerKeybind.Register("SBCameraScroll-Switch_Type_Camera", "SBCameraScroll", "Switch", KeyCode.None, KeyCode.None);
+        switch_keybinding = PlayerKeybind.Register("SBCameraScroll-Switch_Type_Camera", "SBCameraScroll", MainMod.Translate("Switch"), KeyCode.None, KeyCode.None);
         switch_keybinding.HideConflict = other_keybinding => switch_keybinding.Can_Hide_Conflict_With(other_keybinding);
     }
 

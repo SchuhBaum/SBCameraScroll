@@ -296,34 +296,34 @@ public class MainModOptions : OptionInterface {
         //-------------//
 
         int tab_index = 0;
-        Tabs[tab_index] = new OpTab(this, "General");
+        Tabs[tab_index] = new OpTab(this, MainMod.Translate("General"));
         InitializeMarginAndPos();
 
         // Title
         AddNewLine();
-        AddTextLabel("SBCameraScroll Mod", big_text: true);
+        AddTextLabel(MainMod.Translate("SBCameraScroll Mod"), big_text: true);
         DrawTextLabels(ref Tabs[tab_index]);
 
         // Subtitle
         AddNewLine(0.5f);
-        AddTextLabel($"Version {version}", FLabelAlignment.Left);
-        AddTextLabel($"by {author}", FLabelAlignment.Right);
+        AddTextLabel(string.Format(MainMod.Translate("Version {0}"), version), FLabelAlignment.Left);
+        AddTextLabel(string.Format(MainMod.Translate("by {0}"), author), FLabelAlignment.Right);
         DrawTextLabels(ref Tabs[tab_index]);
 
         // Content //
         AddNewLine();
         AddBox();
 
-        AddTextLabel("General:", FLabelAlignment.Left);
+        AddTextLabel(MainMod.Translate("General:"), FLabelAlignment.Left);
         DrawTextLabels(ref Tabs[tab_index]);
 
         AddNewLine();
 
         List<ListItem> camera_types = new()
         {
-            new ListItem(_camera_type_keys[0], "Position (Default)") { desc = _camera_type_descriptions[0] },
-            new ListItem(_camera_type_keys[1], "Vanilla") { desc = _camera_type_descriptions[1] },
-            new ListItem(_camera_type_keys[2], "Switch") { desc = _camera_type_descriptions[2] }
+            new ListItem(_camera_type_keys[0], MainMod.Translate("Position (Default)")) { desc = MainMod.Translate(_camera_type_descriptions[0]) },
+            new ListItem(_camera_type_keys[1], MainMod.Translate("Vanilla")) { desc = MainMod.Translate(_camera_type_descriptions[1]) },
+            new ListItem(_camera_type_keys[2], MainMod.Translate("Switch")) { desc = MainMod.Translate(_camera_type_descriptions[2]) }
         };
         AddComboBox(camera_type, camera_types, (string)camera_type.info.Tags[0]);
         DrawComboBoxes(ref Tabs[tab_index]);
@@ -347,8 +347,8 @@ public class MainModOptions : OptionInterface {
 
         // This button has the same size as apply and back button in
         // ConfigMachine.
-        _clear_cache_button = new(new(_pos.x + (_margin_x.y - _margin_x.x) / 2f - 55f + 65f, _pos.y), new(110f, 30f), "CLEAR CACHE") {
-            description = "The cache is not used anymore. Just clear it."
+        _clear_cache_button = new(new(_pos.x + (_margin_x.y - _margin_x.x) / 2f - 55f + 65f, _pos.y), new(110f, 30f), MainMod.Translate("CLEAR CACHE")) {
+            description = MainMod.Translate("The cache is not used anymore. Just clear it.")
         };
         ClearCacheButton_UpdateColor();
         System.Reflection.EventInfo event_info = _clear_cache_button.GetType().GetEvent("OnClick");
@@ -364,25 +364,25 @@ public class MainModOptions : OptionInterface {
         //-------------------//
 
         tab_index++;
-        Tabs[tab_index] = new OpTab(this, "Position");
+        Tabs[tab_index] = new OpTab(this, MainMod.Translate("Position"));
         InitializeMarginAndPos();
 
         // Title
         AddNewLine();
-        AddTextLabel("SBCameraScroll Mod", big_text: true);
+        AddTextLabel(MainMod.Translate("SBCameraScroll Mod"), big_text: true);
         DrawTextLabels(ref Tabs[tab_index]);
 
         // Subtitle
         AddNewLine(0.5f);
-        AddTextLabel($"Version {version}", FLabelAlignment.Left);
-        AddTextLabel($"by {author}", FLabelAlignment.Right);
+        AddTextLabel(string.Format(MainMod.Translate("Version {0}"), version), FLabelAlignment.Left);
+        AddTextLabel(string.Format(MainMod.Translate("by {0}"), author), FLabelAlignment.Right);
         DrawTextLabels(ref Tabs[tab_index]);
 
         // Content //
         AddNewLine();
         AddBox();
 
-        AddTextLabel("Position Type Camera:", FLabelAlignment.Left);
+        AddTextLabel(MainMod.Translate("Position Type Camera:"), FLabelAlignment.Left);
         DrawTextLabels(ref Tabs[tab_index]);
 
         AddNewLine();
@@ -412,25 +412,25 @@ public class MainModOptions : OptionInterface {
         //------------------//
 
         tab_index++;
-        Tabs[tab_index] = new OpTab(this, "Vanilla");
+        Tabs[tab_index] = new OpTab(this, MainMod.Translate("Vanilla"));
         InitializeMarginAndPos();
 
         // Title
         AddNewLine();
-        AddTextLabel("SBCameraScroll Mod", big_text: true);
+        AddTextLabel(MainMod.Translate("SBCameraScroll Mod"), big_text: true);
         DrawTextLabels(ref Tabs[tab_index]);
 
         // Subtitle
         AddNewLine(0.5f);
-        AddTextLabel($"Version {version}", FLabelAlignment.Left);
-        AddTextLabel($"by {author}", FLabelAlignment.Right);
+        AddTextLabel(string.Format(MainMod.Translate("Version {0}"), version), FLabelAlignment.Left);
+        AddTextLabel(string.Format(MainMod.Translate("by {0}"), author), FLabelAlignment.Right);
         DrawTextLabels(ref Tabs[tab_index]);
 
         // Content //
         AddNewLine();
         AddBox();
 
-        AddTextLabel("Vanilla Type Camera:", FLabelAlignment.Left);
+        AddTextLabel(MainMod.Translate("Vanilla Type Camera:"), FLabelAlignment.Left);
         DrawTextLabels(ref Tabs[tab_index]);
 
         AddNewLine();
@@ -450,25 +450,25 @@ public class MainModOptions : OptionInterface {
         //------------------//
 
         tab_index++;
-        Tabs[tab_index] = new OpTab(this, "Experimental");
+        Tabs[tab_index] = new OpTab(this, MainMod.Translate("Experimental"));
         InitializeMarginAndPos();
 
         // Title
         AddNewLine();
-        AddTextLabel("SBCameraScroll Mod", big_text: true);
+        AddTextLabel(MainMod.Translate("SBCameraScroll Mod"), big_text: true);
         DrawTextLabels(ref Tabs[tab_index]);
 
         // Subtitle
         AddNewLine(0.5f);
-        AddTextLabel($"Version {version}", FLabelAlignment.Left);
-        AddTextLabel($"by {author}", FLabelAlignment.Right);
+        AddTextLabel(string.Format(MainMod.Translate("Version {0}"), version), FLabelAlignment.Left);
+        AddTextLabel(string.Format(MainMod.Translate("by {0}"), author), FLabelAlignment.Right);
         DrawTextLabels(ref Tabs[tab_index]);
 
         // Content //
         AddNewLine();
         AddBox();
 
-        AddTextLabel("Experimental:", FLabelAlignment.Left);
+        AddTextLabel(MainMod.Translate("Experimental:"), FLabelAlignment.Left);
         DrawTextLabels(ref Tabs[tab_index]);
 
         AddNewLine();
@@ -493,13 +493,13 @@ public class MainModOptions : OptionInterface {
 
         AddNewLine();
 
-        List<ListItem> resolution_item_list = new() { new ListItem("Default", "Default", 0) { desc = "Resets the screen resolution." } };
+        List<ListItem> resolution_item_list = new() { new ListItem("Default", MainMod.Translate("Default"), 0) { desc = MainMod.Translate("Resets the screen resolution.") } };
         foreach (Resolution resolution in UnityEngine.Screen.resolutions) {
-            ListItem item = new($"{resolution.width.ToString()} x {resolution.height.ToString()}", resolution.width) { desc = $"Sets the screen resolution to {resolution} pixels." };
+            ListItem item = new($"{resolution.width.ToString()} x {resolution.height.ToString()}", resolution.width) { desc = string.Format(MainMod.Translate("Sets the screen resolution to {0} pixels."), resolution) };
             if (resolution_item_list.Contains(item)) continue;
             resolution_item_list.Add(item);
         }
-        resolution_item_list.Add(new ListItem("Custom", "Custom", 9999) { desc = $"Uses the resolution from the text box `{(string)custom_resolution.info.Tags[0]}`." });
+        resolution_item_list.Add(new ListItem("Custom", MainMod.Translate("Custom"), 9999) { desc = string.Format(MainMod.Translate("Uses the resolution from the text box `{0}`."), MainMod.Translate((string)custom_resolution.info.Tags[0])) });
 
         AddComboBox(resolution, resolution_item_list, (string)resolution.info.Tags[0]);
         // DrawComboBoxes(ref Tabs[tab_index]);
@@ -550,7 +550,7 @@ public class MainModOptions : OptionInterface {
             int camera_type = Array.IndexOf(_camera_type_keys, _camera_type_combo_box.value);
             if (_last_camera_type != camera_type) {
                 _last_camera_type = camera_type;
-                _camera_type_combo_box.description = _camera_type_descriptions[camera_type];
+                _camera_type_combo_box.description = MainMod.Translate(_camera_type_descriptions[camera_type]);
             }
         }
 
@@ -613,7 +613,7 @@ public class MainModOptions : OptionInterface {
 
     private void AddCheckBox(Configurable<bool> configurable, string text) {
         _check_box_configurables.Add(configurable);
-        _check_boxes_text_labels.Add(new OpLabel(new Vector2(), new Vector2(), text, FLabelAlignment.Left));
+        _check_boxes_text_labels.Add(new OpLabel(new Vector2(), new Vector2(), MainMod.Translate(text), FLabelAlignment.Left));
     }
 
     private void DrawCheckBoxes(ref OpTab tab) // changes pos.y but not pos.x
@@ -628,7 +628,7 @@ public class MainModOptions : OptionInterface {
         for (int check_box_index = 0; check_box_index < _check_box_configurables.Count; ++check_box_index) {
             Configurable<bool> configurable = _check_box_configurables[check_box_index];
             OpCheckBox check_box = new(configurable, new Vector2(pos_x, _pos.y)) {
-                description = configurable.info?.description ?? ""
+                description = MainMod.Translate(configurable.info?.description ?? "")
             };
             tab.AddItems(check_box);
             pos_x += CheckBoxWithSpacing;
@@ -654,7 +654,7 @@ public class MainModOptions : OptionInterface {
     }
 
     private void AddComboBox(Configurable<string> configurable, List<ListItem> list, string text, bool allow_empty = false) {
-        OpLabel op_label = new(new Vector2(), new Vector2(0.0f, _font_height), text, FLabelAlignment.Left, false);
+        OpLabel op_label = new(new Vector2(), new Vector2(0.0f, _font_height), MainMod.Translate(text), FLabelAlignment.Left, false);
         _combo_boxes_text_labels.Add(op_label);
         _combo_box_configurables.Add(configurable);
         _combo_box_lists.Add(list);
@@ -682,7 +682,7 @@ public class MainModOptions : OptionInterface {
             Configurable<string> configurable = _combo_box_configurables[combo_box_index];
             OpComboBox combo_box = new(configurable, _pos, width_combo_box, _combo_box_lists[combo_box_index]) {
                 allowEmpty = _combo_box_allow_empty[combo_box_index],
-                description = configurable.info?.description ?? "",
+                description = MainMod.Translate(configurable.info?.description ?? ""),
                 listHeight = list_height
             };
             tab.AddItems(op_label, combo_box);
@@ -702,9 +702,9 @@ public class MainModOptions : OptionInterface {
 
     private void AddSlider(Configurable<int> configurable, string text, string slider_text_left = "", string slider_text_right = "") {
         _slider_configurables.Add(configurable);
-        _slider_main_text_labels.Add(text);
-        _slider_text_labels_left.Add(new OpLabel(new Vector2(), new Vector2(), slider_text_left, alignment: FLabelAlignment.Right)); // set pos and size when drawing
-        _slider_text_labels_right.Add(new OpLabel(new Vector2(), new Vector2(), slider_text_right, alignment: FLabelAlignment.Left));
+        _slider_main_text_labels.Add(MainMod.Translate(text));
+        _slider_text_labels_left.Add(new OpLabel(new Vector2(), new Vector2(), MainMod.Translate(slider_text_left), alignment: FLabelAlignment.Right)); // set pos and size when drawing
+        _slider_text_labels_right.Add(new OpLabel(new Vector2(), new Vector2(), MainMod.Translate(slider_text_right), alignment: FLabelAlignment.Left));
     }
 
     private void DrawSliders(ref OpTab tab) {
@@ -728,7 +728,7 @@ public class MainModOptions : OptionInterface {
             Configurable<int> configurable = _slider_configurables[slider_index];
             OpSlider slider = new(configurable, new Vector2(slider_center - 0.5f * slider_size_x, _pos.y), (int)slider_size_x) {
                 size = new Vector2(slider_size_x, _font_height),
-                description = configurable.info?.description ?? ""
+                description = MainMod.Translate(configurable.info?.description ?? "")
             };
             tab.AddItems(slider);
 
@@ -752,7 +752,7 @@ public class MainModOptions : OptionInterface {
     }
 
     private void AddTextBox(Configurable<string> configurable, string text) {
-        OpLabel op_label = new OpLabel(new Vector2(), new Vector2(0.0f, _font_height), text, FLabelAlignment.Left, false);
+        OpLabel op_label = new OpLabel(new Vector2(), new Vector2(0.0f, _font_height), MainMod.Translate(text), FLabelAlignment.Left, false);
         _text_box_labels.Add(op_label);
         _text_box_configurables.Add(configurable);
     }
@@ -777,7 +777,7 @@ public class MainModOptions : OptionInterface {
             OpTextBox tb = new OpTextBox(c, _pos, width_text_box) {
                 // accept = OpTextBox.Accept.Int,
                 allowSpace = false,
-                description = c.info?.description ?? ""
+                description = MainMod.Translate(c.info?.description ?? "")
             };
             tab.AddItems(op_label, tb);
 
